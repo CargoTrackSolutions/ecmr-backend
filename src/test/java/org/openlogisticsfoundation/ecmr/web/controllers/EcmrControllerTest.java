@@ -248,7 +248,7 @@ public class EcmrControllerTest {
     public void testShareEcmr_Success() throws Exception {
         //Arrange
         EcmrShareModel ecmrShareModel = new EcmrShareModel("test@example.com", EcmrRole.Carrier);
-        EcmrShareResponse ecmrShareResponse = new EcmrShareResponse(ShareEcmrResult.SharedExternal, new Group());
+        EcmrShareResponse ecmrShareResponse = new EcmrShareResponse(ShareEcmrResult.SharedExternal, new Group(), null);
 
         when(authenticationService.getAuthenticatedUser()).thenReturn(authenticatedUser);
         when(ecmrShareService.shareEcmr(any(InternalOrExternalUser.class), any(UUID.class), any(String.class), any(EcmrRole.class)))
@@ -270,7 +270,7 @@ public class EcmrControllerTest {
     public void testShareEcmrWithGroup_Success() throws Exception {
         //Arrange
         EcmrShareWithGroupModel ecmrShareWithGroupModel = new EcmrShareWithGroupModel(groupIds.getFirst(), EcmrRole.Consignee);
-        EcmrShareResponse ecmrShareResponse = new EcmrShareResponse(ShareEcmrResult.SharedInternal, new Group());
+        EcmrShareResponse ecmrShareResponse = new EcmrShareResponse(ShareEcmrResult.SharedInternal, new Group(), null);
 
         when(authenticationService.getAuthenticatedUser()).thenReturn(authenticatedUser);
         when(ecmrShareService.shareEcmrWithGroup(any(InternalOrExternalUser.class), any(UUID.class), any(Long.class), any(EcmrRole.class)))

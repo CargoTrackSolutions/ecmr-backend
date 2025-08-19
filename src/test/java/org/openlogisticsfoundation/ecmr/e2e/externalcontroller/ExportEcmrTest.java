@@ -89,7 +89,7 @@ class ExportEcmrTest extends E2EBaseTest {
             .accept(String.valueOf(MediaType.APPLICATION_JSON))
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .header("Authorization", "Bearer " + adminToken)
-            .queryParam("ecmrRole", "Reader")
+            .queryParam("ecmrRole", "Sender")
             .port(randomServerPort)
 
             .when()

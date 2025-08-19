@@ -595,7 +595,9 @@ public class EcmrController {
                                     schema = @Schema(type = "string"))),
                     @ApiResponse(description = "eCMR not found", responseCode = "404"),
                     @ApiResponse(description = "Unauthorized access", responseCode = "401"),
-                    @ApiResponse(description = "Forbidden access", responseCode = "403")
+                    @ApiResponse(description = "Forbidden access", responseCode = "403"),
+                    @ApiResponse(description = "Role to share not valid", responseCode = "400")
+
             })
     public ResponseEntity<String> getShareToken(@PathVariable(value = "ecmrId") UUID id,
             @RequestParam(name = "ecmrRole") @Valid @NotNull EcmrRole ecmrRole) {
@@ -608,6 +610,8 @@ public class EcmrController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (ValidationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

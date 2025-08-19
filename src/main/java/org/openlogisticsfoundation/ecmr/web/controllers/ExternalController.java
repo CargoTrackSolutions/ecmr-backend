@@ -7,32 +7,26 @@
  */
 package org.openlogisticsfoundation.ecmr.web.controllers;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.SealedDocumentNotFoundException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
-import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
-import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
-import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,24 +49,24 @@ public class ExternalController {
     private final AuthenticationService authenticationService;
     private final EcmrShareService ecmrShareService;
 
-    @GetMapping(path = {"/ecmr/{ecmrId}/export"})
+    @GetMapping(path = { "/ecmr/{ecmrId}/export" })
     @Operation(
-        tags = "ECMR External",
-        summary = "Export eCMR as sealed document with ID and share token",
-        parameters = {
-            @Parameter(name = "ecmrId", description = "UUID of the eCMR", required = true, schema = @Schema(type = "string", format = "uuid")),
-            @Parameter(name = "shareToken", description = "Share token", required = true, schema = @Schema(type = "string"))
-        },
-        responses = {
-            @ApiResponse(description = "The requested ecmr as sealed document",
-                content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = SealedDocument.class))),
-            @ApiResponse(description = "eCMR not found", responseCode = "404"),
-            @ApiResponse(description = "Forbidden access", responseCode = "403")
-        })
+            tags = "ECMR External",
+            summary = "Export eCMR as sealed document with ID and share token",
+            parameters = {
+                    @Parameter(name = "ecmrId", description = "UUID of the eCMR", required = true, schema = @Schema(type = "string", format = "uuid")),
+                    @Parameter(name = "shareToken", description = "Share token", required = true, schema = @Schema(type = "string"))
+            },
+            responses = {
+                    @ApiResponse(description = "The requested ecmr as sealed document",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = SealedDocument.class))),
+                    @ApiResponse(description = "eCMR not found", responseCode = "404"),
+                    @ApiResponse(description = "Forbidden access", responseCode = "403")
+            })
     public ResponseEntity<EcmrExportResult> exportEcmrToExternal(@PathVariable(value = "ecmrId") UUID ecmrId,
-                                                                 @RequestParam @Valid @NotNull String shareToken) {
+            @RequestParam @Valid @NotNull String shareToken) {
         try {
             return ResponseEntity.ok(this.ecmrShareService.exportEcmrToExternal(ecmrId, shareToken));
         } catch (NoSuchElementException e) {
@@ -82,74 +76,32 @@ public class ExternalController {
         }
     }
 
-    @PostMapping(path = {"/ecmr/import"})
-    @PreAuthorize("isAuthenticated()")
+    @PostMapping(path = { "/ecmr/import" })
     @Operation(
-        tags = "ECMR External",
-        summary = "Import eCMR with ID, share token and url",
-        parameters = {
-            @Parameter(name = "ecmrId", description = "UUID of the eCMR", required = true, schema = @Schema(type = "string", format = "uuid")),
-            @Parameter(name = "shareToken", description = "Share token", required = true, schema = @Schema(type = "string")),
-            @Parameter(name = "groupIds", description = "Group IDs", required = true, schema = @Schema(type = "object")),
-            @Parameter(name = "url", description = "URL of the external instance", required = true, schema = @Schema(type = "string"))
-        },
-        responses = {
-            @ApiResponse(description = "eCMR was imported successfully", responseCode = "200"),
-            @ApiResponse(description = "Unauthorized access", responseCode = "401"),
-            @ApiResponse(description = "Forbidden access", responseCode = "403"),
-            @ApiResponse(description = "Share token is invalid", responseCode = "400")
-        })
-    public ResponseEntity<Void> importEcmrFromExternal(@RequestParam @NotNull String url,
-                                                       @RequestParam @NotNull UUID ecmrId,
-                                                       @RequestParam @NotNull String shareToken,
-                                                       @RequestParam(name = "groupId") List<Long> groupIds) {
+            tags = "ECMR External",
+            summary = "Import eCMR with ID, share token and url",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = EcmrImportModel.class))),
+            responses = {
+                    @ApiResponse(description = "eCMR was imported successfully", responseCode = "200"),
+                    @ApiResponse(description = "Unauthorized access", responseCode = "401"),
+                    @ApiResponse(description = "Forbidden access", responseCode = "403"),
+                    @ApiResponse(description = "Share token is invalid", responseCode = "400"),
+                    @ApiResponse(description = "User not found", responseCode = "404")
+            })
+    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModel model) {
         try {
-            AuthenticatedUser authenticatedUser = this.authenticationService.getAuthenticatedUser(true);
-            this.ecmrShareService.importEcmrFromExternal(url, ecmrId, shareToken, groupIds, authenticatedUser);
+            this.ecmrShareService.importEcmrFromExternal(model);
             return ResponseEntity.ok().build();
-        } catch (InvalidInputException | ValidationException e){
+        } catch (InvalidInputException | ValidationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
-        } catch (AuthenticationException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (EcmrAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-        }
-    }
-
-    @PostMapping("/ecmr/{ecmrId}/email")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(
-        tags = "ECMR External",
-        summary = "Send eCMR sharing token via email",
-        parameters = {
-            @Parameter(name = "ecmrId", description = "UUID of the eCMR", required = true, schema = @Schema(type = "string", format = "uuid")),
-            @Parameter(name = "receiverEmail", description = "Email address of the receiver", required = true, schema = @Schema(type = "string", format = "email")),
-            @Parameter(name = "ecmrRole", description = "Role of the user for the eCMR", required = true, schema = @Schema(implementation = EcmrRole.class))
-        },
-        responses = {
-            @ApiResponse(description = "Email sent successfully", responseCode = "200", content = @Content(schema = @Schema(implementation = EcmrShareResponse.class))),
-            @ApiResponse(description = "eCMR not found", responseCode = "404"),
-            @ApiResponse(description = "Unauthorized access", responseCode = "401"),
-            @ApiResponse(description = "Forbidden access", responseCode = "403"),
-            @ApiResponse(description = "Sealed eCMR not found", responseCode = "400")
-        })
-    public ResponseEntity<EcmrShareResponse> sendEmail(@RequestParam String receiverEmail,
-                                                       @PathVariable(value = "ecmrId") String ecmrId,
-                                                       @RequestParam(name = "ecmrRole") @Valid @NotNull EcmrRole ecmrRole) {
-        try {
-            AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-            EcmrShareResponse response = this.ecmrShareService.sendTokenPerEmail(UUID.fromString(ecmrId), receiverEmail, ecmrRole, new InternalOrExternalUser(authenticatedUser.getUser()));
-            return ResponseEntity.ok(response);
-        } catch (EcmrNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        } catch (AuthenticationException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        } catch (NoPermissionException e) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
-        } catch (SealedDocumentNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 }

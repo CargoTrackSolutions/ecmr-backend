@@ -6,16 +6,16 @@
  * SPDX-License-Identifier: OLFL-1.3
  */
 
-package org.openlogisticsfoundation.ecmr.web.models;
+package org.openlogisticsfoundation.ecmr.domain.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class SharedCarrierInformationModel {
-    private String carrierCompanyName;
-    private String carrierDriverName;
+public class SharedInformationModel {
+    private String companyName;
+    private String driverName;
 }
 
 

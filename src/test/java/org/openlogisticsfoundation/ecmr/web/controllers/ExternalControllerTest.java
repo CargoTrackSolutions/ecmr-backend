@@ -8,16 +8,27 @@
 
 package org.openlogisticsfoundation.ecmr.web.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.NoSuchElementException;
+import java.util.UUID;
+
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
-import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,15 +39,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc(addFilters = false)
@@ -59,10 +62,10 @@ class ExternalControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final EcmrImportModel model = new EcmrImportModel("test-url", UUID.randomUUID(), "share", "test@mail.de");
     private final UUID ecmrId = UUID.randomUUID();
     private final String shareToken = "share";
     private final String url = "test-url";
-    private final String groupId = "1";
 
     @BeforeEach
     void setUp() throws Exception {
@@ -119,66 +122,24 @@ class ExternalControllerTest {
     void importEcmr_successful() throws Exception {
         // Act
         mockMvc.perform(post("/external/ecmr/import")
-                .param("ecmrId", ecmrId.toString())
-                .param("shareToken", shareToken)
-                .param("url", url)
-                .param("groupId", groupId))
+                .content(objectMapper.writeValueAsString(model)))
             .andExpect(status().isOk());
 
-        verify(ecmrShareService, times(1)).importEcmrFromExternal(url, ecmrId, shareToken, List.of(Long.valueOf(groupId)), authenticatedUser);
-    }
-
-    @Test
-    @WithMockUser
-    void importEcmr_invalidAuthentication() throws Exception {
-        // Arrange
-        when(authenticationService.getAuthenticatedUser(true)).thenThrow(AuthenticationException.class);
-
-        // Act
-        mockMvc.perform(post("/external/ecmr/import")
-                .param("ecmrId", ecmrId.toString())
-                .param("shareToken", shareToken)
-                .param("url", url)
-                .param("groupId", groupId))
-            .andExpect(status().isUnauthorized());
-
-        verify(ecmrShareService, times(0)).importEcmrFromExternal(url, ecmrId, shareToken, List.of(Long.valueOf(groupId)), authenticatedUser);
-    }
-
-    @Test
-    @WithMockUser
-    void importEcmr_invalidGroupIds() throws Exception {
-        // Arrange
-        doThrow(NoPermissionException.class)
-            .when(ecmrShareService).importEcmrFromExternal(url, ecmrId, shareToken, List.of(Long.valueOf(groupId)), authenticatedUser);
-
-        // Act
-        mockMvc.perform(post("/external/ecmr/import")
-                .param("ecmrId", ecmrId.toString())
-                .param("shareToken", shareToken)
-                .param("url", url)
-                .param("groupId", groupId))
-            .andExpect(status().isForbidden());
-
-        verify(ecmrShareService, times(1)).importEcmrFromExternal(url, ecmrId, shareToken, List.of(Long.valueOf(groupId)), authenticatedUser);
+        verify(ecmrShareService, times(1)).importEcmrFromExternal(any());
     }
 
     @Test
     @WithMockUser
     void importEcmr_invalidSeal() throws Exception {
         // Arrange
-        doThrow(InvalidInputException.class)
-            .when(ecmrShareService).importEcmrFromExternal(url, ecmrId, shareToken, List.of(Long.valueOf(groupId)), authenticatedUser);
+        doThrow(InvalidInputException.class).when(ecmrShareService).importEcmrFromExternal(any());
 
         // Act
         mockMvc.perform(post("/external/ecmr/import")
-                .param("ecmrId", ecmrId.toString())
-                .param("shareToken", shareToken)
-                .param("url", url)
-                .param("groupId", groupId))
+                .content(objectMapper.writeValueAsString(model)))
             .andExpect(status().isBadRequest());
 
-        verify(ecmrShareService, times(1)).importEcmrFromExternal(url, ecmrId, shareToken, List.of(Long.valueOf(groupId)), authenticatedUser);
+        verify(ecmrShareService, times(1)).importEcmrFromExternal(any());
     }
 
 }

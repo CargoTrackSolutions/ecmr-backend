@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
@@ -29,6 +28,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.services.ExternalEcmrInstanceService;
 import org.openlogisticsfoundation.ecmr.e2e.E2EBaseTest;
 import org.openlogisticsfoundation.ecmr.e2e.ResourceLoader;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -38,8 +38,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.restassured.response.Response;
-//TODO activate and fix, when new sharing process is implemented
-@Disabled()
 class ImportEcmrTest extends E2EBaseTest {
 
     @MockitoBean
@@ -128,7 +126,6 @@ class ImportEcmrTest extends E2EBaseTest {
                 .then()
                 .log().all()
                 .statusCode(HttpStatus.OK.value())
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .extract().response();
 
         Response sealResponse = given()
@@ -152,16 +149,15 @@ class ImportEcmrTest extends E2EBaseTest {
 
     @Test
     @Order(1)
-    void importEcmr_invalidSeal() {
+    void importEcmr_invalidSeal() throws JsonProcessingException {
+
+        EcmrImportModel importModel = new EcmrImportModel("url", UUID.fromString(ecmrIdWithInvalidSeal), "token", "admin@test.de");
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + adminToken)
-                .queryParam("shareToken", "token")
-                .queryParam("ecmrId", ecmrIdWithInvalidSeal)
-                .queryParam("url", "url")
-                .queryParam("groupId", List.of(1))
                 .port(randomServerPort)
-
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(objectMapper.writeValueAsString(importModel))
                 .when()
                 .post("/api/external/ecmr/import")
 
@@ -171,27 +167,27 @@ class ImportEcmrTest extends E2EBaseTest {
 
     @Test
     @Order(1)
-    void importEcmr_invalidGroupIds() throws JsonProcessingException {
+    void importEcmr_invalidUserMail() throws JsonProcessingException {
         SealedDocument sealedDocument = objectMapper.readValue(ResourceLoader.load("/json-objects/sealed-document.json"), SealedDocument.class);
         validEcmrId = sealedDocument.getEcmr().getEcmrId();
         sealedDocument.getSenderSeal().setSeal(validSeal);
         EcmrExportResult result = new EcmrExportResult(sealedDocument, EcmrRole.Carrier);
         when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(validEcmrId)), any(String.class))).thenReturn(result);
 
+        EcmrImportModel importModel = new EcmrImportModel("url", UUID.fromString(validEcmrId), "token", "usermail");
+
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
-                .queryParam("shareToken", "token")
-                .queryParam("ecmrId", validEcmrId)
-                .queryParam("url", "url")
-                .queryParam("groupId", List.of(100))
+                .body(objectMapper.writeValueAsString(importModel))
                 .port(randomServerPort)
 
                 .when()
                 .post("/api/external/ecmr/import")
 
                 .then()
-                .statusCode(403);
+                .statusCode(404);
     }
 
     @Test
@@ -203,13 +199,14 @@ class ImportEcmrTest extends E2EBaseTest {
         EcmrExportResult result = new EcmrExportResult(sealedDocument, EcmrRole.Carrier);
         when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(validEcmrId)), any(String.class))).thenReturn(result);
 
+
+        EcmrImportModel importModel = new EcmrImportModel("url", UUID.fromString(validEcmrId), "token", "admin@test.de");
+
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
-                .queryParam("shareToken", "token")
-                .queryParam("ecmrId", validEcmrId)
-                .queryParam("url", "url")
-                .queryParam("groupId", List.of(1))
+                .body(objectMapper.writeValueAsString(importModel))
                 .port(randomServerPort)
 
                 .when()

@@ -16,4 +16,5 @@ import lombok.Getter;
 public class EcmrShareResponse {
     private ShareEcmrResult result;
     private Group group;
+    private String url;
 }

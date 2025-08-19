@@ -265,7 +265,7 @@ public class AnonymousControllerTest {
         ExternalUser externalUser = new ExternalUser(1L, "John", "Doe", "Example Company", "john.doe@example.com", "123456789", validUserToken, validTan, Instant.now().plusSeconds(3600));
 
         Group group = new Group();
-        EcmrShareResponse shareResponse = new EcmrShareResponse(ShareEcmrResult.SharedInternal, group); // Verwende Group
+        EcmrShareResponse shareResponse = new EcmrShareResponse(ShareEcmrResult.SharedInternal, group, null); // Verwende Group
 
         when(authenticationService.getExternalUser(eq(ecmrId), eq(validUserToken), eq(validTan))).thenReturn(externalUser);
         when(ecmrShareService.shareEcmr(any(InternalOrExternalUser.class), eq(ecmrId), eq(ecmrShareModel.getEmail()), eq(ecmrShareModel.getRole()))).thenReturn(shareResponse);

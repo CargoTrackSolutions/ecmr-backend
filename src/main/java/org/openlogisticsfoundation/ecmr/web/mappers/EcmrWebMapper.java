@@ -28,7 +28,6 @@ import org.openlogisticsfoundation.ecmr.domain.models.commands.SenderInformation
 import org.openlogisticsfoundation.ecmr.domain.models.commands.SuccessiveCarrierInformationCommand;
 import org.openlogisticsfoundation.ecmr.web.models.FilterRequestModel;
 import org.openlogisticsfoundation.ecmr.web.models.SealModel;
-import org.openlogisticsfoundation.ecmr.web.models.SharedCarrierInformationModel;
 
 @Mapper(componentModel = "spring")
 public interface EcmrWebMapper {
@@ -113,10 +112,6 @@ public interface EcmrWebMapper {
     SealCommand map(SealModel model);
 
     FilterRequestCommand map(FilterRequestModel model);
-
-    @Mapping(source = "carrierCompanyName", target = "carrierCompanyName")
-    @Mapping(source = "carrierDriverName", target = "carrierDriverName")
-    SharedCarrierInformationModel toSharedCarrierInformation(CarrierInformation value);
 
     /**
      * Checks whether ECMR has multiple consignees

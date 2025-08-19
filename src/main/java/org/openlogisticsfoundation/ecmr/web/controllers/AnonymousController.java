@@ -16,7 +16,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
-import org.openlogisticsfoundation.ecmr.api.model.areas.six.CarrierInformation;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserInvalidTanException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserNotFoundException;
@@ -32,6 +31,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.ExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.PdfFile;
 import org.openlogisticsfoundation.ecmr.domain.models.SealedDocumentWithoutEcmr;
+import org.openlogisticsfoundation.ecmr.domain.models.SharedInformationModel;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ExternalUserRegistrationCommand;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrPdfService;
@@ -48,7 +48,6 @@ import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationResponseModel;
 import org.openlogisticsfoundation.ecmr.web.models.SealModel;
-import org.openlogisticsfoundation.ecmr.web.models.SharedCarrierInformationModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -162,7 +161,7 @@ public class AnonymousController {
      * @param ecmrToken The carrier's share token of the ECMR.
      * @return the ECMR carrier information.
      */
-    @GetMapping(path = { "/ecmr-carrier/{ecmrId}/{ecmrToken}" })
+    @GetMapping(path = { "/registration-info/{ecmrId}/{ecmrToken}" })
     @Operation(
             tags = "Anonymous",
             summary = "Get ECMR carrier information",
@@ -170,21 +169,20 @@ public class AnonymousController {
                     @Parameter(name = "ecmrId", description = "UUID of the ECMR", required = true,
                             schema = @Schema(type = "string", format = "uuid")),
                     @Parameter(name = "ecmrToken", description = "shareToken of the ECMR", required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(name = "roleToRegister", description = "role of the user that is getting registered", required = true,
                             schema = @Schema(type = "string"))
             },
             responses = {
                     @ApiResponse(description = "ECMR carrier details", content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = SharedCarrierInformationModel.class))),
+                            schema = @Schema(implementation = SharedInformationModel.class))),
                     @ApiResponse(description = "ECMR not found", responseCode = "404"),
                     @ApiResponse(description = "Validation error", responseCode = "400")
             })
-    public ResponseEntity<SharedCarrierInformationModel> getEcmrCarrierInfo(@PathVariable(value = "ecmrId") UUID ecmrId,
-            @PathVariable(value = "ecmrToken") String ecmrToken) {
+    public ResponseEntity<SharedInformationModel> getExternalUserRegistrationInfo(@PathVariable(value = "ecmrId") UUID ecmrId,
+            @PathVariable(value = "ecmrToken") String ecmrToken, @RequestParam(name = "roleToRegister") @Valid @NotNull EcmrRole roleToRegister) {
         try {
-            CarrierInformation ecmrCarrierInformation = ecmrShareService.getEcmrCarrierInformation(ecmrId, ecmrToken);
-            SharedCarrierInformationModel sharedCarrierInformation =
-                    ecmrWebMapper.toSharedCarrierInformation(ecmrCarrierInformation);
-            return ResponseEntity.ok(sharedCarrierInformation);
+            return ResponseEntity.ok(ecmrShareService.getRegistrationInfoFromEcmr(ecmrId, ecmrToken, roleToRegister));
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         } catch (ValidationException e) {
@@ -343,19 +341,21 @@ public class AnonymousController {
                             content = @Content(mediaType = "application/json", schema = @Schema(type = "string"))),
                     @ApiResponse(description = "ECMR not found", responseCode = "404"),
                     @ApiResponse(description = "No permission", responseCode = "403"),
-                    @ApiResponse(description = "External user not found", responseCode = "401")
-            })
+                    @ApiResponse(description = "External user not found", responseCode = "401"),
+             })
     public ResponseEntity<String> getShareToken(@PathVariable(value = "ecmrId") UUID ecmrId, @RequestParam(name = "tan") @Valid @NotNull String tan,
             @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "ecmrRole") @Valid @NotNull EcmrRole ecmrRole) {
         try {
             ExternalUser externalUser = this.authenticationService.getExternalUser(ecmrId, userToken, tan);
             return ResponseEntity.ok(this.ecmrShareService.getShareToken(ecmrId, ecmrRole, new InternalOrExternalUser(externalUser)));
         } catch (EcmrNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         } catch (ExternalUserNotFoundException | ExternalUserInvalidTanException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (ValidationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

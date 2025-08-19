@@ -15,11 +15,11 @@ import lombok.Getter;
 @Getter
 public enum SortingField {
     referenceId("referenceIdentificationNumber"),
-    from("senderInformation.nameCompany"),
-    to("consigneeInformation.nameCompany"),
+    from("senderInformation.companyName"),
+    to("consigneeInformation.companyName"),
     status("ecmrStatus"),
     licensePlate("carrierInformation.carrierLicensePlate"),
-    carrierName("carrierInformation.nameCompany"),
+    carrierName("carrierInformation.companyName"),
     carrierPostCode("carrierInformation.postcode"),
     consigneePostCode("consigneeInformation.postcode"),
     lastEditor("editedBy"),
