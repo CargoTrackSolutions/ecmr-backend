@@ -337,8 +337,7 @@ public class EcmrShareService {
         return switch (roleToShare) {
             case Sender -> userRoles.contains(EcmrRole.Sender);
             case Carrier -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender);
-            case Consignee -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee);
-            default -> false;
+            case Consignee, Reader -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee);
         };
     }
 
