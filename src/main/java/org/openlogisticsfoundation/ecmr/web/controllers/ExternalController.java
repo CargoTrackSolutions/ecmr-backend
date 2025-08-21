@@ -13,12 +13,11 @@ import java.util.UUID;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -82,7 +81,7 @@ public class ExternalController {
             summary = "Import eCMR with ID, share token and url",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = EcmrImportModel.class))),
+                    schema = @Schema(implementation = EcmrImportModelWithUserMail.class))),
             responses = {
                     @ApiResponse(description = "eCMR was imported successfully", responseCode = "200"),
                     @ApiResponse(description = "Unauthorized access", responseCode = "401"),
@@ -90,14 +89,12 @@ public class ExternalController {
                     @ApiResponse(description = "Share token is invalid", responseCode = "400"),
                     @ApiResponse(description = "User not found", responseCode = "404")
             })
-    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModel model) {
+    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModelWithUserMail model) {
         try {
             this.ecmrShareService.importEcmrFromExternal(model);
             return ResponseEntity.ok().build();
         } catch (InvalidInputException | ValidationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        } catch (NoPermissionException e) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         } catch (EcmrAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         } catch (UserNotFoundException e) {

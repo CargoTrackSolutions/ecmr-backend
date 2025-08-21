@@ -11,11 +11,12 @@ package org.openlogisticsfoundation.ecmr.domain.services;
 import java.util.UUID;
 
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
@@ -34,20 +35,24 @@ public class ExternalEcmrInstanceService {
 
     public boolean exportEcmrMetaData(String remoteUrl, String originUrl, UUID ecmrId, String shareToken, String userMail) {
         WebClient webClient = WebClient.builder().baseUrl(remoteUrl).build();
-        ResponseEntity<Void> response = webClient.post()
-                .uri("api/external/ecmr/import")
-                .bodyValue(new EcmrImportModel(originUrl, ecmrId, shareToken, userMail))
-                .exchangeToMono(clientResponse -> {
-                    if (clientResponse.statusCode().is2xxSuccessful()) {
-                        return clientResponse.toBodilessEntity();
-                    } else {
-                        // Hier kannst du z.B. eine leere Response zurückgeben oder null
-                        log.info("Error while exporting ecmr metadata: {}", clientResponse.statusCode());
-                        return Mono.just(new ResponseEntity<Void>(clientResponse.statusCode()));
-                    }
-                })
-                .block();
-
-        return response != null && response.getStatusCode() == HttpStatus.OK;
+        try {
+            ResponseEntity<Void> response = webClient.post()
+                    .uri("api/external/ecmr/import")
+                    .bodyValue(new EcmrImportModelWithUserMail(originUrl, ecmrId, shareToken, userMail))
+                    .exchangeToMono(clientResponse -> {
+                        if (clientResponse.statusCode().is2xxSuccessful()) {
+                            return clientResponse.toBodilessEntity();
+                        } else {
+                            log.info("Error while exporting ecmr metadata: {}", clientResponse.statusCode());
+                            return Mono.just(new ResponseEntity<>(clientResponse.statusCode()));
+                        }
+                    })
+                    .block();
+            return response != null && response.getStatusCode() == HttpStatus.OK;
+        } catch (WebClientRequestException e) {
+            log.info("Exception while exporting ecmr metadata: {}", e.getMessage());
+            log.debug(e);
+            return false;
+        }
     }
 }

@@ -161,17 +161,15 @@ public class AnonymousController {
      * @param ecmrToken The carrier's share token of the ECMR.
      * @return the ECMR carrier information.
      */
-    @GetMapping(path = { "/registration-info/{ecmrId}/{ecmrToken}" })
+    @GetMapping(path = { "/registration-info/{ecmrId}" })
     @Operation(
             tags = "Anonymous",
             summary = "Get ECMR carrier information",
             parameters = {
                     @Parameter(name = "ecmrId", description = "UUID of the ECMR", required = true,
                             schema = @Schema(type = "string", format = "uuid")),
-                    @Parameter(name = "ecmrToken", description = "shareToken of the ECMR", required = true,
+                    @Parameter(name = "token", description = "shareToken of the ECMR", required = true,
                             schema = @Schema(type = "string")),
-                    @Parameter(name = "roleToRegister", description = "role of the user that is getting registered", required = true,
-                            schema = @Schema(type = "string"))
             },
             responses = {
                     @ApiResponse(description = "ECMR carrier details", content = @Content(mediaType = "application/json",
@@ -180,9 +178,9 @@ public class AnonymousController {
                     @ApiResponse(description = "Validation error", responseCode = "400")
             })
     public ResponseEntity<SharedInformationModel> getExternalUserRegistrationInfo(@PathVariable(value = "ecmrId") UUID ecmrId,
-            @PathVariable(value = "ecmrToken") String ecmrToken, @RequestParam(name = "roleToRegister") @Valid @NotNull EcmrRole roleToRegister) {
+            @RequestParam(value = "token") String ecmrToken) {
         try {
-            return ResponseEntity.ok(ecmrShareService.getRegistrationInfoFromEcmr(ecmrId, ecmrToken, roleToRegister));
+            return ResponseEntity.ok(ecmrShareService.getRegistrationInfoFromEcmr(ecmrId, ecmrToken));
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         } catch (ValidationException e) {
@@ -342,7 +340,7 @@ public class AnonymousController {
                     @ApiResponse(description = "ECMR not found", responseCode = "404"),
                     @ApiResponse(description = "No permission", responseCode = "403"),
                     @ApiResponse(description = "External user not found", responseCode = "401"),
-             })
+            })
     public ResponseEntity<String> getShareToken(@PathVariable(value = "ecmrId") UUID ecmrId, @RequestParam(name = "tan") @Valid @NotNull String tan,
             @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "ecmrRole") @Valid @NotNull EcmrRole ecmrRole) {
         try {

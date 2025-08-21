@@ -28,7 +28,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.services.ExternalEcmrInstanceService;
 import org.openlogisticsfoundation.ecmr.e2e.E2EBaseTest;
 import org.openlogisticsfoundation.ecmr.e2e.ResourceLoader;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -151,7 +151,7 @@ class ImportEcmrTest extends E2EBaseTest {
     @Order(1)
     void importEcmr_invalidSeal() throws JsonProcessingException {
 
-        EcmrImportModel importModel = new EcmrImportModel("url", UUID.fromString(ecmrIdWithInvalidSeal), "token", "admin@test.de");
+        EcmrImportModelWithUserMail importModel = new EcmrImportModelWithUserMail("url", UUID.fromString(ecmrIdWithInvalidSeal), "token", "admin@test.de");
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + adminToken)
@@ -174,7 +174,7 @@ class ImportEcmrTest extends E2EBaseTest {
         EcmrExportResult result = new EcmrExportResult(sealedDocument, EcmrRole.Carrier);
         when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(validEcmrId)), any(String.class))).thenReturn(result);
 
-        EcmrImportModel importModel = new EcmrImportModel("url", UUID.fromString(validEcmrId), "token", "usermail");
+        EcmrImportModelWithUserMail importModel = new EcmrImportModelWithUserMail("url", UUID.fromString(validEcmrId), "token", "usermail");
 
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
@@ -200,7 +200,7 @@ class ImportEcmrTest extends E2EBaseTest {
         when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(validEcmrId)), any(String.class))).thenReturn(result);
 
 
-        EcmrImportModel importModel = new EcmrImportModel("url", UUID.fromString(validEcmrId), "token", "admin@test.de");
+        EcmrImportModelWithUserMail importModel = new EcmrImportModelWithUserMail("url", UUID.fromString(validEcmrId), "token", "admin@test.de");
 
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))

@@ -18,11 +18,13 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @Valid
-public class EcmrImportModel {
+public class EcmrImportModelWithUserMail {
     @NotNull
     private String url;
     @NotNull
     private UUID ecmrId;
     @NotNull
     private String shareToken;
+    @NotNull
+    private String userMail;
 }

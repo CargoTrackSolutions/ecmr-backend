@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
@@ -41,6 +43,8 @@ import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrPageModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareWithGroupModel;
@@ -679,6 +683,36 @@ public class EcmrController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        }
+    }
+
+    @PostMapping(path = { "/import-external" })
+    @Operation(
+            tags = "ECMR External",
+            summary = "Import eCMR with ID, share token and url",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = EcmrImportModelWithUserMail.class))),
+            responses = {
+                    @ApiResponse(description = "eCMR was imported successfully", responseCode = "200"),
+                    @ApiResponse(description = "Unauthorized access", responseCode = "401"),
+                    @ApiResponse(description = "Forbidden access", responseCode = "403"),
+                    @ApiResponse(description = "Share token is invalid", responseCode = "400"),
+                    @ApiResponse(description = "User not found", responseCode = "404")
+            })
+    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModel model) {
+        try {
+            AuthenticatedUser authenticatedUser = this.authenticationService.getAuthenticatedUser();
+            this.ecmrShareService.importEcmrFromExternal(model, authenticatedUser);
+            return ResponseEntity.ok().build();
+        } catch (InvalidInputException | ValidationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (EcmrAlreadyExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 }

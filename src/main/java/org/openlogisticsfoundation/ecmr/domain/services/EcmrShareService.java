@@ -57,6 +57,7 @@ import org.openlogisticsfoundation.ecmr.persistence.repositories.GroupRepository
 import org.openlogisticsfoundation.ecmr.persistence.repositories.SealedDocumentRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.UserRepository;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,24 +94,17 @@ public class EcmrShareService {
     @Value("${app.origin.url}")
     private String originUrl;
 
-    public SharedInformationModel getRegistrationInfoFromEcmr(UUID ecmrId, String ecmrToken, EcmrRole roleToRegister) throws EcmrNotFoundException,
+    public SharedInformationModel getRegistrationInfoFromEcmr(UUID ecmrId, String ecmrToken) throws EcmrNotFoundException,
             ValidationException {
         EcmrEntity ecmrEntity = ecmrService.getEcmrEntity(ecmrId);
 
-        if (roleToRegister == EcmrRole.Sender) {
-            if (!ecmrToken.equals(ecmrEntity.getShareWithSenderToken())) {
-                throw new ValidationException("Share Token is invalid for this role");
-            }
+        EcmrRole roleByToken = this.getRoleByToken(ecmrToken, ecmrEntity);
+
+        if (roleByToken == EcmrRole.Sender) {
             return ecmrSharedInformationMapper.mapSenderData(ecmrEntity);
-        } else if (roleToRegister == EcmrRole.Carrier) {
-            if (!ecmrToken.equals(ecmrEntity.getShareWithCarrierToken())) {
-                throw new ValidationException("Share Token is invalid for this role");
-            }
+        } else if (roleByToken == EcmrRole.Carrier) {
             return ecmrSharedInformationMapper.mapCarrierData(ecmrEntity);
-        } else if (roleToRegister == EcmrRole.Consignee) {
-            if (!ecmrToken.equals(ecmrEntity.getShareWithConsigneeToken())) {
-                throw new ValidationException("Share Token is invalid for this role");
-            }
+        } else if (roleByToken == EcmrRole.Consignee) {
             return ecmrSharedInformationMapper.mapConsigneeData(ecmrEntity);
         } else {
             throw new ValidationException("Only sender, carriers and consignees can register external users");
@@ -337,7 +331,8 @@ public class EcmrShareService {
         return switch (roleToShare) {
             case Sender -> userRoles.contains(EcmrRole.Sender);
             case Carrier -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender);
-            case Consignee, Reader -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee);
+            case Consignee, Reader ->
+                    userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee);
         };
     }
 
@@ -400,23 +395,34 @@ public class EcmrShareService {
         }
     }
 
-    // import existing ecmr from external instance and save it initially on this instance
     @Transactional
-    public void importEcmrFromExternal(EcmrImportModel model)
-            throws InvalidInputException, NoPermissionException, EcmrAlreadyExistsException, ValidationException, UserNotFoundException {
+    public void importEcmrFromExternal(EcmrImportModelWithUserMail model)
+            throws UserNotFoundException, InvalidInputException, ValidationException {
+        this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(), model.getUserMail());
+    }
+
+    @Transactional
+    public void importEcmrFromExternal(EcmrImportModel model, AuthenticatedUser authenticatedUser)
+            throws UserNotFoundException, InvalidInputException, ValidationException {
+        this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(), authenticatedUser.getUser().getEmail());
+    }
+
+    // import existing ecmr from external instance and save it initially on this instance
+    private void importEcmrFromExternal(String url, UUID ecmrId, String shareToken, String userMail)
+            throws InvalidInputException, EcmrAlreadyExistsException, ValidationException, UserNotFoundException {
         // check if the ecmr is already imported
-        if (ecmrService.existsByEcmrId(model.getEcmrId())) {
-            throw new EcmrAlreadyExistsException(model.getEcmrId());
+        if (ecmrService.existsByEcmrId(ecmrId)) {
+            throw new EcmrAlreadyExistsException(ecmrId);
         }
 
-        UserEntity userEntity = userRepository.findByEmailAndDeactivatedFalse(model.getUserMail())
-                .orElseThrow(() -> new UserNotFoundException(model.getUserMail()));
+        UserEntity userEntity = userRepository.findByEmailAndDeactivatedFalse(userMail)
+                .orElseThrow(() -> new UserNotFoundException(userMail));
         if (userEntity.getDefaultGroup() == null) {
             throw new ValidationException("User has no Default Group");
         }
 
         // 1. call export endpoint from external instance
-        EcmrExportResult exportResult = externalEcmrInstanceService.importEcmr(model.getUrl(), model.getEcmrId(), model.getShareToken());
+        EcmrExportResult exportResult = externalEcmrInstanceService.importEcmr(url, ecmrId, shareToken);
         // set up EcmrEntity
         SealedDocumentEntity sealedDocumentEntity = sealedDocumentPersistenceMapper.toEntity(exportResult.getSealedDocument());
 
@@ -458,7 +464,7 @@ public class EcmrShareService {
         }
         String shareToken = this.getShareToken(roleToShare, ecmr);
 
-        String shareUrl = String.format("%s/external-user-registration/%s/%s/%s", originUrl, ecmrId, shareToken, roleToShare.name());
+        String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", originUrl, ecmrId, shareToken, roleToShare.name());
         String mailText = """ 
                 Sehr geehrte Damen und Herren,
                 im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:

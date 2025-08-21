@@ -28,7 +28,7 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -62,10 +62,9 @@ class ExternalControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final EcmrImportModel model = new EcmrImportModel("test-url", UUID.randomUUID(), "share", "test@mail.de");
+    private final EcmrImportModelWithUserMail model = new EcmrImportModelWithUserMail("test-url", UUID.randomUUID(), "share", "test@mail.de");
     private final UUID ecmrId = UUID.randomUUID();
     private final String shareToken = "share";
-    private final String url = "test-url";
 
     @BeforeEach
     void setUp() throws Exception {
