@@ -13,12 +13,12 @@ import java.util.UUID;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
-import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +45,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ExternalController {
 
-    private final AuthenticationService authenticationService;
     private final EcmrShareService ecmrShareService;
 
     @GetMapping(path = { "/ecmr/{ecmrId}/export" })
@@ -93,7 +92,7 @@ public class ExternalController {
         try {
             this.ecmrShareService.importEcmrFromExternal(model);
             return ResponseEntity.ok().build();
-        } catch (InvalidInputException | ValidationException e) {
+        } catch (InvalidInputException | ValidationException | ShareExternallyException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (EcmrAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());

@@ -22,6 +22,7 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.SealAlreadyPresentException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
@@ -700,7 +701,7 @@ public class EcmrController {
                     @ApiResponse(description = "Share token is invalid", responseCode = "400"),
                     @ApiResponse(description = "User not found", responseCode = "404")
             })
-    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModel model) {
+    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModel model) throws ShareExternallyException {
         try {
             AuthenticatedUser authenticatedUser = this.authenticationService.getAuthenticatedUser();
             this.ecmrShareService.importEcmrFromExternal(model, authenticatedUser);

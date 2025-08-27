@@ -24,6 +24,7 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.RateLimitException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrAssignmentMapper;
@@ -189,7 +190,7 @@ public class EcmrShareService {
             }
         } else {
             if (validatedEcmrForSharing.sealedDocumentEntity() == null) {
-                throw new ValidationException("Ecmr can't be shared externally without first seal");
+                return new EcmrShareResponse(ShareEcmrResult.ErrorSealMandatoryForExternal, null, null);
             }
             return this.shareExternally(ecmrId, userMail, role, validatedEcmrForSharing, internalOrExternalUser, validatedEcmrForSharing.rolesOfUSer);
         }
@@ -204,8 +205,7 @@ public class EcmrShareService {
     }
 
     private EcmrShareResponse shareExternally(UUID ecmrId, String userMail, EcmrRole roleToShare, ValidatedEcmrForSharing validatedEcmrForSharing,
-            InternalOrExternalUser internalOrExternalUser, List<EcmrRole> rolesOfUser)
-            throws ValidationException {
+            InternalOrExternalUser internalOrExternalUser, List<EcmrRole> rolesOfUser) {
         Optional<String> urlOpt = this.mailSuffixService.getUrl(this.extractMailDomain(userMail));
         if (urlOpt.isPresent()) {
             String url = urlOpt.get();
@@ -214,7 +214,7 @@ public class EcmrShareService {
                         rolesOfUser);
             }
             if (!this.isPreviousSealPresent(roleToShare, validatedEcmrForSharing.sealedDocumentEntity())) {
-                throw new ValidationException("Sharing to another instance only possible, if previous seal present");
+                return new EcmrShareResponse(ShareEcmrResult.ErrorPreviousSealMandatoryForExternalInstance, null, null);
             }
             if (!externalEcmrInstanceService.exportEcmrMetaData(url, originUrl, ecmrId,
                     this.getShareToken(roleToShare, validatedEcmrForSharing.ecmr()),
@@ -331,8 +331,9 @@ public class EcmrShareService {
         return switch (roleToShare) {
             case Sender -> userRoles.contains(EcmrRole.Sender);
             case Carrier -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender);
-            case Consignee, Reader ->
-                    userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee);
+            case Consignee -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee);
+            case Reader -> userRoles.contains(EcmrRole.Carrier) || userRoles.contains(EcmrRole.Sender) || userRoles.contains(EcmrRole.Consignee)
+                    || userRoles.contains(EcmrRole.Reader);
         };
     }
 
@@ -397,19 +398,19 @@ public class EcmrShareService {
 
     @Transactional
     public void importEcmrFromExternal(EcmrImportModelWithUserMail model)
-            throws UserNotFoundException, InvalidInputException, ValidationException {
+            throws UserNotFoundException, InvalidInputException, ValidationException, ShareExternallyException {
         this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(), model.getUserMail());
     }
 
     @Transactional
     public void importEcmrFromExternal(EcmrImportModel model, AuthenticatedUser authenticatedUser)
-            throws UserNotFoundException, InvalidInputException, ValidationException {
+            throws UserNotFoundException, InvalidInputException, ValidationException, ShareExternallyException {
         this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(), authenticatedUser.getUser().getEmail());
     }
 
     // import existing ecmr from external instance and save it initially on this instance
     private void importEcmrFromExternal(String url, UUID ecmrId, String shareToken, String userMail)
-            throws InvalidInputException, EcmrAlreadyExistsException, ValidationException, UserNotFoundException {
+            throws InvalidInputException, EcmrAlreadyExistsException, ValidationException, UserNotFoundException, ShareExternallyException {
         // check if the ecmr is already imported
         if (ecmrService.existsByEcmrId(ecmrId)) {
             throw new EcmrAlreadyExistsException(ecmrId);

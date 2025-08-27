@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrSeal;
 import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.services.ExternalEcmrInstanceService;
@@ -167,7 +168,7 @@ class ImportEcmrTest extends E2EBaseTest {
 
     @Test
     @Order(1)
-    void importEcmr_invalidUserMail() throws JsonProcessingException {
+    void importEcmr_invalidUserMail() throws JsonProcessingException, ShareExternallyException {
         SealedDocument sealedDocument = objectMapper.readValue(ResourceLoader.load("/json-objects/sealed-document.json"), SealedDocument.class);
         validEcmrId = sealedDocument.getEcmr().getEcmrId();
         sealedDocument.getSenderSeal().setSeal(validSeal);
@@ -192,7 +193,7 @@ class ImportEcmrTest extends E2EBaseTest {
 
     @Test
     @Order(2)
-    void importEcmr_valid() throws JsonProcessingException {
+    void importEcmr_valid() throws JsonProcessingException, ShareExternallyException {
         SealedDocument sealedDocument = objectMapper.readValue(ResourceLoader.load("/json-objects/sealed-document.json"), SealedDocument.class);
         validEcmrId = sealedDocument.getEcmr().getEcmrId();
         sealedDocument.getSenderSeal().setSeal(validSeal);

@@ -7,8 +7,9 @@
  */
 package org.openlogisticsfoundation.ecmr.web.config;
 
-import io.swagger.v3.oas.annotations.Hidden;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+
+import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
 import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
 import org.openlogisticsfoundation.ecmr.web.models.ApiError;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.time.Instant;
+import io.swagger.v3.oas.annotations.Hidden;
+import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
 @Slf4j
@@ -34,6 +36,12 @@ class ControllerExceptionHandler {
     public ResponseEntity<ApiError> handle(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getErrorCount() > 0 ? exception.getBindingResult().getAllErrors().getFirst().toString() : "Validation failed";
         ApiError apiError = new ApiError(Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), message);
+        return ResponseEntity.badRequest().body(apiError);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ApiError> handle(ShareExternallyException exception) {
+        ApiError apiError = new ApiError(Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), exception.getMessage());
         return ResponseEntity.badRequest().body(apiError);
     }
 }

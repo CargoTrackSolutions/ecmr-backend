@@ -11,5 +11,7 @@ package org.openlogisticsfoundation.ecmr.domain.models;
 public enum ShareEcmrResult {
     SharedInternal,
     SharedExternal,
-    ErrorInternalUserHasNoGroup
+    ErrorInternalUserHasNoGroup,
+    ErrorSealMandatoryForExternal,
+    ErrorPreviousSealMandatoryForExternalInstance,
 }
