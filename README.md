@@ -40,6 +40,7 @@ whose goal is to define and implement digital document standards (like eCMR, del
     ├── documentation/ # eCMR project documentation
     ├── README.md # Project description
     ├── openapi.yaml # API description
+    ├── API_CHANGELOG.md * Changelog of the openapi.yaml file
     ├── LICENSE # Licensing information
     ├── docker-compose.yml # Docker compose setup for development purpose
     └── CONTRIBUTING.md # Contribution guidelines
