@@ -1,75 +1,72 @@
 [[section-concepts]]
-== Cross-cutting Concepts
-
-Concepts form the basis for conceptual integrity, (consistency, homogeneity) of the architecture.
-Thus, they are an important contribution to achieve inner qualities.
-This section describes general structures and system-wide cross-cutting aspects.
-It also presents various technical solutions.
-
-=== Design Patterns
-
-The eCMR Service uses different design patterns.
-
-==== Micro Services
-
-A microservice architecture is a variant of a service-oriented architecture (SOA).
-The target system is composed of a set of fine-granular services ("micros") that allow for easy, independent distribution, as well as independent changes and extensions.
-Each microservice has a high degree of autonomy and isolation, and can be developed autonomously and deployed in its own container (as an implementation of the Application Container architecture pattern).
-Each microservice can be located in a different place and implemented using a different technology; they communicate with each other using lightweight protocols (fast, data-efficient protocols such as REST ).
-
-The goals of this architecture are reuse, high cohesion, low coupling, separation of concerns, single responsibility, and information hiding.
-Its advantages are modularity and maintainability, as well as faster adaptation to changing requirements (scaling).
-
-==== Event-Driven Communication
-
-Software components are loosely coupled via known interfaces.
-In a purely event-oriented system, this knowledge is no longer necessary, since events can simply be triggered and assigned to recipients via certain criteria (e.g., topics).
-This enables asynchronous or event-based communication, where the sending and receiving of data is staggered and without blocking the process, e.g. by waiting for the recipient to respond.
-This creates greater temporal and spatial flexibility, but also risks.
-Events can be triggered both from outside the system, e.g. by user input or by sensor values, and internally by the system itself.
-There are several implementations of this architectural pattern.
-
-==== Application Container
-
-In the Silicon Economy, a microservice is always delivered and executed in exactly one application container.
-Containers contain not only the application or microservice itself, but also all the required dependencies.
-These include, for example, runtime environments and system libraries.
-In contrast to virtual environments or virtual machines (VM), containers use core functionalities of the underlying operating system and are thus more lightweight in comparison.
-Via the so-called container engine (podman in the Silicon Economy), the individual applications in the containers share the functionalities of the operating system of the underlying computer.
-This serves as an abstraction layer between the virtual environments and the actual hardware and allows dedicated resources, such as CPU cores and memory, to be distributed to the virtual machines.
-If an application does not need all the resources allocated to the virtual machine, they will not be available in other applications on the same machine or server.
-Between containers, such resources are shared, leading to better hardware utilization.
-
-==== Application Container Orchestration
-
-The concept of the eCMR Service and scaling in particular is based on
-Kubernetes for monitoring and controlling container instances.
-See Section 8.1.6 for more information.
-
-The Kubernetes Cluster is an Application Container Orchestration solutions
-for containers, also has additional functions.
-While a container engine is only ever executed on one target system (host), for example on exactly one server or one computer, orchestration can be used to combine several hosts into a cluster and manage them centrally.
-There are one or more masters that only manage the cluster and its resources, while the actual containers are executed on the nodes.
-The cluster improves the possibility of making the necessary resources available to the individual containers.
-If a container requires more resources than are available on the current node, the container can be transferred to another node with correspondingly available resources and executed there.
-During the runtime of the cluster, new nodes can be integrated and thus the available resources can be increased.
-Other nodes can be removed from the cluster.
-Furthermore, containers can not only be managed, but also scaled.
-This means that several instances of the same container can be started and stopped again as needed (e.g. heavy resource use).
-If there are requirements for high availability, containers can also be run redundantly and on different nodes.
-This improves the reliability of the actual application.
-The individual nodes can be executed on different IT systems and at different locations.
-Only direct access of the master to the nodes is necessary.
-
-In summary, container orchestration performs the following tasks:
-
-. management of resources, such as memory.
-. management of nodes on which individual containers are executed
-. allocation of resources, such as memory and network
-. scaling containers based on redundancy requirements
-. monitoring containers for functionality and resource usage.
 
 === Domain Model
 
 See https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-model[eCMR data model] for
 more information about the eCMR domain model
+
+=== eCMR sharing process and eSeal implications
+
+==== Core Concept
+
+- Partners exchange _only_ eSeals, never raw eCMRs.
+- By validating the latest eSeal, the full history of the eCMR can be reconstructed via the chain of precedingSeals.
+- Simplified communication: the eSeal is the canonical transferable unit.
+- The public key for eSeal verification is part of the eSeal Header. To verify the public key, a checksum is published via an DNS record of the providing eCMR instance.
+
+==== Result
+
+This creates a chain of eSeals, ensuring a full audit trail of all eCMR changes.
+
+==== eSeal concept
+
+The eSeal (header + payload) is generated with the sealer's private key.
+
+* With the public key from the header (part of the x5c chain of X.509 certificates), every participant can verify the authenticity and integrity of the seal and its header and payload.
+
+===== eSeal structure
+
+**Header**
+
+*.* Contains metadata and signature details (algorithm, certificate information, key ID, etc.).
+
+**Payload**
+
+The sealed JSON document, in our case the eCMR.
+
+* This contains the complete eCMR data record.
+* Since the payload (and the header) is sealed, any modification is immediately detectable, as the integrity of the
+entire seal would be broken.
+
+image::images/eseal_structure.svg["eSeal structure"]
+
+===== Chain of Seals
+
+The next diagram shows the eCMR chain of seals evolving from the sender to the consignee.
+
+image::images/eseal_chain_of_seals.svg["Chain of seals]
+
+==== eSeal Verification
+
+. eSeal header contains the public key
+
+. DNS entry provides checksum for the public key
+
+When an eSeal is created, the public key of the signing instance is embedded in the header of the eSeal.
+
+The owner of the public key (i.e. the instance operator) publishes a checksum (hash) of the key in a DNS record under a domain it controls.
+The resolver of the seal verifies that the public key in the eSeal header, when hashed with SHA-256, matches the value in the DNS record.
+This way, the authenticity of the public key is anchored in DNS, which is already a trust infrastructure.
+
+==== The ecmr sharing process
+
+eCMR Sharing as an activity diagram:
+
+image::images/ecmr_sharing_activity_diagram.svg["eCMR sharing process as a activity diagram]
+
+==== eSeal example
+
+Goto https://www.jwt.io/, open the example below and copy the text to the JWT input area on the left side.
+Now, you  can see header and payload of the eseal on the right side.
+
+link:images/example_seal.jwt["example"]
