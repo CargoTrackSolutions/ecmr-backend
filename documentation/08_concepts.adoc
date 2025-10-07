@@ -22,21 +22,32 @@ This creates a chain of eSeals, ensuring a full audit trail of all eCMR changes.
 
 The eSeal (header + payload) is generated with the sealer's private key.
 
-* With the public key from the header (part of the x5c chain of X.509 certificates), every participant can verify the authenticity and integrity of the seal and its header and payload.
+With the public key from the header (part of the x5c chain of X.509 certificates), every participant can verify the authenticity and integrity of the seal and its header and payload.
 
 ===== eSeal structure
 
 **Header**
 
-*.* Contains metadata and signature details (algorithm, certificate information, key ID, etc.).
+Contains metadata and signature details (algorithm, certificate information, key ID, etc.).
+
+Meaning of the fields in the header
+
+- alg: Algorithm used for the signature (here: ES256 = ECDSA with P-256 and SHA-256).
+- cty: Content-Type; in this case, it indicates: "The payload is JSON".
+- kid: Key ID, used for the unique identification of the key/certificate.
+- x5t#S256: SHA-256 thumbprint of the certificate → enables fast certificate validation.
+- x5c: The complete certificate chain (Base64-encoded), allowing the recipient to verify that the seal was created with a trusted key.
+- typ: Indicates that this is a JOSE/JWT-compatible object.
+- iat: "Issued At" – timestamp of when the seal was created.
 
 **Payload**
 
 The sealed JSON document, in our case the eCMR.
 
 * This contains the complete eCMR data record.
-* Since the payload (and the header) is sealed, any modification is immediately detectable, as the integrity of the
+* Since the payload (and the header) are sealed, any modification is immediately detectable, as the integrity of the
 entire seal would be broken.
+* If an eCMR is sealed again (re-sealed), the preceding seal is part of the payload
 
 image::images/eseal_structure.svg["eSeal structure"]
 
@@ -48,9 +59,9 @@ image::images/eseal_chain_of_seals.svg["Chain of seals]
 
 ==== eSeal Verification
 
-. eSeal header contains the public key
+. The eSeal header contains the public key
 
-. DNS entry provides checksum for the public key
+. The DNS record entry provides checksum for the public key
 
 When an eSeal is created, the public key of the signing instance is embedded in the header of the eSeal.
 
@@ -67,6 +78,6 @@ image::images/ecmr_sharing_activity_diagram.svg["eCMR sharing process as a activ
 ==== eSeal example
 
 Goto https://www.jwt.io/, open the example below and copy the text to the JWT input area on the left side.
-Now, you  can see header and payload of the eseal on the right side.
+Now, you can see the eSeal header and payload on the right side.
 
 link:images/example_seal.jwt["example"]
