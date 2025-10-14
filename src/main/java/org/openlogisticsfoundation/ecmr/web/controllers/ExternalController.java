@@ -10,9 +10,9 @@ package org.openlogisticsfoundation.ecmr.web.controllers;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.InvalidSealException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
@@ -92,7 +92,7 @@ public class ExternalController {
         try {
             this.ecmrShareService.importEcmrFromExternal(model);
             return ResponseEntity.ok().build();
-        } catch (InvalidInputException | ValidationException | ShareExternallyException e) {
+        } catch (InvalidSealException | ValidationException | ShareExternallyException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (EcmrAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());

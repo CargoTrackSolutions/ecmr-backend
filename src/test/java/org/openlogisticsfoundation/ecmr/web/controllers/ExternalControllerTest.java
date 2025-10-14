@@ -21,9 +21,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.InvalidSealException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
@@ -131,7 +131,7 @@ class ExternalControllerTest {
     @WithMockUser
     void importEcmr_invalidSeal() throws Exception {
         // Arrange
-        doThrow(InvalidInputException.class).when(ecmrShareService).importEcmrFromExternal(any());
+        doThrow(InvalidSealException.class).when(ecmrShareService).importEcmrFromExternal(any());
 
         // Act
         mockMvc.perform(post("/external/ecmr/import")

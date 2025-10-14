@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.InvalidSealException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.SealAlreadyPresentException;
@@ -706,7 +706,7 @@ public class EcmrController {
             AuthenticatedUser authenticatedUser = this.authenticationService.getAuthenticatedUser();
             this.ecmrShareService.importEcmrFromExternal(model, authenticatedUser);
             return ResponseEntity.ok().build();
-        } catch (InvalidInputException | ValidationException e) {
+        } catch (InvalidSealException | ValidationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (EcmrAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());

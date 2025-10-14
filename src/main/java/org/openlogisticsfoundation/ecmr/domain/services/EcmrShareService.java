@@ -16,12 +16,12 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.InvalidSealException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.RateLimitException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
@@ -398,19 +398,21 @@ public class EcmrShareService {
 
     @Transactional
     public void importEcmrFromExternal(EcmrImportModelWithUserMail model)
-            throws UserNotFoundException, InvalidInputException, ValidationException, ShareExternallyException {
+            throws UserNotFoundException, ValidationException, ShareExternallyException, InvalidSealException {
         this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(), model.getUserMail());
     }
 
     @Transactional
     public void importEcmrFromExternal(EcmrImportModel model, AuthenticatedUser authenticatedUser)
-            throws UserNotFoundException, InvalidInputException, ValidationException, ShareExternallyException {
-        this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(), authenticatedUser.getUser().getEmail());
+            throws UserNotFoundException, ValidationException, ShareExternallyException, InvalidSealException {
+        this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(),
+                authenticatedUser.getUser().getEmail());
     }
 
     // import existing ecmr from external instance and save it initially on this instance
     private void importEcmrFromExternal(String url, UUID ecmrId, String shareToken, String userMail)
-            throws InvalidInputException, EcmrAlreadyExistsException, ValidationException, UserNotFoundException, ShareExternallyException {
+            throws EcmrAlreadyExistsException, ValidationException, UserNotFoundException, ShareExternallyException,
+            InvalidSealException {
         // check if the ecmr is already imported
         if (ecmrService.existsByEcmrId(ecmrId)) {
             throw new EcmrAlreadyExistsException(ecmrId);
@@ -432,7 +434,7 @@ public class EcmrShareService {
         // 2. verify sealed document before calling any internal functions
         ESeal seal = new ESeal(sealedDocumentService.getCurrentSeal(sealedDocumentEntity), null);
         if (sealedDocumentService.verify(List.of(seal)) != SealVerifyResult.VALID) {
-            throw new InvalidInputException("Invalid input data");
+            throw new InvalidSealException();
         }
 
         // 3. save ecmrSealEntity
