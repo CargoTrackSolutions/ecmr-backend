@@ -31,7 +31,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.ExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.PdfFile;
 import org.openlogisticsfoundation.ecmr.domain.models.SealedDocumentWithoutEcmr;
-import org.openlogisticsfoundation.ecmr.domain.models.SharedInformationModel;
+import org.openlogisticsfoundation.ecmr.domain.models.ExternalUserInformationModel;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ExternalUserRegistrationCommand;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrPdfService;
@@ -173,12 +173,12 @@ public class AnonymousController {
             },
             responses = {
                     @ApiResponse(description = "ECMR carrier details", content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = SharedInformationModel.class))),
+                            schema = @Schema(implementation = ExternalUserInformationModel.class))),
                     @ApiResponse(description = "ECMR not found", responseCode = "404"),
                     @ApiResponse(description = "Validation error", responseCode = "400")
             })
-    public ResponseEntity<SharedInformationModel> getExternalUserRegistrationInfo(@PathVariable(value = "ecmrId") UUID ecmrId,
-            @RequestParam(value = "token") String ecmrToken) {
+    public ResponseEntity<ExternalUserInformationModel> getExternalUserRegistrationInfo(@PathVariable(value = "ecmrId") UUID ecmrId,
+                                                                                        @RequestParam(value = "token") String ecmrToken) {
         try {
             return ResponseEntity.ok(ecmrShareService.getRegistrationInfoFromEcmr(ecmrId, ecmrToken));
         } catch (EcmrNotFoundException e) {

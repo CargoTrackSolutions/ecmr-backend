@@ -9,20 +9,21 @@ package org.openlogisticsfoundation.ecmr.domain.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.openlogisticsfoundation.ecmr.domain.models.SharedInformationModel;
+import org.openlogisticsfoundation.ecmr.domain.models.ExternalUserInformationModel;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 
 @Mapper(componentModel = "spring")
-public interface EcmrSharedInformationMapper {
+public interface ExternalUserInformationMapper {
     @Mapping(target = "companyName", source = "senderInformation.companyName")
     @Mapping(target = "driverName", ignore = true)
-    SharedInformationModel mapSenderData(EcmrEntity ecmr);
+    ExternalUserInformationModel mapSenderData(EcmrEntity ecmr);
 
     @Mapping(target = "companyName", source = "carrierInformation.companyName")
     @Mapping(target = "driverName", source = "carrierInformation.personName")
-    SharedInformationModel mapCarrierData(EcmrEntity ecmr);
+    @Mapping(target = "driverPhone", source = "carrierInformation.driverPhone")
+    ExternalUserInformationModel mapCarrierData(EcmrEntity ecmr);
 
     @Mapping(target = "companyName", source = "consigneeInformation.companyName")
     @Mapping(target = "driverName", ignore = true)
-    SharedInformationModel mapConsigneeData(EcmrEntity ecmr);
+    ExternalUserInformationModel mapConsigneeData(EcmrEntity ecmr);
 }

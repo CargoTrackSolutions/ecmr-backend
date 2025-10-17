@@ -13,9 +13,10 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class SharedInformationModel {
+public class ExternalUserInformationModel {
     private String companyName;
     private String driverName;
+    private String driverPhone;
 }
 
 

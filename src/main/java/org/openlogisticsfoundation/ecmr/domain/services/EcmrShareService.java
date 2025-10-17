@@ -29,20 +29,11 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrAssignmentMapper;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrPersistenceMapper;
-import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrSharedInformationMapper;
+import org.openlogisticsfoundation.ecmr.domain.mappers.ExternalUserInformationMapper;
 import org.openlogisticsfoundation.ecmr.domain.mappers.GroupPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.mappers.SealedDocumentPersistenceMapper;
-import org.openlogisticsfoundation.ecmr.domain.models.ActionType;
-import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrAssignment;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrType;
-import org.openlogisticsfoundation.ecmr.domain.models.Group;
-import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
-import org.openlogisticsfoundation.ecmr.domain.models.ShareEcmrResult;
-import org.openlogisticsfoundation.ecmr.domain.models.SharedInformationModel;
+import org.openlogisticsfoundation.ecmr.domain.models.*;
+import org.openlogisticsfoundation.ecmr.domain.models.ExternalUserInformationModel;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ExternalUserRegistrationCommand;
 import org.openlogisticsfoundation.ecmr.domain.services.tan.MessageProviderException;
 import org.openlogisticsfoundation.ecmr.domain.services.tan.PhoneMessageProvider;
@@ -90,23 +81,23 @@ public class EcmrShareService {
     private final SealedDocumentPersistenceMapper sealedDocumentPersistenceMapper;
     private final MailSuffixService mailSuffixService;
     private final EcmrAssignmentMapper ecmrAssignmentMapper;
-    private final EcmrSharedInformationMapper ecmrSharedInformationMapper;
+    private final ExternalUserInformationMapper externalUserInformationMapper;
 
     @Value("${app.origin.url}")
     private String originUrl;
 
-    public SharedInformationModel getRegistrationInfoFromEcmr(UUID ecmrId, String ecmrToken) throws EcmrNotFoundException,
+    public ExternalUserInformationModel getRegistrationInfoFromEcmr(UUID ecmrId, String ecmrToken) throws EcmrNotFoundException,
             ValidationException {
         EcmrEntity ecmrEntity = ecmrService.getEcmrEntity(ecmrId);
 
         EcmrRole roleByToken = this.getRoleByToken(ecmrToken, ecmrEntity);
 
         if (roleByToken == EcmrRole.Sender) {
-            return ecmrSharedInformationMapper.mapSenderData(ecmrEntity);
+            return externalUserInformationMapper.mapSenderData(ecmrEntity);
         } else if (roleByToken == EcmrRole.Carrier) {
-            return ecmrSharedInformationMapper.mapCarrierData(ecmrEntity);
+            return externalUserInformationMapper.mapCarrierData(ecmrEntity);
         } else if (roleByToken == EcmrRole.Consignee) {
-            return ecmrSharedInformationMapper.mapConsigneeData(ecmrEntity);
+            return externalUserInformationMapper.mapConsigneeData(ecmrEntity);
         } else {
             throw new ValidationException("Only sender, carriers and consignees can register external users");
         }
@@ -468,26 +459,26 @@ public class EcmrShareService {
         String shareToken = this.getShareToken(roleToShare, ecmr);
 
         String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", originUrl, ecmrId, shareToken, roleToShare.name());
-        String mailText = """ 
+        String mailText = """
                 Sehr geehrte Damen und Herren,
                 im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:
-                
+
                 {{url}}
-                
+
                 Wenn bei Ihnen eine eigene Instanz des eCMR Systems besteht, können Sie den eCMR auch in Ihre Instanz importieren. Melden Sie sich dazu bei Ihrer Instanz an und fügen die obige URL in den Import Dialog ein.
-                
+
                 Bitte beachten Sie, dass der Link aus Sicherheitsgründen nur für einen begrenzten Zeitraum gültig ist. Sollten Sie Rückfragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.
                 Vielen Dank für die Zusammenarbeit.
-                
+
                 ---
-                
+
                 Dear Sir or Madam,
                 As part of our current transport, we are providing you with the electronic consignment note (eCMR). You can view, edit, and digitally sign the document using the following link:
-                
+
                 {{url}}
-                
+
                 If you have your own instance of the eCMR system, you can also import the eCMR into your instance. To do this, log in to your instance and paste the above URL into the import dialog.
-                
+
                 Please note that the link is only valid for a limited time for security reasons. If you have any questions or need assistance, feel free to contact us.
                 Thank you for your cooperation.
                 """;
