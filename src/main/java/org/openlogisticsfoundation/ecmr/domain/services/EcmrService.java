@@ -8,12 +8,12 @@
 
 package org.openlogisticsfoundation.ecmr.domain.services;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrsNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
@@ -58,6 +58,17 @@ public class EcmrService {
     @Transactional
     public EcmrEntity getEcmrEntity(UUID ecmrId) throws EcmrNotFoundException {
         return ecmrRepository.findByEcmrId(ecmrId).orElseThrow(() -> new EcmrNotFoundException(ecmrId));
+    }
+
+    @Transactional
+    public List<EcmrEntity> getEcmrEntities(List<UUID> ecmrIds) throws EcmrsNotFoundException {
+        List<EcmrEntity> entities = ecmrRepository.findAllByEcmrIdIn(ecmrIds);
+        if (entities.size() != ecmrIds.size()) {
+            Set<UUID> foundIds = entities.stream().map(EcmrEntity::getEcmrId).collect(Collectors.toSet());
+            List<UUID> missingIds = ecmrIds.stream().filter(id -> !foundIds.contains(id)).collect(Collectors.toList());
+            throw new EcmrsNotFoundException(missingIds);
+        }
+        return entities;
     }
 
     public boolean existsByEcmrId(UUID ecmrId) {

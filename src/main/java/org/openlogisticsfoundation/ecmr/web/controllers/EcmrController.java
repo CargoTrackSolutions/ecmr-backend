@@ -13,18 +13,10 @@ import static org.openlogisticsfoundation.ecmr.web.controllers.PdfHelper.createP
 import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import org.apache.commons.lang3.NotImplementedException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.InvalidSealException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.SealAlreadyPresentException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.*;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrAssignment;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
@@ -44,13 +36,7 @@ import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrPageModel;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrShareWithGroupModel;
-import org.openlogisticsfoundation.ecmr.web.models.FilterRequestModel;
-import org.openlogisticsfoundation.ecmr.web.models.SealModel;
+import org.openlogisticsfoundation.ecmr.web.models.*;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -242,6 +228,46 @@ public class EcmrController {
     }
 
     /**
+     * Deletes multiple eCMRs by ID
+     *
+     * @param request The request containing IDs of the eCMRs to delete
+     */
+    @DeleteMapping("/selected")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        tags = "ECMR",
+        summary = "Delete multiple eCMR",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Request containing eCMR IDs to delete",
+            required = true,
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = BulkRequest.class)
+            )
+        ),
+        responses = {
+            @ApiResponse(description = "eCMRs deleted successfully", responseCode = "204"),
+            @ApiResponse(description = "eCMRs not found", responseCode = "404"),
+            @ApiResponse(description = "Unauthorized access", responseCode = "401"),
+            @ApiResponse(description = "Forbidden access", responseCode = "403")
+        })
+    public void bulkDeleteEcmrs(@RequestBody @Valid BulkRequest request) {
+        try {
+            AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
+            ecmrDeleteService.bulkDeleteEcmrs(request.getEcmrIds(), new InternalOrExternalUser(authenticatedUser.getUser()));
+        } catch (ValidationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (NoPermissionException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (EcmrsNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    /**
      * Archives an eCMR
      *
      * @param ecmrId The ID of the eCMR to archive
@@ -279,6 +305,53 @@ public class EcmrController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         }
     }
+
+    /**
+     * Archives multiple eCMRs
+     *
+     * @param request The request containing IDs of the eCMRs to archive
+     * @return The archived eCMRs
+     */
+    @PatchMapping(path = { "archive" })
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        tags = "ECMR",
+        summary = "Archive multiple eCMRs",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Request containing eCMR IDs to archive",
+            required = true,
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = BulkRequest.class)
+            )
+        ),
+        responses = {
+            @ApiResponse(description = "The archived eCMRs",
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    array = @ArraySchema(schema = @Schema(implementation = EcmrModel.class)))),
+            @ApiResponse(description = "eCMR not found", responseCode = "404"),
+            @ApiResponse(description = "Unauthorized access", responseCode = "401"),
+            @ApiResponse(description = "Forbidden access", responseCode = "403"),
+            @ApiResponse(description = "Bad request", responseCode = "400")
+        })
+    public ResponseEntity<List<EcmrModel>> bulkArchiveEcmrs(@RequestBody @Valid BulkRequest request) {
+        try {
+            AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
+
+            List<EcmrModel> results = this.ecmrUpdateService.bulkArchiveEcmrs(request.getEcmrIds(), authenticatedUser);
+            return ResponseEntity.ok(results);
+        } catch (EcmrsNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (ValidationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (NoPermissionException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        }
+    }
+
 
     /**
      * Reactivates an archived eCMR

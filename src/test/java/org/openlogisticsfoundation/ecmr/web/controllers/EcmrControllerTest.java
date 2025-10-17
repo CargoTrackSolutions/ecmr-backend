@@ -53,11 +53,7 @@ import org.openlogisticsfoundation.ecmr.domain.services.EcmrService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrPageModel;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrShareWithGroupModel;
-import org.openlogisticsfoundation.ecmr.web.models.FilterRequestModel;
-import org.openlogisticsfoundation.ecmr.web.models.SealModel;
+import org.openlogisticsfoundation.ecmr.web.models.*;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -107,7 +103,9 @@ public class EcmrControllerTest {
 
     private AuthenticatedUser authenticatedUser;
     private UUID ecmrId;
+    private List<UUID> ecmrIds;
     private EcmrModel ecmrModel;
+    private List<EcmrModel> ecmrModels;
     private SealModel sealModel;
     private EcmrCommand ecmrCommand;
     private List<Long> groupIds;
@@ -136,6 +134,21 @@ public class EcmrControllerTest {
         groupIds = List.of(1L, 2L);
         jsonRequest = new ObjectMapper().writeValueAsString(ecmrModel);
         authenticatedUser = new AuthenticatedUser(user);
+
+        // Setup test data for bulk operations
+        UUID firstEcmrId = UUID.randomUUID();
+        UUID secondEcmrId = UUID.randomUUID();
+        ecmrIds = List.of(firstEcmrId, secondEcmrId);
+
+        EcmrModel firstEcmrModel = new EcmrModel();
+        firstEcmrModel.setEcmrId(firstEcmrId.toString());
+        firstEcmrModel.setEcmrConsignment(new EcmrConsignment());
+
+        EcmrModel secondEcmrModel = new EcmrModel();
+        secondEcmrModel.setEcmrId(secondEcmrId.toString());
+        secondEcmrModel.setEcmrConsignment(new EcmrConsignment());
+
+        ecmrModels = List.of(firstEcmrModel, secondEcmrModel);
 
         when(authenticationService.getAuthenticatedUser()).thenReturn(authenticatedUser);
     }
@@ -217,6 +230,25 @@ public class EcmrControllerTest {
 
     @Test
     @WithMockUser
+    public void testBulkDeleteEcmrs_Success() throws Exception {
+        // Arrange
+        BulkRequest bulkRequest = new BulkRequest(ecmrIds);
+
+        String bulkRequestJson = new ObjectMapper().writeValueAsString(bulkRequest);
+
+        // Act
+        mockMvc.perform(delete("/ecmr/selected")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bulkRequestJson))
+                .andExpect(status().isNoContent());
+
+        // Assert
+        verify(authenticationService, times(1)).getAuthenticatedUser();
+        verify(ecmrDeleteService, times(1)).bulkDeleteEcmrs(eq(ecmrIds), any());
+    }
+
+    @Test
+    @WithMockUser
     public void testArchiveEcmr_Success() throws Exception {
         // Arrange
         when(ecmrUpdateService.archiveEcmr(eq(ecmrId), eq(authenticatedUser))).thenReturn(ecmrModel);
@@ -227,6 +259,27 @@ public class EcmrControllerTest {
         // Assert
         verify(authenticationService, times(1)).getAuthenticatedUser();
         verify(ecmrUpdateService, times(1)).archiveEcmr(eq(ecmrId), eq(authenticatedUser));
+    }
+
+    @Test
+    @WithMockUser
+    public void testBulkArchiveEcmrs_Success() throws Exception {
+        // Arrange
+        BulkRequest bulkRequest = new BulkRequest(ecmrIds);
+
+        when(ecmrUpdateService.bulkArchiveEcmrs(eq(ecmrIds), eq(authenticatedUser))).thenReturn(ecmrModels);
+
+        String bulkRequestJson = new ObjectMapper().writeValueAsString(bulkRequest);
+
+        // Act
+        mockMvc.perform(patch("/ecmr/archive")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bulkRequestJson))
+                .andExpect(status().isOk());
+
+        // Assert
+        verify(authenticationService, times(1)).getAuthenticatedUser();
+        verify(ecmrUpdateService, times(1)).bulkArchiveEcmrs(eq(ecmrIds), eq(authenticatedUser));
     }
 
     @Test

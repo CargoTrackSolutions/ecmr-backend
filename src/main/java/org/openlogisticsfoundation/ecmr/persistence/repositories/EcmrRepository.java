@@ -29,6 +29,9 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
     Optional<EcmrEntity> findByEcmrId(UUID ecmrId);
 
     @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)
+    List<EcmrEntity> findAllByEcmrIdIn(List<UUID> ecmrIds);
+
+    @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)
     List<EcmrEntity> findAllByEcmrStatusAndType(EcmrStatus ecmrStatus, EcmrType type);
 
     @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)

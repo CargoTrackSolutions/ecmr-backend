@@ -11,10 +11,12 @@ package org.openlogisticsfoundation.ecmr.domain.services;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrsNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrPersistenceMapper;
@@ -55,17 +57,24 @@ public class EcmrUpdateService {
         return persistenceMapper.toModel(this.ecmrRepository.save(ecmrEntity));
     }
 
-    public EcmrModel reactivateEcmr(UUID ecmrUuid, AuthenticatedUser authenticatedUser)
-            throws EcmrNotFoundException, ValidationException, NoPermissionException {
-        if (authorisationService.hasNoRole(new InternalOrExternalUser(authenticatedUser.getUser()), ecmrUuid)) {
-            throw new NoPermissionException("No permission for this task");
+    public List<EcmrModel> bulkArchiveEcmrs(List<UUID> ecmrIds, AuthenticatedUser authenticatedUser)
+        throws ValidationException, NoPermissionException, EcmrsNotFoundException {
+
+        InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
+        for (UUID ecmrId : ecmrIds) {
+            if (authorisationService.hasNoRole(user, ecmrId)) {
+                throw new NoPermissionException("No permission for ECMR: " + ecmrId);
+            }
         }
-        EcmrEntity ecmrEntity = ecmrService.getEcmrEntity(ecmrUuid);
-        if (ecmrEntity.getType() != EcmrType.ARCHIVED) {
-            throw new ValidationException("Only archived ecmrs can be reactivated");
+
+        List<EcmrEntity> entities = ecmrService.getEcmrEntities(ecmrIds);
+        for(EcmrEntity entity : entities) {
+            entity.setType(EcmrType.ARCHIVED);
         }
-        ecmrEntity.setType(EcmrType.ECMR);
-        return persistenceMapper.toModel(this.ecmrRepository.save(ecmrEntity));
+        return this.ecmrRepository.saveAll(entities)
+            .stream()
+            .map(persistenceMapper::toModel)
+            .collect(Collectors.toList());
     }
 
     public void archiveEcmrs() {
@@ -75,6 +84,19 @@ public class EcmrUpdateService {
             entity.setType(EcmrType.ARCHIVED);
         }
         this.ecmrRepository.saveAll(entities);
+    }
+
+    public EcmrModel reactivateEcmr(UUID ecmrUuid, AuthenticatedUser authenticatedUser)
+        throws EcmrNotFoundException, ValidationException, NoPermissionException {
+        if (authorisationService.hasNoRole(new InternalOrExternalUser(authenticatedUser.getUser()), ecmrUuid)) {
+            throw new NoPermissionException("No permission for this task");
+        }
+        EcmrEntity ecmrEntity = ecmrService.getEcmrEntity(ecmrUuid);
+        if (ecmrEntity.getType() != EcmrType.ARCHIVED) {
+            throw new ValidationException("Only archived ecmrs can be reactivated");
+        }
+        ecmrEntity.setType(EcmrType.ECMR);
+        return persistenceMapper.toModel(this.ecmrRepository.save(ecmrEntity));
     }
 
     @Transactional

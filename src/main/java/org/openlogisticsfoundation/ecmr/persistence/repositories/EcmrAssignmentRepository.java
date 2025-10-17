@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EcmrAssignmentRepository extends JpaRepository<EcmrAssignmentEntity, Long> {
     void deleteByEcmr_EcmrId(UUID ecmrId);
+    void deleteAllByEcmr_EcmrIdIn(List<UUID> ecmrId);
 
     List<EcmrAssignmentEntity> findByEcmr_EcmrIdAndGroup_IdIn(UUID ecmrId, List<Long> groupIds);
 
