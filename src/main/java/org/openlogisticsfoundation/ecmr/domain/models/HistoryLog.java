@@ -17,4 +17,6 @@ public class HistoryLog {
     private String actionFrom;
     private ActionType actionType;
     private Instant timestamp;
+    private EcmrRole shareRole;
+    private String shareWith;
 }

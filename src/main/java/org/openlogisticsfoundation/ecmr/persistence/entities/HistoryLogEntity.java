@@ -23,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 
 @Entity
 @Table(name = "HISTORY_LOG")
@@ -41,4 +42,9 @@ public class HistoryLogEntity extends BaseEntity {
     private String actionFrom;
 
     private Instant timestamp;
+
+    @Enumerated(EnumType.STRING)
+    private EcmrRole shareRole;
+
+    private String shareWith;
 }

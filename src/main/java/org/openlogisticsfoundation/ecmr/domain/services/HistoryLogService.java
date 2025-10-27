@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.HistoryLogPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.models.ActionType;
+import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.models.HistoryLog;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
@@ -50,6 +51,18 @@ public class HistoryLogService {
         historyLog.setEcmr(ecmr);
         historyLog.setActionType(actionType);
         historyLog.setTimestamp(Instant.now());
+
+        historyLogRepository.save(historyLog);
+    }
+
+    public void writeShareHistoryLog(EcmrEntity ecmr, String fullName, ActionType actionType, EcmrRole shareRole, String shareWith) {
+        HistoryLogEntity historyLog = new HistoryLogEntity();
+        historyLog.setActionFrom(fullName);
+        historyLog.setEcmr(ecmr);
+        historyLog.setActionType(actionType);
+        historyLog.setTimestamp(Instant.now());
+        historyLog.setShareRole(shareRole);
+        historyLog.setShareWith(shareWith);
 
         historyLogRepository.save(historyLog);
     }

@@ -10,5 +10,8 @@ package org.openlogisticsfoundation.ecmr.domain.models;
 
 public enum ActionType {
     Creation,
-    Edit
+    Edit,
+    Share_Internal,
+    Share_External,
+    Share_Guest
 }

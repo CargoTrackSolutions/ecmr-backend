@@ -15,4 +15,5 @@
     <include file="/db/changelog/10-adapt-to-data-model-1_0_2.xml"/>
     <include file="/db/changelog/11-add-missing-field.xml"/>
     <include file="/db/changelog/12-add-mailsuffix.xml"/>
+    <include file="/db/changelog/13-add-columns-share-log.xml"/>
 </databaseChangeLog>

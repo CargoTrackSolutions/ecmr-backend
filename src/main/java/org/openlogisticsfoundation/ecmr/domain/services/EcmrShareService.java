@@ -132,6 +132,11 @@ public class EcmrShareService {
 
         this.createAndSaveAssigment(ecmrEntity, ecmrRole, externalUserEntity);
 
+        String sharedWith = externalUserEntity.getFirstName() + " " + externalUserEntity.getLastName() +
+            " (" + externalUserEntity.getPhone() + ")";
+
+        historyLogService.writeShareHistoryLog(ecmrEntity, ecmrEntity.getCreatedBy(), ActionType.Share_Guest, ecmrRole, sharedWith);
+
         String ecmrLink = this.originUrl + "/ecmr-tan/{ecmrId}/{user-token}/{tan}"
                 .replace("{ecmrId}", command.getEcmrId().toString())
                 .replace("{user-token}", userToken)
@@ -164,6 +169,8 @@ public class EcmrShareService {
 
         GroupEntity groupEntity = groupRepository.findById(groupId).orElseThrow(() -> new GroupNotFoundException(groupId));
 
+        historyLogService.writeShareHistoryLog(validatedEcmrForSharing.ecmr(), internalOrExternalUser.getFullName(), ActionType.Share_Internal, role, groupEntity.getName());
+
         return this.shareInternally(internalOrExternalUser, role, validatedEcmrForSharing.rolesOfUSer(), groupEntity, validatedEcmrForSharing.ecmr());
     }
 
@@ -176,6 +183,9 @@ public class EcmrShareService {
             if (userEntity.getDefaultGroup() == null) {
                 return new EcmrShareResponse(ShareEcmrResult.ErrorInternalUserHasNoGroup, null, null);
             } else {
+
+                historyLogService.writeShareHistoryLog(validatedEcmrForSharing.ecmr, internalOrExternalUser.getFullName(), ActionType.Share_Internal, role, userEntity.getDefaultGroup().getName());
+
                 return this.shareInternally(internalOrExternalUser, role, validatedEcmrForSharing.rolesOfUSer(), userEntity.getDefaultGroup(),
                         validatedEcmrForSharing.ecmr());
             }
@@ -183,6 +193,9 @@ public class EcmrShareService {
             if (validatedEcmrForSharing.sealedDocumentEntity() == null) {
                 return new EcmrShareResponse(ShareEcmrResult.ErrorSealMandatoryForExternal, null, null);
             }
+
+            historyLogService.writeShareHistoryLog(validatedEcmrForSharing.ecmr, internalOrExternalUser.getFullName(), ActionType.Share_External, role, userMail);
+
             return this.shareExternally(ecmrId, userMail, role, validatedEcmrForSharing, internalOrExternalUser, validatedEcmrForSharing.rolesOfUSer);
         }
     }

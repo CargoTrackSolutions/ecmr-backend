@@ -14,5 +14,6 @@ import org.openlogisticsfoundation.ecmr.persistence.entities.HistoryLogEntity;
 
 @Mapper(componentModel = "spring")
 public interface HistoryLogPersistenceMapper {
+
     HistoryLog toModel(HistoryLogEntity historyLogEntity);
 }
