@@ -10,6 +10,8 @@ package org.openlogisticsfoundation.ecmr.persistence.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +27,7 @@ import lombok.Setter;
 public class MailSuffixEntity extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String mailSuffix;
-    @Column(nullable = false)
-    private String url;
+    @ManyToOne
+    @JoinColumn(name = "approved_url_id")
+    private ApprovedUrlEntity approvedUrl;
 }

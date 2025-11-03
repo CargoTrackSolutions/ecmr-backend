@@ -41,7 +41,7 @@ public class MailSuffixService {
     private final MailSuffixRepository mailSuffixRepository;
 
     public Optional<String> getUrl(String mailSuffix) {
-        return this.mailSuffixRepository.findByMailSuffix(mailSuffix).map(MailSuffixEntity::getUrl);
+        return this.mailSuffixRepository.findByMailSuffix(mailSuffix).map(m -> m.getApprovedUrl().getUrl());
     }
 
     public void loadAndReplaceMailSuffixes() {
