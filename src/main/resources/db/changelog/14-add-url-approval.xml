@@ -30,7 +30,7 @@
             <column name="instance_url" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="ecmr_id" type="BIGINT">
+            <column name="ecmr_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="sharing_user_email" type="VARCHAR(255)"/>

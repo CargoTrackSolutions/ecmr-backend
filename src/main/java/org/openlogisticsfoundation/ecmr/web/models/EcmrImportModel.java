@@ -8,21 +8,19 @@
 
 package org.openlogisticsfoundation.ecmr.web.models;
 
-import java.util.UUID;
+import java.time.Instant;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-@Valid
 public class EcmrImportModel {
-    @NotNull
-    private String url;
-    @NotNull
-    private UUID ecmrId;
-    @NotNull
+    private Long id;
+    private String ecmrId;
+    private String instanceUrl;
+    private String sharingUserEmail;
+    private String receivingUserEmail;
     private String shareToken;
+    private Instant creationTimestamp;
 }

@@ -6,14 +6,13 @@
  * SPDX-License-Identifier: OLFL-1.3
  */
 
-package org.openlogisticsfoundation.ecmr.domain.mappers;
+package org.openlogisticsfoundation.ecmr.web.mappers;
 
 import org.mapstruct.Mapper;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrImport;
-import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrImportEntity;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
 
 @Mapper(componentModel = "spring")
-public interface EcmrImportPersistenceMapper {
-    EcmrImport toEcmrImport(EcmrImportEntity em);
-    EcmrImportEntity toEcmrImportEntity(EcmrImport em);
+public interface EcmrImportWebMapper {
+    EcmrImportModel toModel(EcmrImport ecmrImport);
 }

@@ -16,6 +16,8 @@ import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrImport;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrImportService;
 import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
+import org.openlogisticsfoundation.ecmr.web.mappers.EcmrImportWebMapper;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +43,8 @@ public class EcmrImportController {
 
     private final EcmrImportService ecmrImportService;
     private final AuthenticationService authenticationService;
+    private final EcmrImportWebMapper ecmrImportWebMapper;
+
 
     /**
      * Get all pending EcmrImports
@@ -59,8 +63,8 @@ public class EcmrImportController {
                     @ApiResponse(responseCode = "401", description = "Unauthorized access")
             }
     )
-    public ResponseEntity<List<EcmrImport>> getEcmrImports() {
-        return ResponseEntity.ok(ecmrImportService.getAllEcmrImports());
+    public ResponseEntity<List<EcmrImportModel>> getEcmrImports() {
+        return ResponseEntity.ok(ecmrImportService.getAllEcmrImports().stream().map(ecmrImportWebMapper::toModel).toList());
     }
 
     /**

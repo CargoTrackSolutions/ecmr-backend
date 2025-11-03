@@ -48,7 +48,7 @@ import org.openlogisticsfoundation.ecmr.persistence.repositories.ExternalUserRep
 import org.openlogisticsfoundation.ecmr.persistence.repositories.GroupRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.SealedDocumentRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.UserRepository;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportWithoutUserMailModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -407,7 +407,7 @@ public class EcmrShareService {
     }
 
     @Transactional
-    public void importEcmrFromExternal(EcmrImportModel model, AuthenticatedUser authenticatedUser)
+    public void importEcmrFromExternal(EcmrImportWithoutUserMailModel model, AuthenticatedUser authenticatedUser)
             throws UserNotFoundException, ValidationException, ShareExternallyException, InvalidSealException {
         this.importEcmrFromExternal(model.getUrl(), model.getEcmrId(), model.getShareToken(),
                 authenticatedUser.getUser().getEmail());

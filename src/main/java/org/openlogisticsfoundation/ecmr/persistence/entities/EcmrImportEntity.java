@@ -9,6 +9,7 @@
 package org.openlogisticsfoundation.ecmr.persistence.entities;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -31,7 +32,7 @@ import lombok.Setter;
 public class EcmrImportEntity extends BaseEntity {
     @NotNull
     @Column(name = "ecmr_id")
-    private String ecmrId;
+    private UUID ecmrId;
     @NotNull
     @Column(name = "instance_url")
     private String instanceUrl;

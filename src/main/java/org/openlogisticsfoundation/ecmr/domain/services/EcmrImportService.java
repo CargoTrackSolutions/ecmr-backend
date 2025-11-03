@@ -37,6 +37,11 @@ public class EcmrImportService {
         return ecmrImportRepository.findAll().stream().map(ecmrImportPersistenceMapper::toEcmrImport).toList();
     }
 
+    public EcmrImport saveEcmrImport(EcmrImport ecmrImport) {
+        EcmrImportEntity importEntity = ecmrImportPersistenceMapper.toEcmrImportEntity(ecmrImport);
+        return ecmrImportPersistenceMapper.toEcmrImport(ecmrImportRepository.save(importEntity));
+    }
+
     public void approvePendingEcmrImport(AuthenticatedUser authenticatedUser, long ecmrImportId, Boolean addMailSuffix)
             throws EcmrImportNotFoundException, UserNotFoundException {
         EcmrImportEntity ecmrImportEntity = ecmrImportRepository.findById(ecmrImportId)

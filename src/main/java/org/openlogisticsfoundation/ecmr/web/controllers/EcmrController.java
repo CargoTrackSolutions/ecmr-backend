@@ -774,7 +774,7 @@ public class EcmrController {
                     @ApiResponse(description = "Share token is invalid", responseCode = "400"),
                     @ApiResponse(description = "User not found", responseCode = "404")
             })
-    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportModel model) throws ShareExternallyException {
+    public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid EcmrImportWithoutUserMailModel model) throws ShareExternallyException {
         try {
             AuthenticatedUser authenticatedUser = this.authenticationService.getAuthenticatedUser();
             this.ecmrShareService.importEcmrFromExternal(model, authenticatedUser);
