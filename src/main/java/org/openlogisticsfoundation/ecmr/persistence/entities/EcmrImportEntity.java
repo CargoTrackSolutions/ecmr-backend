@@ -46,6 +46,7 @@ public class EcmrImportEntity extends BaseEntity {
     private String shareToken;
     @Lob
     private String seal;
+    private String errorMessage;
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Instant creationTimestamp;

@@ -22,5 +22,6 @@ public class EcmrImportModel {
     private String sharingUserEmail;
     private String receivingUserEmail;
     private String shareToken;
+    private String errorMessage;
     private Instant creationTimestamp;
 }
