@@ -177,7 +177,7 @@ public class ApprovedUrlController {
                     @ApiResponse(responseCode = "401", description = "Unauthorized access")
             }
     )
-    public ResponseEntity<List<ApprovedUrl>> updateMultipleApprovedUrls(@RequestBody List<ApprovedUrlCreationModel> approvedUrls) throws AuthenticationException {
+    public ResponseEntity<List<ApprovedUrl>> updateMultipleApprovedUrls(@RequestBody List<ApprovedUrlUpdateModel> approvedUrls) throws AuthenticationException {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser(true);
             List<ApprovedUrlCommand> commandList = approvedUrls.stream().map(approvedUrlWebMapper::toCommand).toList();
