@@ -16,4 +16,5 @@
     <include file="/db/changelog/11-add-missing-field.xml"/>
     <include file="/db/changelog/12-add-mailsuffix.xml"/>
     <include file="/db/changelog/13-add-columns-share-log.xml"/>
+    <include file="/db/changelog/14-add-url-approval.xml"/>
 </databaseChangeLog>

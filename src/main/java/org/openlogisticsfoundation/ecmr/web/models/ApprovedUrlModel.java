@@ -6,18 +6,13 @@
  * SPDX-License-Identifier: OLFL-1.3
  */
 
-package org.openlogisticsfoundation.ecmr.domain.models;
+package org.openlogisticsfoundation.ecmr.web.models;
 
-import java.time.Instant;
+import lombok.Getter;
 
-import lombok.Data;
-
-@Data
-public class ApprovedUrl {
+@Getter
+public class ApprovedUrlModel {
     private Long id;
     private String url;
     private boolean approvedState;
-    private Instant creationTimestamp;
-    private Instant updateTimestamp;
-    private User lastUpdateUser;
 }

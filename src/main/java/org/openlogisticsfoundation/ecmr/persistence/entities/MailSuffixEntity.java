@@ -7,6 +7,9 @@
  */
 package org.openlogisticsfoundation.ecmr.persistence.entities;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -29,5 +32,6 @@ public class MailSuffixEntity extends BaseEntity {
     private String mailSuffix;
     @ManyToOne
     @JoinColumn(name = "approved_url_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ApprovedUrlEntity approvedUrl;
 }

@@ -160,34 +160,6 @@ public class ApprovedUrlController {
     }
 
     /**
-     * Update multiple ApprovedUrls.
-     * @param approvedUrls ApprovedUrls to update
-     * @return List of update ApprovedUrls
-     */
-    @PutMapping("/multiple")
-    @PreAuthorize("isAuthenticated() && hasRole('Admin')")
-    @Operation(
-            tags = "Approved URLs",
-            summary = "Update multiple ApprovedUrls",
-            responses = {
-                    @ApiResponse(description = "List of updated ApprovedUrls",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ApprovedUrl.class))),
-                    @ApiResponse(responseCode = "401", description = "Unauthorized access")
-            }
-    )
-    public ResponseEntity<List<ApprovedUrl>> updateMultipleApprovedUrls(@RequestBody List<ApprovedUrlUpdateModel> approvedUrls) throws AuthenticationException {
-        try {
-            AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser(true);
-            List<ApprovedUrlCommand> commandList = approvedUrls.stream().map(approvedUrlWebMapper::toCommand).toList();
-            return ResponseEntity.ok(approvedUrlService.updateMultipleApprovedUrls(authenticatedUser, commandList));
-        } catch (UserNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-    }
-
-    /**
      * Deletes an approved URL.
      * @param approvedUrlId The ID of the approvedUrl Object to delete
      * @return Boolean indicating whether the deletion was successful

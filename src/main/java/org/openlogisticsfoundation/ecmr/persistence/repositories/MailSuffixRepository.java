@@ -7,6 +7,7 @@
  */
 package org.openlogisticsfoundation.ecmr.persistence.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.openlogisticsfoundation.ecmr.persistence.entities.MailSuffixEntity;
@@ -16,4 +17,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MailSuffixRepository extends JpaRepository<MailSuffixEntity, Long> {
     Optional<MailSuffixEntity> findByMailSuffix(String mailSuffix);
+    List<MailSuffixEntity> findAllByApprovedUrl_Id(Long approvedUrlId);
+    boolean existsByMailSuffix(String mailSuffix);
+    List<MailSuffixEntity> findAllByMailSuffixIn(List<String> mailSuffixes);
 }

@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <changeSet id="1761223074815-1" author="thomas.dukvin">
+    <changeSet id="1762438727986-17" author="thomas.dukvin">
         <createTable tableName="approved_url">
             <column autoIncrement="true" name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_approved_url"/>
@@ -12,7 +12,7 @@
             <column name="url" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="approved_state" type="BOOLEAN" defaultValue="false">
+            <column defaultValueBoolean="false" name="approved_state" type="BOOLEAN">
                 <constraints nullable="false"/>
             </column>
             <column name="creation_timestamp" type="DATETIME">
@@ -23,14 +23,16 @@
             </column>
             <column name="last_update_user_id" type="BIGINT"/>
         </createTable>
+    </changeSet>
+    <changeSet id="1762438727986-18" author="thomas.dukvin">
         <createTable tableName="ecmr_import">
             <column autoIncrement="true" name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ecmr_import"/>
             </column>
-            <column name="instance_url" type="VARCHAR(255)">
+            <column name="ecmr_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
-            <column name="ecmr_id" type="UUID">
+            <column name="instance_url" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="sharing_user_email" type="VARCHAR(255)"/>
@@ -46,22 +48,21 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-
-        <dropColumn tableName="mail_suffix" columnName="url"/>
-
+    </changeSet>
+    <changeSet id="1762438727986-19" author="thomas.dukvin">
         <addColumn tableName="mail_suffix">
-            <column name="approved_url_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
+            <column name="approved_url_id" type="BIGINT"/>
         </addColumn>
-
-        <addForeignKeyConstraint baseTableName="approved_url" baseColumnNames="last_update_user_id" constraintName="fk_approved_url_ecmr_user"
-                                 referencedTableName="ecmr_user"
-                                 referencedColumnNames="id"/>
-
-        <addForeignKeyConstraint baseTableName="mail_suffix" baseColumnNames="approved_url_id" constraintName="fk_mail_suffix_approved_url"
-                                 referencedTableName="approved_url"
-                                 referencedColumnNames="id"/>
-
+    </changeSet>
+    <changeSet id="1762438727986-23" author="thomas.dukvin">
+        <addForeignKeyConstraint baseColumnNames="last_update_user_id" baseTableName="approved_url"
+                                 constraintName="FK_APPROVED_URL_ON_LAST_UPDATE_USER" referencedColumnNames="id" referencedTableName="ecmr_user"/>
+    </changeSet>
+    <changeSet id="1762438727986-24" author="thomas.dukvin">
+        <addForeignKeyConstraint baseColumnNames="approved_url_id" baseTableName="mail_suffix" constraintName="FK_MAIL_SUFFIX_ON_APPROVED_URL"
+                                 onDelete="CASCADE" referencedColumnNames="id" referencedTableName="approved_url"/>
+    </changeSet>
+    <changeSet id="1762438727986-25" author="thomas.dukvin">
+        <dropColumn columnName="url" tableName="mail_suffix"/>
     </changeSet>
 </databaseChangeLog>

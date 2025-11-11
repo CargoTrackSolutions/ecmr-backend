@@ -10,6 +10,7 @@ package org.openlogisticsfoundation.ecmr.persistence.entities;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -30,7 +31,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApprovedUrlEntity extends BaseEntity {
+    @Column(nullable = false)
     private String url;
+    @ColumnDefault("false")
     private boolean approvedState;
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

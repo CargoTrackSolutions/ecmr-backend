@@ -8,16 +8,14 @@
 
 package org.openlogisticsfoundation.ecmr.domain.models;
 
-import java.time.Instant;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
-import lombok.Data;
-
-@Data
-public class ApprovedUrl {
+@AllArgsConstructor
+@Getter
+@Setter
+public class MailSuffix {
     private Long id;
-    private String url;
-    private boolean approvedState;
-    private Instant creationTimestamp;
-    private Instant updateTimestamp;
-    private User lastUpdateUser;
+    private String mailSuffix;
 }

@@ -19,4 +19,5 @@ import org.springframework.stereotype.Repository;
 public interface ApprovedUrlRepository extends JpaRepository<ApprovedUrlEntity, Long> {
     boolean existsById(@NotNull Long id);
     List<ApprovedUrlEntity> findAllByUrlIn(@NotNull List<String> urls);
+    boolean existsByUrl(@NotNull String url);
 }

@@ -18,6 +18,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.EcmrImport;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ApprovedUrlCommand;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrImportEntity;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrImportRepository;
+import org.openlogisticsfoundation.ecmr.web.models.PendingInstanceModel;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,6 @@ public class EcmrImportService {
     private final EcmrImportRepository ecmrImportRepository;
     private final EcmrImportPersistenceMapper ecmrImportPersistenceMapper;
     private final ApprovedUrlService approvedUrlService;
-    private final MailSuffixService mailSuffixService;
 
     public List<EcmrImport> getAllEcmrImports() {
         return ecmrImportRepository.findAll().stream().map(ecmrImportPersistenceMapper::toEcmrImport).toList();
@@ -42,16 +42,15 @@ public class EcmrImportService {
         return ecmrImportPersistenceMapper.toEcmrImport(ecmrImportRepository.save(importEntity));
     }
 
-    public void approvePendingEcmrImport(AuthenticatedUser authenticatedUser, long ecmrImportId, Boolean addMailSuffix)
+    public void handleApproval(AuthenticatedUser authenticatedUser, String url, Boolean approvedState)
             throws EcmrImportNotFoundException, UserNotFoundException {
-        EcmrImportEntity ecmrImportEntity = ecmrImportRepository.findById(ecmrImportId)
-                .orElseThrow(() -> new EcmrImportNotFoundException(ecmrImportId));
-
-        ApprovedUrlCommand newApprovedUrl = ApprovedUrlCommand.builder().approvedState(true).url(ecmrImportEntity.getInstanceUrl()).build();
-        approvedUrlService.createApprovedUrl(authenticatedUser, newApprovedUrl);
-
-        if (addMailSuffix) {
-            //TODO: Add logic to add the mailSuffix of sharingUserEmail via MailSuffixService
+        if(!approvedUrlService.existsByUrl(url)) {
+            ApprovedUrlCommand newApprovedUrl = ApprovedUrlCommand.builder().approvedState(approvedState).url(url).build();
+            approvedUrlService.createApprovedUrl(authenticatedUser, newApprovedUrl);
         }
+    }
+
+    public List<PendingInstanceModel> getAllPendingInstances() {
+        return ecmrImportRepository.countAllGroupByInstanceUrl().stream().map(ecmrImportPersistenceMapper::toPendingInstanceModel).toList();
     }
 }
