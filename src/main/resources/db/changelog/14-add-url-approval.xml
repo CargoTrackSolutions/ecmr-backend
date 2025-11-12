@@ -42,7 +42,8 @@
             <column name="share_token" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="seal" type="CLOB"/>
+            <column name="sender_seal" type="CLOB"/>
+            <column name="carrier_seal" type="CLOB"/>
             <column name="error_message" type="VARCHAR(255)"/>
             <column name="creation_timestamp" type="DATETIME">
                 <constraints nullable="false"/>

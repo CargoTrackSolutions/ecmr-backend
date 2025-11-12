@@ -25,7 +25,8 @@ public class EcmrImport {
     private String sharingUserEmail;
     private String receivingUserEmail;
     private String shareToken;
-    private String seal;
+    private String senderSeal;
+    private String carrierSeal;
     private String errorMessage;
     private Instant creationTimestamp;
 }
