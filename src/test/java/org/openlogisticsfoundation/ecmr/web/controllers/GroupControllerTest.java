@@ -8,34 +8,47 @@
 
 package org.openlogisticsfoundation.ecmr.web.controllers;
 
-import org.junit.jupiter.api.Test;
-import org.openlogisticsfoundation.ecmr.domain.models.commands.GroupCreationCommand;
-import org.openlogisticsfoundation.ecmr.domain.models.commands.GroupUpdateCommand;
-import org.openlogisticsfoundation.ecmr.web.mappers.GroupWebMapper;
-import org.openlogisticsfoundation.ecmr.web.models.GroupCreationModel;
-import org.openlogisticsfoundation.ecmr.web.models.GroupFlatModel;
-import org.openlogisticsfoundation.ecmr.web.models.GroupParentUpdateModel;
-import org.openlogisticsfoundation.ecmr.web.models.GroupUpdateModel;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.openlogisticsfoundation.ecmr.domain.models.*;
-import org.openlogisticsfoundation.ecmr.domain.services.*;
+import org.junit.jupiter.api.Test;
+import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
+import org.openlogisticsfoundation.ecmr.domain.models.CountryCode;
+import org.openlogisticsfoundation.ecmr.domain.models.Group;
+import org.openlogisticsfoundation.ecmr.domain.models.User;
+import org.openlogisticsfoundation.ecmr.domain.models.UserRole;
+import org.openlogisticsfoundation.ecmr.domain.models.commands.GroupCreationCommand;
+import org.openlogisticsfoundation.ecmr.domain.models.commands.GroupUpdateCommand;
+import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
+import org.openlogisticsfoundation.ecmr.domain.services.GroupService;
+import org.openlogisticsfoundation.ecmr.domain.services.UserService;
+import org.openlogisticsfoundation.ecmr.web.mappers.GroupWebMapper;
+import org.openlogisticsfoundation.ecmr.web.models.GroupCreationModel;
+import org.openlogisticsfoundation.ecmr.web.models.GroupFlatModel;
+import org.openlogisticsfoundation.ecmr.web.models.GroupParentUpdateModel;
+import org.openlogisticsfoundation.ecmr.web.models.GroupUpdateModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -76,6 +89,7 @@ public class GroupControllerTest {
             CountryCode.DE,
             "john.doe@example.com",
             "123456789",
+                "Example Company",
             UserRole.User,
             123L,
             false,

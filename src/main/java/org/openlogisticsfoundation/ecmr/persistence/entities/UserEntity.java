@@ -43,6 +43,7 @@ public class UserEntity extends BaseEntity {
     @Column(unique = true)
     private String email;
     private String phone;
+    private String companyName;
     @NotNull
     @Enumerated(EnumType.STRING)
     private UserRole role;

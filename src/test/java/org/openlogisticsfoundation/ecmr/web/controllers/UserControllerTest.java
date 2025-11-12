@@ -8,15 +8,33 @@
 
 package org.openlogisticsfoundation.ecmr.web.controllers;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openlogisticsfoundation.ecmr.domain.models.*;
+import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
+import org.openlogisticsfoundation.ecmr.domain.models.CountryCode;
+import org.openlogisticsfoundation.ecmr.domain.models.Group;
+import org.openlogisticsfoundation.ecmr.domain.models.User;
+import org.openlogisticsfoundation.ecmr.domain.models.UserRole;
+import org.openlogisticsfoundation.ecmr.domain.models.commands.UserCommand;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
+import org.openlogisticsfoundation.ecmr.domain.services.UserService;
+import org.openlogisticsfoundation.ecmr.web.mappers.UserWebMapper;
+import org.openlogisticsfoundation.ecmr.web.models.UserCreationAndUpdateModel;
+import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,14 +43,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-import org.openlogisticsfoundation.ecmr.domain.models.commands.UserCommand;
-import org.openlogisticsfoundation.ecmr.domain.services.UserService;
-import org.openlogisticsfoundation.ecmr.web.mappers.UserWebMapper;
-import org.openlogisticsfoundation.ecmr.web.models.UserCreationAndUpdateModel;
-import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 
-import java.util.Arrays;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -71,6 +83,7 @@ public class UserControllerTest {
             CountryCode.DE,
             "john.doe@example.com",
             "123456789",
+                "Example Company",
             UserRole.User,
             1L,
             false,
@@ -134,6 +147,7 @@ public class UserControllerTest {
             CountryCode.DE,
             "john.doe@example.com",
             "123456789",
+                "Example Company",
             Arrays.asList(1L, 2L),
             1L);
         when(authenticationService.getAuthenticatedUser(true)).thenReturn(authenticatedUser);
@@ -160,6 +174,7 @@ public class UserControllerTest {
             CountryCode.DE,
             "john.doe@example.com",
             "123456789",
+                "Example Company",
             Arrays.asList(1L, 2L),
             1L);
         long userId = 1L;

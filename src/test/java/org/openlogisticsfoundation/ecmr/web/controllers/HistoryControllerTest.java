@@ -9,10 +9,11 @@
 package org.openlogisticsfoundation.ecmr.web.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,12 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openlogisticsfoundation.ecmr.domain.models.*;
+import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
+import org.openlogisticsfoundation.ecmr.domain.models.CountryCode;
+import org.openlogisticsfoundation.ecmr.domain.models.HistoryLog;
+import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
+import org.openlogisticsfoundation.ecmr.domain.models.User;
+import org.openlogisticsfoundation.ecmr.domain.models.UserRole;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.HistoryLogService;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
@@ -63,6 +69,7 @@ public class HistoryControllerTest {
             CountryCode.DE, // country
             "max.mustermann@example.com", // email
             "+49123456789", // phone
+                "Example Company", //companyName
             UserRole.Admin, // role
             null, // defaultGroupId
             false, // deactivated

@@ -53,7 +53,12 @@ import org.openlogisticsfoundation.ecmr.domain.services.EcmrService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
-import org.openlogisticsfoundation.ecmr.web.models.*;
+import org.openlogisticsfoundation.ecmr.web.models.BulkRequest;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrPageModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrShareWithGroupModel;
+import org.openlogisticsfoundation.ecmr.web.models.FilterRequestModel;
+import org.openlogisticsfoundation.ecmr.web.models.SealModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -120,6 +125,7 @@ public class EcmrControllerTest {
                 CountryCode.DE,
                 "john.doe@example.com",
                 "123456789",
+                "Example Company",
                 UserRole.User,
                 123L,
                 false,

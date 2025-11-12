@@ -33,6 +33,7 @@ public class UserCreationAndUpdateModel {
     @Email
     private String email;
     private String phone;
+    private String companyName;
     @NotNull
     private List<Long> groupIds;
     private Long defaultGroupId;

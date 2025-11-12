@@ -22,6 +22,7 @@ public class User {
     private CountryCode country;
     private String email;
     private String phone;
+    private String companyName;
     private UserRole role;
     private Long defaultGroupId;
     private boolean deactivated;
