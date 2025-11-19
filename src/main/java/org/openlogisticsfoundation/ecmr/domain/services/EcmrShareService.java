@@ -206,10 +206,10 @@ public class EcmrShareService {
     }
 
     private boolean isPreviousSealMissing(EcmrRole roleToShare, Set<TransportRole> sealsPresent) {
-        return !switch (roleToShare) {
-            case Carrier -> sealsPresent.contains(TransportRole.SENDER);
-            case Consignee -> sealsPresent.contains(TransportRole.CARRIER);
-            default -> false;
+        return switch (roleToShare) {
+            case Carrier -> !sealsPresent.contains(TransportRole.SENDER);
+            case Consignee -> !sealsPresent.contains(TransportRole.CARRIER);
+            default -> true;
         };
     }
 
