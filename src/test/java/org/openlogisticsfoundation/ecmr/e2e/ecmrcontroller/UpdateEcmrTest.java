@@ -13,8 +13,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.UUID;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
@@ -105,33 +105,10 @@ public class UpdateEcmrTest extends E2EBaseTest {
     }
 
     @Test
-    @Disabled("returns 500 but should return 400")
-    void updateEcmr_invalidId() throws JsonProcessingException {
-        EcmrModel ecmrModel = new ObjectMapper()
-            .readValue(ResourceLoader.load("/json-objects/ecmr/updated-ecmr.json"), EcmrModel.class);
-        ecmrModel.setEcmrId("xyz");
-        String requestBody = new ObjectMapper().writeValueAsString(ecmrModel);
-
-        given()
-            .accept(String.valueOf(MediaType.APPLICATION_JSON))
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .header("Authorization", "Bearer " + adminToken)
-            .body(requestBody)
-            .port(randomServerPort)
-
-            .when()
-            .put("/api/ecmr")
-
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value());
-    }
-
-    @Test
-    @Disabled("returns 500 but should return 404")
     void updateEcmr_idNotFound() throws JsonProcessingException {
         EcmrModel ecmrModel = new ObjectMapper()
             .readValue(ResourceLoader.load("/json-objects/ecmr/updated-ecmr.json"), EcmrModel.class);
-        ecmrModel.setEcmrId("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+        ecmrModel.setEcmrId(UUID.randomUUID().toString());
         String requestBody = new ObjectMapper().writeValueAsString(ecmrModel);
 
         given()

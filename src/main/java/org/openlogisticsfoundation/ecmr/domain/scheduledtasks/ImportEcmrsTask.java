@@ -8,21 +8,20 @@
 
 package org.openlogisticsfoundation.ecmr.domain.scheduledtasks;
 
-import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
+import org.openlogisticsfoundation.ecmr.domain.services.EcmrImportService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
 
-
 @Component
 @AllArgsConstructor
-public class ArchiveEcmrsTask {
+public class ImportEcmrsTask {
 
-    private final EcmrUpdateService ecmrUpdateService;
+    private final EcmrImportService ecmrImportService;
 
-    @Scheduled(cron = "${ecmr.cron.archive}", zone = "UTC")
-    public void archiveEcmrs(){
-        ecmrUpdateService.archiveEcmrs();
+    @Scheduled(cron = "${ecmr.cron.import}", zone = "UTC")
+    public void importEcmrs(){
+        ecmrImportService.importEcmrs();
     }
 }

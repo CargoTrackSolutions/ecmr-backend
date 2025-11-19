@@ -23,11 +23,9 @@ import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.FilterRequestCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.GoodsReceivedCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ItemCommand;
-import org.openlogisticsfoundation.ecmr.domain.models.commands.SealCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.SenderInformationCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.SuccessiveCarrierInformationCommand;
 import org.openlogisticsfoundation.ecmr.web.models.FilterRequestModel;
-import org.openlogisticsfoundation.ecmr.web.models.SealModel;
 
 @Mapper(componentModel = "spring")
 public interface EcmrWebMapper {
@@ -52,7 +50,6 @@ public interface EcmrWebMapper {
     @Mapping(source = "ecmrConsignment.itemList", target = "itemList")
     @Mapping(source = "ecmrConsignment.toBePaidBy", target = "toBePaidBy")
     @Mapping(source = "ecmrConsignment.goodsReceived", target = "goodsReceived")
-    @Mapping(source = "originUrl", target = "originUrl")
     EcmrCommand toCommand(EcmrModel ecmrModel);
 
     @Mapping(source = "senderCountryCode.value", target = "countryCode")
@@ -108,8 +105,6 @@ public interface EcmrWebMapper {
     @Mapping(source = "grossWeightInKg.supplyChainConsignmentItemGrossWeight", target = "supplyChainConsignmentItemGrossWeight")
     @Mapping(source = "volumeInM3.supplyChainConsignmentItemGrossVolume", target = "supplyChainConsignmentItemGrossVolume")
     ItemCommand map(Item value);
-
-    SealCommand map(SealModel model);
 
     FilterRequestCommand map(FilterRequestModel model);
 

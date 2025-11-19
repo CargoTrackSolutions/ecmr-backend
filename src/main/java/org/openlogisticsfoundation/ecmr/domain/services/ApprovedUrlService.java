@@ -9,6 +9,7 @@
 package org.openlogisticsfoundation.ecmr.domain.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ApprovedUrlNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
@@ -32,6 +33,10 @@ public class ApprovedUrlService {
     private final ApprovedUrlRepository approvedUrlRepository;
     private final ApprovedUrlPersistenceMapper approvedUrlPersistenceMapper;
     private final UserService userService;
+
+    public Optional<ApprovedUrl> getApprovedUrl(String url) {
+        return approvedUrlRepository.findByUrl(url).map(approvedUrlPersistenceMapper::toApprovedUrl);
+    }
 
     public List<ApprovedUrl> getAllApprovedUrls() {
         return approvedUrlRepository.findAll().stream().map(approvedUrlPersistenceMapper::toApprovedUrl).toList();

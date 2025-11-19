@@ -31,7 +31,7 @@ public class MailSuffixEntity extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String mailSuffix;
     @ManyToOne
-    @JoinColumn(name = "approved_url_id")
+    @JoinColumn(name = "approved_url_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ApprovedUrlEntity approvedUrl;
 }

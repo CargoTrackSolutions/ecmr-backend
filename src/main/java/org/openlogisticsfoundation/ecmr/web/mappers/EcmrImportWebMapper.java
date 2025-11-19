@@ -10,9 +10,12 @@ package org.openlogisticsfoundation.ecmr.web.mappers;
 
 import org.mapstruct.Mapper;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrImport;
+import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrImportCreateCommand;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportCreateModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
 
 @Mapper(componentModel = "spring")
 public interface EcmrImportWebMapper {
     EcmrImportModel toModel(EcmrImport ecmrImport);
+    EcmrImportCreateCommand map(EcmrImportCreateModel model);
 }

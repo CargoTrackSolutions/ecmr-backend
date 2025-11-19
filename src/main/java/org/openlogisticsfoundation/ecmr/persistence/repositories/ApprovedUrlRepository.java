@@ -9,6 +9,7 @@
 package org.openlogisticsfoundation.ecmr.persistence.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.openlogisticsfoundation.ecmr.persistence.entities.ApprovedUrlEntity;
@@ -17,7 +18,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ApprovedUrlRepository extends JpaRepository<ApprovedUrlEntity, Long> {
+    Optional<ApprovedUrlEntity> findByUrl(String url);
+
     boolean existsById(@NotNull Long id);
+
     List<ApprovedUrlEntity> findAllByUrlIn(@NotNull List<String> urls);
     boolean existsByUrl(@NotNull String url);
 }

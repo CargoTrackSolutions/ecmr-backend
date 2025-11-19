@@ -41,4 +41,8 @@ public class InternalOrExternalUser {
                 this.isInternalUser() ? this.getInternalUser().getFirstName() : this.getExternalUser().getFirstName(),
                 this.isInternalUser() ? this.getInternalUser().getLastName() : this.getExternalUser().getLastName());
     }
+
+    public String getCompanyName() {
+        return this.isInternalUser() ? this.getInternalUser().getCompanyName() : this.getExternalUser().getCompany();
+    }
 }

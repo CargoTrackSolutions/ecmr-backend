@@ -7,10 +7,10 @@
  */
 package org.openlogisticsfoundation.ecmr.e2e.templatecontroller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.restassured.response.Response;
-import org.junit.jupiter.api.*;
+import static io.restassured.RestAssured.given;
+
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.domain.models.TemplateUser;
 import org.openlogisticsfoundation.ecmr.e2e.E2EBaseTest;
@@ -18,7 +18,10 @@ import org.openlogisticsfoundation.ecmr.e2e.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-import static io.restassured.RestAssured.given;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.restassured.response.Response;
 
 public class UpdateTemplateTest extends E2EBaseTest {
 
@@ -75,7 +78,6 @@ public class UpdateTemplateTest extends E2EBaseTest {
     }
 
     @Test
-    @Disabled("returns 200 but should return 400")
     void updateTemplate_invalidBody() throws JsonProcessingException {
         EcmrModel ecmrModel = new ObjectMapper()
             .readValue(ResourceLoader.load("/json-objects/ecmr/invalid-ecmr.json"), EcmrModel.class);

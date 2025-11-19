@@ -8,6 +8,7 @@
 package org.openlogisticsfoundation.ecmr.persistence.entities;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,46 +18,45 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "ECMR_SEAL")
+@Table(name = "SEAL_METADATA", indexes = {
+    @Index(name = "idx_ecmrid", columnList = "ecmr_id"),
+    @Index(name = "idx_unique_ecmrid_transportrole", columnList = "ecmr_id, transport_role", unique = true)
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EcmrSealEntity extends BaseEntity {
+public class SealMetadataEntity extends BaseEntity {
     @CreationTimestamp
     private Instant created;
 
     @UpdateTimestamp
     private Instant last_updated;
 
-    @Version
-    private Integer version;
-
-    @Lob
-    private String seal;
+    @Column(name = "ecmr_id", nullable = false)
+    private UUID ecmrId;
 
     @Column(nullable = false)
     private String sealer;
 
-    @Column(nullable = false)
+    @Column
+    private String sealerCompany;
+
+    @Column(name = "transport_role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private TransportRole transportRole;
+    private TransportRole role;
 
     @Column(nullable = false)
     private Instant timestamp;
 
-
+    @Column(nullable = false)
+    private String originUrl;
 }
-
-
-
-

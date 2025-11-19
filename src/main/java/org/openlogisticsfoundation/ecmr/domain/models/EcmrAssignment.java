@@ -12,12 +12,15 @@ import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @AllArgsConstructor
 @Getter
 public class EcmrAssignment {
+    private Long id;
     private UUID ecmrId;
     private Group group;
     private ExternalUser externalUser;
+    @Setter
     private EcmrRole role;
 }

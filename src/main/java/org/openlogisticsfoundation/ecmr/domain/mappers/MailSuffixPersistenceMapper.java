@@ -13,7 +13,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.MailSuffix;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.MailSuffixCommand;
 import org.openlogisticsfoundation.ecmr.persistence.entities.MailSuffixEntity;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = ApprovedUrlPersistenceMapper.class)
 public interface MailSuffixPersistenceMapper {
     MailSuffix toMailSuffix(MailSuffixEntity mailSuffixEntity);
     MailSuffixEntity toMailSuffixEntity(MailSuffixCommand mailSuffix);

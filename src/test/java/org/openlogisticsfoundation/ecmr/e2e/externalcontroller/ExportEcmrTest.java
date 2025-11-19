@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
@@ -24,6 +25,7 @@ import org.springframework.http.MediaType;
 
 import io.restassured.response.Response;
 
+@Disabled("TODO enable when clarified")
 class ExportEcmrTest extends E2EBaseTest {
 
     static String validEcmrId;

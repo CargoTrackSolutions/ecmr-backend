@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrConsignment;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
-import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.CountryCode;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
@@ -44,29 +43,27 @@ import org.openlogisticsfoundation.ecmr.domain.models.ShareEcmrResult;
 import org.openlogisticsfoundation.ecmr.domain.models.User;
 import org.openlogisticsfoundation.ecmr.domain.models.UserRole;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrCommand;
-import org.openlogisticsfoundation.ecmr.domain.models.commands.SealCommand;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrCreationService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrDeleteService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrPdfService;
-import org.openlogisticsfoundation.ecmr.domain.services.EcmrSealService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
+import org.openlogisticsfoundation.ecmr.domain.services.SealService;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
 import org.openlogisticsfoundation.ecmr.web.models.BulkRequest;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrPageModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareWithGroupModel;
 import org.openlogisticsfoundation.ecmr.web.models.FilterRequestModel;
-import org.openlogisticsfoundation.ecmr.web.models.SealModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,39 +76,38 @@ public class EcmrControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private EcmrService ecmrService;
 
-    @MockBean
+    @MockitoBean
     private EcmrUpdateService ecmrUpdateService;
 
-    @MockBean
+    @MockitoBean
     private EcmrCreationService ecmrCreationService;
 
-    @MockBean
+    @MockitoBean
     private EcmrPdfService ecmrPdfService;
 
-    @MockBean
+    @MockitoBean
     private EcmrWebMapper ecmrWebMapper;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
 
-    @MockBean
+    @MockitoBean
     private EcmrShareService ecmrShareService;
 
-    @MockBean
+    @MockitoBean
     private EcmrDeleteService ecmrDeleteService;
 
-    @MockBean
-    private EcmrSealService ecmrSealService;
+    @MockitoBean
+    private SealService ecmrSealService;
 
     private AuthenticatedUser authenticatedUser;
     private UUID ecmrId;
     private List<UUID> ecmrIds;
     private EcmrModel ecmrModel;
     private List<EcmrModel> ecmrModels;
-    private SealModel sealModel;
     private EcmrCommand ecmrCommand;
     private List<Long> groupIds;
     private String jsonRequest;
@@ -135,7 +131,6 @@ public class EcmrControllerTest {
         ecmrModel = new EcmrModel();
         ecmrModel.setEcmrId(ecmrId.toString());
         ecmrModel.setEcmrConsignment(new EcmrConsignment());
-        sealModel = new SealModel(TransportRole.CONSIGNEE, "Sample City");
         ecmrCommand = mock(EcmrCommand.class);
         groupIds = List.of(1L, 2L);
         jsonRequest = new ObjectMapper().writeValueAsString(ecmrModel);
@@ -349,22 +344,6 @@ public class EcmrControllerTest {
 
     @Test
     @WithMockUser
-    public void testImportEcmr_Success() throws Exception {
-        // Arrange
-        String shareToken = "valid-share-token";
-
-        when(ecmrShareService.importEcmr(eq(authenticatedUser), eq(ecmrId), eq(shareToken))).thenReturn(ecmrModel);
-
-        // Act
-        mockMvc.perform(get("/ecmr/{ecmrId}/import", ecmrId).param("shareToken", shareToken)).andExpect(status().isOk());
-
-        // Assert
-        verify(authenticationService, times(1)).getAuthenticatedUser();
-        verify(ecmrShareService, times(1)).importEcmr(eq(authenticatedUser), eq(ecmrId), eq(shareToken));
-    }
-
-    @Test
-    @WithMockUser
     public void testDownloadEcmrPdfFile_Success() throws Exception {
         // Arrange
         String filename = "test.pdf";
@@ -405,21 +384,15 @@ public class EcmrControllerTest {
     @WithMockUser
     public void testSeal_Success() throws Exception {
         // Arrange
-        SealCommand sealCommand = new SealCommand(TransportRole.SENDER, "Sample City");
-
-        when(ecmrWebMapper.map(any(SealModel.class))).thenReturn(sealCommand);
-        doNothing().when(ecmrSealService).sealEcmr(eq(ecmrId), eq(sealCommand), any());
-
-        String signJsonRequest = new ObjectMapper().writeValueAsString(sealModel);
+        doNothing().when(ecmrSealService).sealEcmr(eq(ecmrId), any());
 
         // Act
-        mockMvc.perform(post("/ecmr/{ecmrId}/seal", ecmrId).contentType(MediaType.APPLICATION_JSON).content(signJsonRequest))
+        mockMvc.perform(post("/ecmr/{ecmrId}/seal", ecmrId).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // Assert
         verify(authenticationService, times(1)).getAuthenticatedUser();
-        verify(ecmrWebMapper, times(1)).map(any(SealModel.class));
-        verify(ecmrSealService, times(1)).sealEcmr(eq(ecmrId), eq(sealCommand), any());
+        verify(ecmrSealService, times(1)).sealEcmr(eq(ecmrId), any());
     }
 
     @Test

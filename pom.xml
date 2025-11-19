@@ -183,19 +183,19 @@
         <dependency>
             <groupId>org.openlogisticsfoundation.ecmr.data-model</groupId>
             <artifactId>data-model</artifactId>
-            <version>1.0.4</version>
+            <version>1.1.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.openlogisticsfoundation.ecmr</groupId>
             <artifactId>verifier</artifactId>
-            <version>1.1.1</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.openlogisticsfoundation.ecmr</groupId>
             <artifactId>signer</artifactId>
-            <version>1.1.1</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
@@ -219,6 +219,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>dnsjava</groupId>
+            <artifactId>dnsjava</artifactId>
+            <version>3.6.3</version>
+        </dependency>
     </dependencies>
 
     <build>

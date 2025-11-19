@@ -8,12 +8,9 @@
 
 package org.openlogisticsfoundation.ecmr.domain.services;
 
-import java.util.UUID;
 import java.util.function.Function;
 
-import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
+import org.openlogisticsfoundation.ecmr.web.models.ExternalEcmrSharingModel;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -26,27 +23,28 @@ import reactor.core.publisher.Mono;
 @Log4j2
 public class ExternalEcmrInstanceService {
 
-    public EcmrExportResult importEcmr(String remoteUrl, UUID ecmrId, String shareToken) throws ShareExternallyException {
-        WebClient webClient = WebClient.builder().baseUrl(remoteUrl).build();
-        try {
-            return webClient.get()
-                    .uri("api/external/ecmr/{ecmrId}/export?shareToken={shareToken}", ecmrId, shareToken)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, logErrorResponse("Importing ECMR"))
-                    .bodyToMono(EcmrExportResult.class)
-                    .block();
-        } catch (RuntimeException e) {
-            log.error("Exception while importing ECMR: {}", e.getMessage());
-            throw new ShareExternallyException(e.getMessage());
-        }
-    }
+    //TODO einbauen wenn geklärt wie
+//    public String importEcmr(String remoteUrl, UUID ecmrId, String shareToken) throws ShareExternallyException {
+//        WebClient webClient = WebClient.builder().baseUrl(remoteUrl).build();
+//        try {
+//            return webClient.get()
+//                    .uri("api/external/ecmr/{ecmrId}/export?shareToken={shareToken}", ecmrId, shareToken)
+//                    .retrieve()
+//                    .onStatus(HttpStatusCode::isError, logErrorResponse("Importing ECMR"))
+//                    .bodyToMono(String.class)
+//                    .block();
+//        } catch (RuntimeException e) {
+//            log.error("Exception while importing ECMR: {}", e.getMessage());
+//            throw new ShareExternallyException(e.getMessage());
+//        }
+//    }
 
-    public boolean exportEcmrMetaData(String remoteUrl, String originUrl, UUID ecmrId, String shareToken, String userMail) {
+    public boolean exportEcmrMetaData(String remoteUrl,ExternalEcmrSharingModel model) {
         WebClient webClient = WebClient.builder().baseUrl(remoteUrl).build();
         try {
             webClient.post()
                     .uri("api/external/ecmr/import")
-                    .bodyValue(new EcmrImportModelWithUserMail(originUrl, ecmrId, shareToken, userMail))
+                    .bodyValue(model)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, logErrorResponse("Exporting ECMR metadata"))
                     .toBodilessEntity()

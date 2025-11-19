@@ -132,8 +132,7 @@ public class EcmrEntity extends BaseEntity {
     private String shareWithCarrierToken;
     private String shareWithConsigneeToken;
     private String shareWithReaderToken;
-
-    private String originUrl;
+    private String importToken;
 
     @OneToOne(mappedBy = "ecmr")
     @JsonManagedReference

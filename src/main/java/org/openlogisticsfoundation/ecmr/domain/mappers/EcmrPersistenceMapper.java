@@ -63,6 +63,7 @@ public interface EcmrPersistenceMapper {
     @Mapping(target = "shareWithCarrierToken", ignore = true)
     @Mapping(target = "shareWithConsigneeToken", ignore = true)
     @Mapping(target = "shareWithReaderToken", ignore = true)
+    @Mapping(target = "importToken",  ignore = true)
     EcmrEntity toEntity(EcmrCommand ecmrModel, EcmrType type, EcmrStatus ecmrStatus);
 
     @Mapping(target = "id", ignore = true)
@@ -178,15 +179,12 @@ public interface EcmrPersistenceMapper {
     @Mapping(target = "shareWithConsigneeToken", ignore = true)
     @Mapping(target = "shareWithReaderToken", ignore = true)
     @Mapping(target = "ecmrStatus", ignore = true)
+    @Mapping(target = "importToken",  ignore = true)
     EcmrEntity toEntity(@MappingTarget EcmrEntity ecmrEntity, EcmrCommand ecmrCommand, EcmrType type);
 
     @Mapping(target = "itemList", source = "ecmrConsignment.itemList")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "template", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "editedBy", ignore = true)
-    @Mapping(target = "editedAt", ignore = true)
     @Mapping(target = "shareWithSenderToken", ignore = true)
     @Mapping(target = "shareWithCarrierToken", ignore = true)
     @Mapping(target = "shareWithConsigneeToken", ignore = true)
@@ -211,6 +209,7 @@ public interface EcmrPersistenceMapper {
     @Mapping(source = "ecmrConsignment.toBePaidBy", target = "toBePaidBy")
     @Mapping(source = "ecmrConsignment.goodsReceived", target = "goodsReceived")
     @Mapping(target = "type", ignore = true)
+    @Mapping(target = "importToken",  ignore = true)
     EcmrEntity toEntity(EcmrModel ecmrModel);
 
     @Mapping(target = "id", ignore = true)

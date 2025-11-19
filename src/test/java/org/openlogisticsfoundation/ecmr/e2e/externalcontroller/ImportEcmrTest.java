@@ -9,156 +9,53 @@
 package org.openlogisticsfoundation.ecmr.e2e.externalcontroller;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
-import org.openlogisticsfoundation.ecmr.api.model.EcmrSeal;
-import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrExportResult;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
-import org.openlogisticsfoundation.ecmr.domain.services.ExternalEcmrInstanceService;
+import org.openlogisticsfoundation.ecmr.domain.services.SealDnsFingerprintVerificationService;
 import org.openlogisticsfoundation.ecmr.e2e.E2EBaseTest;
 import org.openlogisticsfoundation.ecmr.e2e.ResourceLoader;
-import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModelWithUserMail;
+import org.openlogisticsfoundation.ecmr.web.models.EcmrImportModel;
+import org.openlogisticsfoundation.ecmr.web.models.ExternalEcmrSharingModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.xbill.DNS.TextParseException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import eu.europa.esig.dss.jades.JWSCompactSerializationParser;
+import eu.europa.esig.dss.jades.validation.JWS;
+import eu.europa.esig.dss.model.InMemoryDocument;
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
+
 class ImportEcmrTest extends E2EBaseTest {
 
-    @MockitoBean
-    ExternalEcmrInstanceService externalEcmrInstanceService;
-
-    private static final String ecmrIdWithInvalidSeal = "12345678-1111-2222-3333-098765432109";
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    private static String validEcmrId;
-    private static String validSeal;
-
-    @BeforeEach
-    void mockExternalInstance() throws Exception {
-        SealedDocument invalidSealedDocument = objectMapper.readValue(ResourceLoader.load("/json-objects/sealed-document.json"),
-                SealedDocument.class);
-        invalidSealedDocument.getEcmr().setEcmrId(ecmrIdWithInvalidSeal);
-        EcmrSeal invalidSeal = new EcmrSeal();
-        invalidSeal.setSeal("invalidSeal");
-        invalidSealedDocument.setSenderSeal(invalidSeal);
-        EcmrExportResult invalidResult = new EcmrExportResult(invalidSealedDocument, EcmrRole.Carrier);
-        when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(ecmrIdWithInvalidSeal)), any(String.class))).thenReturn(
-                invalidResult);
-    }
-
-    // Preparations: create a valid seal to use it for the test ecmr later
-    @Test
-    @Order(0)
-    void getValidSeal() {
-        Response response = given()
-                .accept(String.valueOf(MediaType.APPLICATION_JSON))
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header("Authorization", "Bearer " + adminToken)
-                .body(
-                        ResourceLoader.load("/json-objects/ecmr/full-ecmr.json")
-                )
-                .queryParam("groupId", List.of(1))
-                .port(randomServerPort)
-
-                .when()
-                .post("/api/ecmr")
-
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .extract().response();
-
-        EcmrModel ecmr = response.as(EcmrModel.class);
-        String ecmrId = ecmr.getEcmrId();
-
-
-        Response shareTokenResponse = given()
-                .accept(String.valueOf(MediaType.APPLICATION_JSON))
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header("Authorization", "Bearer " + adminToken)
-                .queryParam("ecmrRole", "Sender")
-                .port(randomServerPort)
-
-                .when()
-                .get("/api/ecmr/" + ecmrId + "/share-token")
-
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .extract().response();
-
-        String shareToken = shareTokenResponse.asString();
-
-        given()
-                .accept(String.valueOf(MediaType.APPLICATION_JSON))
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header("Authorization", "Bearer " + adminToken)
-                .body(
-                        """
-                                {
-                                    "transportRole":"SENDER",
-                                    "city":"dortmund"
-                                }
-                                """
-                )
-                .port(randomServerPort)
-
-                .when()
-                .log().all()
-                .post("/api/ecmr/" + ecmrId + "/seal")
-
-                .then()
-                .log().all()
-                .statusCode(HttpStatus.OK.value())
-                .extract().response();
-
-        Response sealResponse = given()
-                .accept(String.valueOf(MediaType.APPLICATION_JSON))
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header("Authorization", "Bearer " + adminToken)
-                .queryParam("shareToken", shareToken)
-                .port(randomServerPort)
-
-                .when()
-                .get("/api/external/ecmr/" + ecmrId + "/export")
-
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .extract().response();
-
-        EcmrExportResult exportResult = sealResponse.as(EcmrExportResult.class);
-        validSeal = exportResult.getSealedDocument().getSenderSeal().getSeal();
-    }
+    @MockitoBean
+    SealDnsFingerprintVerificationService sealDnsFingerprintVerificationService;
 
     @Test
-    @Order(1)
-    void importEcmr_invalidSeal() throws JsonProcessingException {
+    void importEcmr_invalidDNSValidation() throws Exception {
+        ExternalEcmrSharingModel externalEcmrSharingModel = objectMapper.readValue(
+                ResourceLoader.load("/json-objects/external-ecmr-sharing-model-invalid.json"), ExternalEcmrSharingModel.class);
 
-        EcmrImportModelWithUserMail importModel = new EcmrImportModelWithUserMail("url", UUID.fromString(ecmrIdWithInvalidSeal), "token", "admin@test.de");
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + adminToken)
                 .port(randomServerPort)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(objectMapper.writeValueAsString(importModel))
+                .body(objectMapper.writeValueAsString(externalEcmrSharingModel))
                 .when()
                 .post("/api/external/ecmr/import")
 
@@ -167,21 +64,36 @@ class ImportEcmrTest extends E2EBaseTest {
     }
 
     @Test
-    @Order(1)
-    void importEcmr_invalidUserMail() throws JsonProcessingException, ShareExternallyException {
-        SealedDocument sealedDocument = objectMapper.readValue(ResourceLoader.load("/json-objects/sealed-document.json"), SealedDocument.class);
-        validEcmrId = sealedDocument.getEcmr().getEcmrId();
-        sealedDocument.getSenderSeal().setSeal(validSeal);
-        EcmrExportResult result = new EcmrExportResult(sealedDocument, EcmrRole.Carrier);
-        when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(validEcmrId)), any(String.class))).thenReturn(result);
+    void importEcmr_invalidSeal() throws Exception {
+        ExternalEcmrSharingModel externalEcmrSharingModel = objectMapper.readValue(
+                ResourceLoader.load("/json-objects/external-ecmr-sharing-model-invalid.json"), ExternalEcmrSharingModel.class);
+        this.mockCertDnsValidation(externalEcmrSharingModel.getSenderSeal());
 
-        EcmrImportModelWithUserMail importModel = new EcmrImportModelWithUserMail("url", UUID.fromString(validEcmrId), "token", "usermail");
+        given()
+                .accept(String.valueOf(MediaType.APPLICATION_JSON))
+                .header("Authorization", "Bearer " + adminToken)
+                .port(randomServerPort)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(objectMapper.writeValueAsString(externalEcmrSharingModel))
+                .when()
+                .post("/api/external/ecmr/import")
+
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void importEcmr_invalidUserMail() throws Exception {
+        ExternalEcmrSharingModel externalEcmrSharingModel = objectMapper.readValue(
+                ResourceLoader.load("/json-objects/external-ecmr-sharing-model.json"), ExternalEcmrSharingModel.class);
+        externalEcmrSharingModel.setReceivingUserEmail("non-existing-user@test.de");
+        this.mockCertDnsValidation(externalEcmrSharingModel.getSenderSeal());
 
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
-                .body(objectMapper.writeValueAsString(importModel))
+                .body(objectMapper.writeValueAsString(externalEcmrSharingModel))
                 .port(randomServerPort)
 
                 .when()
@@ -192,22 +104,16 @@ class ImportEcmrTest extends E2EBaseTest {
     }
 
     @Test
-    @Order(2)
-    void importEcmr_valid() throws JsonProcessingException, ShareExternallyException {
-        SealedDocument sealedDocument = objectMapper.readValue(ResourceLoader.load("/json-objects/sealed-document.json"), SealedDocument.class);
-        validEcmrId = sealedDocument.getEcmr().getEcmrId();
-        sealedDocument.getSenderSeal().setSeal(validSeal);
-        EcmrExportResult result = new EcmrExportResult(sealedDocument, EcmrRole.Carrier);
-        when(externalEcmrInstanceService.importEcmr(any(String.class), eq(UUID.fromString(validEcmrId)), any(String.class))).thenReturn(result);
-
-
-        EcmrImportModelWithUserMail importModel = new EcmrImportModelWithUserMail("url", UUID.fromString(validEcmrId), "token", "admin@test.de");
+    void importEcmr_valid() throws Exception {
+        ExternalEcmrSharingModel externalEcmrSharingModel = objectMapper.readValue(
+                ResourceLoader.load("/json-objects/external-ecmr-sharing-model.json"), ExternalEcmrSharingModel.class);
+        this.mockCertDnsValidation(externalEcmrSharingModel.getSenderSeal());
 
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
-                .body(objectMapper.writeValueAsString(importModel))
+                .body(objectMapper.writeValueAsString(externalEcmrSharingModel))
                 .port(randomServerPort)
 
                 .when()
@@ -216,19 +122,31 @@ class ImportEcmrTest extends E2EBaseTest {
                 .then()
                 .statusCode(200);
 
-        given()
+        Response response = given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
                 .port(randomServerPort)
 
                 .when()
-                .get("/api/ecmr/" + validEcmrId)
+                .get("/api/ecmr-import")
 
                 .then()
                 .statusCode(HttpStatus.OK.value())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body("ecmrId", is(validEcmrId));
+                .extract().response();
+
+        List<EcmrImportModel> list = response.as(new TypeRef<>() {
+        });
+        assertFalse(list.isEmpty());
     }
 
+    private void mockCertDnsValidation(String seal) throws ExecutionException, InterruptedException, TextParseException {
+        JWSCompactSerializationParser jwsParser =
+                new JWSCompactSerializationParser(new InMemoryDocument(seal.getBytes()));
+        JWS jws = jwsParser.parse();
+        String fingerprintB64FromSeal = jws.getX509CertSha256ThumbprintHeaderValue();
+        byte[] fingerprintBytesFromSeal = Base64.getUrlDecoder().decode(fingerprintB64FromSeal.toLowerCase());
+        when(sealDnsFingerprintVerificationService.getTrustedSha256Fingerprints(any(URI.class))).thenReturn(List.of(fingerprintBytesFromSeal));
+    }
 }

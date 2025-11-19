@@ -13,7 +13,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.ApprovedUrl;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ApprovedUrlCommand;
 import org.openlogisticsfoundation.ecmr.persistence.entities.ApprovedUrlEntity;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = UserPersistenceMapper.class)
 public interface ApprovedUrlPersistenceMapper {
     ApprovedUrl toApprovedUrl(ApprovedUrlEntity approvedUrlEntity);
     ApprovedUrlEntity toApprovedUrlEntity(ApprovedUrlCommand approvedUrlCommand);

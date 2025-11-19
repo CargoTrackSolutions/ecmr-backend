@@ -5,26 +5,21 @@
  * For details on the licensing terms, see the LICENSE file.
  * SPDX-License-Identifier: OLFL-1.3
  */
+package org.openlogisticsfoundation.ecmr.domain.models.commands;
 
-package org.openlogisticsfoundation.ecmr.web.models;
-
-import java.util.UUID;
-
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-@Valid
-public class EcmrImportModelWithUserMail {
+public class ExternalEcmrSharingCommand {
     @NotNull
-    private String url;
-    @NotNull
-    private UUID ecmrId;
+    private String senderSeal;
+    private String carrierSeal;
     @NotNull
     private String shareToken;
     @NotNull
-    private String userMail;
+    private String receivingUserEmail;
+    private String sharingUserEmail;
 }

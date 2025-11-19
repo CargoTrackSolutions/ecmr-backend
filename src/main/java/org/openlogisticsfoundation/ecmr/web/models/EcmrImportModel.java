@@ -9,6 +9,7 @@
 package org.openlogisticsfoundation.ecmr.web.models;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +18,7 @@ import lombok.Getter;
 @Getter
 public class EcmrImportModel {
     private Long id;
-    private String ecmrId;
+    private UUID ecmrId;
     private String instanceUrl;
     private String sharingUserEmail;
     private String receivingUserEmail;

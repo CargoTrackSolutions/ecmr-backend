@@ -8,10 +8,8 @@
 
 package org.openlogisticsfoundation.ecmr.domain.exceptions;
 
-import java.util.UUID;
-
-public class EcmrAlreadyExistsException extends Exception {
-    public EcmrAlreadyExistsException(UUID ecmrId) {
-        super("An eCMR with the id " + ecmrId + " already exists.");
+public class UrlNotApprovedException extends Exception {
+    public UrlNotApprovedException(String url) {
+        super("URL " + url + " is not approved.");
     }
 }

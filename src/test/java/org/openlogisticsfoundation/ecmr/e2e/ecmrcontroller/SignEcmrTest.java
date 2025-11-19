@@ -24,7 +24,6 @@ import io.restassured.response.Response;
 
 class SignEcmrTest extends E2EBaseTest {
     static String validEcmrId;
-    static String secondValidEcmrId;
     static String validEcmrIdEmpty;
 
     // Preparations
@@ -55,31 +54,6 @@ class SignEcmrTest extends E2EBaseTest {
 
     @Test
     @Order(1)
-    void addSecondEcmr() {
-        Response response = given()
-                .accept(String.valueOf(MediaType.APPLICATION_JSON))
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header("Authorization", "Bearer " + adminToken)
-                .body(
-                        ResourceLoader.load("/json-objects/ecmr/full-ecmr.json")
-                )
-                .queryParam("groupId", List.of(1))
-                .port(randomServerPort)
-
-                .when()
-                .post("/api/ecmr")
-
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .extract().response();
-
-        EcmrModel ecmr = response.as(EcmrModel.class);
-        secondValidEcmrId = ecmr.getEcmrId();
-    }
-
-    @Test
-    @Order(1)
     void addEmptyEcmr() {
         Response response = given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
@@ -105,46 +79,11 @@ class SignEcmrTest extends E2EBaseTest {
 
     @Test
     @Order(2)
-    void sealEcmr_wrongSigner() {
-        given()
-                .accept(String.valueOf(MediaType.APPLICATION_JSON))
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header("Authorization", "Bearer " + adminToken)
-                .body(
-                        """
-                                {
-                                    "transportRole":"WrongSender",
-                                    "city":"dortmund"
-                                }
-                                """
-                )
-                .port(randomServerPort)
-
-                .when()
-                .log().all()
-                .post("/api/ecmr/" + validEcmrId + "/seal")
-
-                .then()
-                .log().all()
-                .statusCode(HttpStatus.BAD_REQUEST.value())
-                .contentType(MediaType.APPLICATION_JSON_VALUE);
-    }
-
-    @Test
-    @Order(2)
     void sealEcmr_emptyEcmr() {
         given()
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
-                .body(
-                        """
-                                {
-                                    "transportRole":"SENDER",
-                                    "city":"dortmund"
-                                }
-                                """
-                )
                 .port(randomServerPort)
 
                 .when()
@@ -164,14 +103,6 @@ class SignEcmrTest extends E2EBaseTest {
                 .accept(String.valueOf(MediaType.APPLICATION_JSON))
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header("Authorization", "Bearer " + adminToken)
-                .body(
-                        """
-                                {
-                                    "transportRole":"SENDER",
-                                    "city":"dortmund"
-                                }
-                                """
-                )
                 .port(randomServerPort)
 
                 .when()

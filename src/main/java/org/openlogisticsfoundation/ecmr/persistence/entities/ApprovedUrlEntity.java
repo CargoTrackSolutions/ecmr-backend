@@ -16,6 +16,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -25,13 +26,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "APPROVED_URL")
+@Table(name = "APPROVED_URL", indexes = @Index(name = "idx_approved_url", columnList = "url", unique = true))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApprovedUrlEntity extends BaseEntity {
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String url;
     @ColumnDefault("false")
     private boolean approvedState;

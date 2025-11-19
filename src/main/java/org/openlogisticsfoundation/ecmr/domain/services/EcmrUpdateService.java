@@ -114,7 +114,7 @@ public class EcmrUpdateService {
         ecmrEntity.setEditedAt(Instant.now());
         ecmrEntity.setEditedBy(internalOrExternalUser.getFullName());
 
-        ecmrEntity = ecmrService.clearPhoneNumbers(ecmrEntity);
+        ecmrEntity = ecmrService.cleanPhoneNumbers(ecmrEntity);
 
         ecmrEntity = ecmrRepository.save(ecmrEntity);
         ecmrEntity = this.ecmrStatusService.setEcmrStatus(ecmrEntity, internalOrExternalUser);

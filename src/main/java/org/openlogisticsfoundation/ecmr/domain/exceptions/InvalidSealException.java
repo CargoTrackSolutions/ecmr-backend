@@ -9,7 +9,12 @@
 package org.openlogisticsfoundation.ecmr.domain.exceptions;
 
 public class InvalidSealException extends Exception {
+
     public InvalidSealException() {
         super("Seal not valid");
+    }
+
+    public InvalidSealException(String message) {
+        super("Seal not valid: " + message);
     }
 }

@@ -28,7 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrConsignment;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
-import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
 import org.openlogisticsfoundation.ecmr.domain.models.ExternalUser;
@@ -37,25 +36,22 @@ import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.ShareEcmrResult;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ExternalUserRegistrationCommand;
-import org.openlogisticsfoundation.ecmr.domain.models.commands.SealCommand;
-import org.openlogisticsfoundation.ecmr.domain.services.EcmrSealService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.domain.services.ExternalUserService;
-import org.openlogisticsfoundation.ecmr.domain.services.SealedDocumentService;
+import org.openlogisticsfoundation.ecmr.domain.services.SealService;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
 import org.openlogisticsfoundation.ecmr.web.mappers.ExternalUserWebMapper;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationModel;
-import org.openlogisticsfoundation.ecmr.web.models.SealModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,31 +64,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @DirtiesContext
 public class AnonymousControllerTest {
 
-    @MockBean
+    @MockitoBean
     private EcmrShareService ecmrShareService;
 
-    @MockBean
+    @MockitoBean
     private ExternalUserWebMapper externalUserWebMapper;
 
-    @MockBean
+    @MockitoBean
     private ExternalUserService externalUserService;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
 
-    @MockBean
+    @MockitoBean
     private EcmrService ecmrService;
 
-    @MockBean
+    @MockitoBean
     private EcmrUpdateService ecmrUpdateService;
 
-    @MockBean
-    private SealedDocumentService sealedDocumentService;
+    @MockitoBean
+    private SealService ecmrSealService;
 
-    @MockBean
-    private EcmrSealService ecmrSealService;
-
-    @MockBean
+    @MockitoBean
     private EcmrWebMapper ecmrWebMapper;
 
     @Autowired
@@ -131,7 +124,7 @@ public class AnonymousControllerTest {
         ExternalUserRegistrationCommand command = new ExternalUserRegistrationCommand(registrationModel.getEcmrId(), registrationModel.getShareToken(), registrationModel.getFirstName(), registrationModel.getLastName(), registrationModel.getCompany(), registrationModel.getEmail(), registrationModel.getPhone());
 
         when(externalUserWebMapper.map(any())).thenReturn(command);
-        when(ecmrShareService.registerExternalUser(command)).thenReturn(validUserToken);
+        when(externalUserService.registerExternalUser(command)).thenReturn(validUserToken);
 
         String jsonRequest = new ObjectMapper().writeValueAsString(registrationModel);
 
@@ -140,7 +133,7 @@ public class AnonymousControllerTest {
 
         // Assert
         verify(externalUserWebMapper, times(1)).map(any(ExternalUserRegistrationModel.class));
-        verify(ecmrShareService, times(1)).registerExternalUser(any(ExternalUserRegistrationCommand.class));
+        verify(externalUserService, times(1)).registerExternalUser(any(ExternalUserRegistrationCommand.class));
     }
 
     @Test
@@ -205,17 +198,10 @@ public class AnonymousControllerTest {
     public void testSeal_Success() throws Exception {
         // Arrange
         UUID ecmrId = UUID.randomUUID();
-        SealModel sealModel = new SealModel(TransportRole.CONSIGNEE , "Sample City");
-
         ExternalUser externalUser = new ExternalUser(1L, "John", "Doe", "Example Company", "john.doe@example.com", "123456789", validUserToken, validTan, Instant.now().plusSeconds(3600));
 
-        SealCommand sealCommand = new SealCommand(TransportRole.SENDER, "Sample City");
-
         when(authenticationService.getExternalUser(eq(ecmrId), eq(validUserToken) ,eq(validTan))).thenReturn(externalUser);
-        when(ecmrWebMapper.map(any(SealModel.class))).thenReturn(sealCommand);
-        doNothing().when(ecmrSealService).sealEcmr(eq(ecmrId), eq(sealCommand), any(InternalOrExternalUser.class));
-
-        String jsonRequest = new ObjectMapper().writeValueAsString(sealModel);
+        doNothing().when(ecmrSealService).sealEcmr(eq(ecmrId), any(InternalOrExternalUser.class));
 
         // Act
         mockMvc.perform(post("/anonymous/ecmr/{ecmrId}/seal", ecmrId)
@@ -223,13 +209,11 @@ public class AnonymousControllerTest {
                 .param("userToken", validUserToken)
                 .param("tan", validTan)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest)
         ).andExpect(status().isOk());
 
         // Assert
         verify(authenticationService, times(1)).getExternalUser(eq(ecmrId), eq(validUserToken), eq(validTan));
-        verify(ecmrWebMapper, times(1)).map(any(SealModel.class));
-        verify(ecmrSealService, times(1)).sealEcmr(eq(ecmrId), eq(sealCommand), any(InternalOrExternalUser.class));
+        verify(ecmrSealService, times(1)).sealEcmr(eq(ecmrId), any(InternalOrExternalUser.class));
     }
 
     @Test

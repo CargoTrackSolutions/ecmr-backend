@@ -7,13 +7,14 @@
  */
 package org.openlogisticsfoundation.ecmr.e2e.templatecontroller;
 
-import org.junit.jupiter.api.*;
+import static io.restassured.RestAssured.given;
+
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.openlogisticsfoundation.ecmr.e2e.E2EBaseTest;
 import org.openlogisticsfoundation.ecmr.e2e.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-
-import static io.restassured.RestAssured.given;
 
 public class CreateTemplateTest extends E2EBaseTest {
 
@@ -61,7 +62,6 @@ public class CreateTemplateTest extends E2EBaseTest {
     }
 
     @Test
-    @Disabled("returns 200 but should return 400")
     void createTemplate_invalidBody() {
         given()
             .accept(String.valueOf(MediaType.APPLICATION_JSON))

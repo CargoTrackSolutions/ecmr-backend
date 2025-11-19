@@ -16,38 +16,35 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
+import org.openlogisticsfoundation.ecmr.api.model.SealMetadata;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserInvalidTanException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.RateLimitException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.SealAlreadyPresentException;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.SealedDocumentNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
 import org.openlogisticsfoundation.ecmr.domain.models.ExternalUser;
+import org.openlogisticsfoundation.ecmr.domain.models.ExternalUserInformationModel;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.PdfFile;
-import org.openlogisticsfoundation.ecmr.domain.models.SealedDocumentWithoutEcmr;
-import org.openlogisticsfoundation.ecmr.domain.models.ExternalUserInformationModel;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.EcmrCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.ExternalUserRegistrationCommand;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrPdfService;
-import org.openlogisticsfoundation.ecmr.domain.services.EcmrSealService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrShareService;
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.domain.services.ExternalUserService;
-import org.openlogisticsfoundation.ecmr.domain.services.SealedDocumentService;
+import org.openlogisticsfoundation.ecmr.domain.services.SealMetadataService;
+import org.openlogisticsfoundation.ecmr.domain.services.SealService;
 import org.openlogisticsfoundation.ecmr.domain.services.tan.MessageProviderException;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
 import org.openlogisticsfoundation.ecmr.web.mappers.ExternalUserWebMapper;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationResponseModel;
-import org.openlogisticsfoundation.ecmr.web.models.SealModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -84,9 +81,9 @@ public class AnonymousController {
     private final EcmrService ecmrService;
     private final EcmrWebMapper ecmrWebMapper;
     private final EcmrUpdateService ecmrUpdateService;
-    private final SealedDocumentService sealedDocumentService;
-    private final EcmrSealService ecmrSealService;
+    private final SealService ecmrSealService;
     private final EcmrPdfService ecmrPdfService;
+    private final SealMetadataService sealMetadataService;
 
     /**
      * Checks if the provided TAN is valid for a given ECMR ID.
@@ -141,7 +138,7 @@ public class AnonymousController {
             @Valid @RequestBody ExternalUserRegistrationModel externalUserRegistrationModel) {
         try {
             ExternalUserRegistrationCommand command = externalUserWebMapper.map(externalUserRegistrationModel);
-            String userToken = this.ecmrShareService.registerExternalUser(command);
+            String userToken = this.externalUserService.registerExternalUser(command);
             return ResponseEntity.ok(new ExternalUserRegistrationResponseModel(command.getEcmrId(), userToken));
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -178,9 +175,9 @@ public class AnonymousController {
                     @ApiResponse(description = "Validation error", responseCode = "400")
             })
     public ResponseEntity<ExternalUserInformationModel> getExternalUserRegistrationInfo(@PathVariable(value = "ecmrId") UUID ecmrId,
-                                                                                        @RequestParam(value = "token") String ecmrToken) {
+            @RequestParam(value = "token") String ecmrToken) {
         try {
-            return ResponseEntity.ok(ecmrShareService.getRegistrationInfoFromEcmr(ecmrId, ecmrToken));
+            return ResponseEntity.ok(externalUserService.getRegistrationInfoFromEcmr(ecmrId, ecmrToken));
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         } catch (ValidationException e) {
@@ -276,7 +273,6 @@ public class AnonymousController {
      * @param ecmrId The UUID of the ECMR.
      * @param userToken Unique token of the external user
      * @param tan The TAN for validation.
-     * @param sealModel The seal model containing seal data.
      */
     @PostMapping("/ecmr/{ecmrId}/seal")
     @Operation(
@@ -288,9 +284,6 @@ public class AnonymousController {
                     @Parameter(name = "userToken", description = "Unique token of the external user", required = true, schema = @Schema(type = "string")),
                     @Parameter(name = "tan", description = "TAN for validation", required = true, schema = @Schema(type = "string"))
             },
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = SealModel.class))),
             responses = {
                     @ApiResponse(description = "ECMR not found", responseCode = "404"),
                     @ApiResponse(description = "Forbidden access", responseCode = "403"),
@@ -298,15 +291,14 @@ public class AnonymousController {
                     @ApiResponse(description = "Validation error or seal already present", responseCode = "400")
             })
     public ResponseEntity<Void> seal(@PathVariable(value = "ecmrId") UUID ecmrId,
-            @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "tan") @Valid @NotNull String tan,
-            @RequestBody @Valid @NotNull SealModel sealModel) {
+            @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "tan") @Valid @NotNull String tan) {
         try {
             ExternalUser externalUser = this.authenticationService.getExternalUser(ecmrId, userToken, tan);
-            this.ecmrSealService.sealEcmr(ecmrId, ecmrWebMapper.map(sealModel), new InternalOrExternalUser(externalUser));
+            this.ecmrSealService.sealEcmr(ecmrId, new InternalOrExternalUser(externalUser));
             return ResponseEntity.ok().build();
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (ValidationException | SealAlreadyPresentException e) {
+        } catch (ValidationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
@@ -475,7 +467,7 @@ public class AnonymousController {
     public ResponseEntity<StreamingResponseBody> downloadEcmrPdfFileShare(@PathVariable("ecmrId") UUID id,
             @RequestParam @Valid @NotNull String shareToken) {
         try {
-            PdfFile ecmrReport = this.ecmrPdfService.createJasperReportForEcmr(id, shareToken, true);
+            PdfFile ecmrReport = this.ecmrPdfService.createJasperReportForEcmrReader(id, shareToken, true);
             return createPdfResponse(ecmrReport);
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
@@ -527,34 +519,29 @@ public class AnonymousController {
      * @param ecmrId The ID of the eCMR
      * @return The requested eCMR
      */
-    @GetMapping(path = { "/sealed-document/{ecmrId}" })
+    @GetMapping(path = { "/ecmr/{ecmrId}/seal-metadata" })
     @Operation(
             tags = "Anonymous",
-            summary = "Retrieve Sealed Document without eCMR Model by eCMR ID",
+            summary = "Retrieve seal metadata by eCMR ID",
             parameters = {
                     @Parameter(name = "ecmrId", description = "UUID of the eCMR", required = true, schema = @Schema(type = "string", format = "uuid")),
                     @Parameter(name = "userToken", description = "Unique token of the external user", required = true, schema = @Schema(type = "string")),
                     @Parameter(name = "tan", description = "TAN for validation", required = true, schema = @Schema(type = "string"))
             },
             responses = {
-                    @ApiResponse(description = "The requested sealed Document without eCMR Model",
+                    @ApiResponse(description = "The requested seal metadata",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = SealedDocumentWithoutEcmr.class))),
-                    @ApiResponse(description = "Sealed Document not found", responseCode = "404"),
+                                    schema = @Schema(implementation = SealMetadata.class))),
                     @ApiResponse(description = "Unauthorized access", responseCode = "401"),
                     @ApiResponse(description = "Forbidden access", responseCode = "403")
             })
-    public ResponseEntity<SealedDocumentWithoutEcmr> getSealedDocumentWithoutEcmr(@PathVariable(value = "ecmrId") UUID ecmrId,
+    public ResponseEntity<List<SealMetadata>> getSealMetadata(@PathVariable(value = "ecmrId") UUID ecmrId,
             @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "tan") @NotNull @Valid String tan) {
         try {
             ExternalUser externalUser = authenticationService.getExternalUser(ecmrId, userToken, tan);
-            SealedDocumentWithoutEcmr sealedDocumentWithoutEcmr = this.sealedDocumentService.getSealedDocumentWithoutEcmr(ecmrId,
-                    new InternalOrExternalUser(externalUser));
-            return ResponseEntity.ok(sealedDocumentWithoutEcmr);
-        } catch (SealedDocumentNotFoundException e) {
-            //Use no ResponseStatusException because we do not want a log, because this will happen regularly and is no error.
-            return ResponseEntity.notFound().build();
+            List<SealMetadata> sealMetadata = this.sealMetadataService.getSealMetadata(ecmrId, new InternalOrExternalUser(externalUser));
+            return ResponseEntity.ok(sealMetadata);
         } catch (ExternalUserNotFoundException | ExternalUserInvalidTanException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (NoPermissionException e) {

@@ -13,7 +13,9 @@ import java.util.Optional;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ApprovedUrlNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.MailSuffixAlreadyExists;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.MailSuffixNotFoundException;
+import org.openlogisticsfoundation.ecmr.domain.mappers.ApprovedUrlPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.mappers.MailSuffixPersistenceMapper;
+import org.openlogisticsfoundation.ecmr.domain.models.ApprovedUrl;
 import org.openlogisticsfoundation.ecmr.domain.models.MailSuffix;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.MailSuffixCommand;
 import org.openlogisticsfoundation.ecmr.persistence.entities.ApprovedUrlEntity;
@@ -31,17 +33,20 @@ import lombok.extern.log4j.Log4j2;
 public class MailSuffixService {
 
     private final MailSuffixRepository mailSuffixRepository;
+    private final ApprovedUrlPersistenceMapper approvedUrlPersistenceMapper;
     private final MailSuffixPersistenceMapper mailSuffixPersistenceMapper;
     private final ApprovedUrlRepository approvedUrlRepository;
 
-    public Optional<String> getUrl(String mailSuffix) {
-        return mailSuffixRepository.findByMailSuffix(mailSuffix).map(m -> m.getApprovedUrl().getUrl());
+    public Optional<ApprovedUrl> getApprovedUrl(String mailSuffix) {
+        return this.mailSuffixRepository.findByMailSuffix(mailSuffix).map(MailSuffixEntity::getApprovedUrl)
+                .map(approvedUrlPersistenceMapper::toApprovedUrl);
     }
 
     public MailSuffix createMailSuffix(Long approvedUrlId, MailSuffixCommand mailSuffixCommand)
             throws MailSuffixAlreadyExists, ApprovedUrlNotFoundException {
-        if(!mailSuffixRepository.existsByMailSuffix(mailSuffixCommand.getMailSuffix())) {
-            ApprovedUrlEntity approvedUrlEntity = approvedUrlRepository.findById(approvedUrlId).orElseThrow(() -> new ApprovedUrlNotFoundException(approvedUrlId));
+        if (!mailSuffixRepository.existsByMailSuffix(mailSuffixCommand.getMailSuffix())) {
+            ApprovedUrlEntity approvedUrlEntity = approvedUrlRepository.findById(approvedUrlId)
+                    .orElseThrow(() -> new ApprovedUrlNotFoundException(approvedUrlId));
 
             MailSuffixEntity mailSuffixEntity = mailSuffixPersistenceMapper.toMailSuffixEntity(mailSuffixCommand);
             mailSuffixEntity.setApprovedUrl(approvedUrlEntity);
@@ -58,9 +63,10 @@ public class MailSuffixService {
                 .toList();
 
         List<String> suffixes = mappedEntities.stream().map(MailSuffixEntity::getMailSuffix).toList();
-        List<String> existingSuffixes =  mailSuffixRepository.findAllByMailSuffixIn(suffixes).stream().map(MailSuffixEntity::getMailSuffix).toList();
+        List<String> existingSuffixes = mailSuffixRepository.findAllByMailSuffixIn(suffixes).stream().map(MailSuffixEntity::getMailSuffix).toList();
 
-        ApprovedUrlEntity approvedUrlEntity = approvedUrlRepository.findById(approvedUrlId).orElseThrow(() -> new ApprovedUrlNotFoundException(approvedUrlId));
+        ApprovedUrlEntity approvedUrlEntity = approvedUrlRepository.findById(approvedUrlId)
+                .orElseThrow(() -> new ApprovedUrlNotFoundException(approvedUrlId));
 
         List<MailSuffixEntity> newEntities = mappedEntities.stream().
                 filter(entity -> !existingSuffixes.contains(entity.getMailSuffix()))
@@ -79,7 +85,8 @@ public class MailSuffixService {
 
     public MailSuffix updateMailSuffix(Long mailSuffixId, String newMailSuffix)
             throws MailSuffixNotFoundException, ApprovedUrlNotFoundException {
-        MailSuffixEntity mailSuffixEntity = mailSuffixRepository.findById(mailSuffixId).orElseThrow(() -> new MailSuffixNotFoundException(mailSuffixId));
+        MailSuffixEntity mailSuffixEntity = mailSuffixRepository.findById(mailSuffixId)
+                .orElseThrow(() -> new MailSuffixNotFoundException(mailSuffixId));
 
         mailSuffixEntity.setMailSuffix(newMailSuffix);
 
@@ -87,7 +94,8 @@ public class MailSuffixService {
     }
 
     public boolean deleteMailSuffix(Long mailSuffixId) throws MailSuffixNotFoundException {
-        MailSuffixEntity mailSuffixEntity = mailSuffixRepository.findById(mailSuffixId).orElseThrow(() -> new MailSuffixNotFoundException(mailSuffixId));
+        MailSuffixEntity mailSuffixEntity = mailSuffixRepository.findById(mailSuffixId)
+                .orElseThrow(() -> new MailSuffixNotFoundException(mailSuffixId));
         mailSuffixRepository.delete(mailSuffixEntity);
         return !mailSuffixRepository.existsById(mailSuffixId);
     }

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.SealMetadata;
-import org.openlogisticsfoundation.ecmr.api.model.SealedDocument;
+import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
 import org.openlogisticsfoundation.ecmr.api.model.areas.ten.LogisticsShippingMarksCustomBarcode;
 import org.openlogisticsfoundation.ecmr.api.model.compositions.Item;
 import org.openlogisticsfoundation.ecmr.api.model.signature.Signature;
@@ -33,11 +33,9 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrPersistenceMapper;
-import org.openlogisticsfoundation.ecmr.domain.mappers.SealedDocumentPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.PdfFile;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
-import org.openlogisticsfoundation.ecmr.persistence.entities.SealedDocumentEntity;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -61,55 +59,34 @@ public class EcmrPdfService {
     private final ResourceLoader resourceLoader;
     private final EcmrService ecmrService;
     private final EcmrPersistenceMapper ecmrPersistenceMapper;
-    private final SealedDocumentPersistenceMapper sealedDocumentPersistenceMapper;
-    private final SealedDocumentService sealedDocumentService;
+    private final SealMetadataService sealMetadataService;
 
     public PdfFile createJasperReportForEcmr(UUID id, InternalOrExternalUser internalOrExternalUser, boolean isCopy)
             throws NoPermissionException, EcmrNotFoundException, PdfCreationException {
-
-        Optional<SealedDocument> sealedDocumentOpt = this.sealedDocumentService.getSealedDocument(id, internalOrExternalUser);
-        SealedDocument sealedDocument = null;
-        EcmrModel ecmrModel;
-        if (sealedDocumentOpt.isPresent()) {
-            sealedDocument = sealedDocumentOpt.get();
-            ecmrModel = sealedDocument.getEcmr();
-        } else {
-            ecmrModel = this.ecmrService.getEcmr(id, internalOrExternalUser);
-        }
-
-        return this.createJasperReportForEcmr(ecmrModel, sealedDocument, isCopy);
+        EcmrModel ecmrModel = this.ecmrService.getEcmr(id, internalOrExternalUser);
+        List<SealMetadata> sealMetadata = sealMetadataService.getSealMetadata(id, internalOrExternalUser);
+        return this.createJasperReportForEcmr(ecmrModel, sealMetadata, isCopy);
     }
 
-    public PdfFile createJasperReportForEcmr(UUID id, String shareToken, boolean isCopy)
+    public PdfFile createJasperReportForEcmrReader(UUID id, String shareToken, boolean isCopy)
             throws NoPermissionException, EcmrNotFoundException, PdfCreationException {
-
-        Optional<SealedDocumentEntity> sealedDocumentOpt = this.sealedDocumentService.getSealedDocumentEntity(id);
-        SealedDocumentEntity sealedDocumentEntity = null;
-        EcmrEntity ecmrEntity;
-        if (sealedDocumentOpt.isPresent()) {
-            sealedDocumentEntity = sealedDocumentOpt.get();
-            ecmrEntity = sealedDocumentEntity.getEcmr();
-        } else {
-            ecmrEntity = this.ecmrService.getEcmrEntity(id);
-        }
-
+        EcmrEntity ecmrEntity = this.ecmrService.getEcmrEntity(id);
         if (!ecmrEntity.getShareWithReaderToken().equals(shareToken)) {
             throw new NoPermissionException("Share Token mandatory");
         }
-        SealedDocument sealedDocument = sealedDocumentPersistenceMapper.toDomain(sealedDocumentEntity);
 
-        return this.createJasperReportForEcmr(sealedDocument == null ? ecmrPersistenceMapper.toModel(ecmrEntity) : sealedDocument.getEcmr(),
-                sealedDocument, isCopy);
+        List<SealMetadata> sealMetadata = sealMetadataService.getSealMetadata(id);
+        return this.createJasperReportForEcmr(ecmrPersistenceMapper.toModel(ecmrEntity), sealMetadata, isCopy);
     }
 
-    private PdfFile createJasperReportForEcmr(EcmrModel ecmrModel, SealedDocument sealedDocument, boolean isCopy) throws PdfCreationException {
+    private PdfFile createJasperReportForEcmr(EcmrModel ecmrModel, List<SealMetadata> sealMetadata, boolean isCopy) throws PdfCreationException {
         try {
             InputStream ecmrReportStream = getClass().getResourceAsStream("/reports/ecmr.jrxml");
             JasperReport jasperReport = JasperCompileManager.compileReport(ecmrReportStream);
 
             List<ItemBean> itemBeans = convertToItemBeans(ecmrModel.getEcmrConsignment().getItemList());
             JRBeanCollectionDataSource itemDataSource = new JRBeanCollectionDataSource(itemBeans);
-            HashMap<String, Object> parameters = setEcmrParameters(ecmrModel, sealedDocument, isCopy);
+            HashMap<String, Object> parameters = setEcmrParameters(ecmrModel, sealMetadata, isCopy);
             parameters.put("items", itemDataSource);
 
             return new PdfFile("eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf",
@@ -122,7 +99,7 @@ public class EcmrPdfService {
         }
     }
 
-    private HashMap<String, Object> setEcmrParameters(EcmrModel ecmrModel, SealedDocument sealedDocument, boolean isCopy) throws IOException {
+    private HashMap<String, Object> setEcmrParameters(EcmrModel ecmrModel, List<SealMetadata> sealMetadata, boolean isCopy) throws IOException {
         HashMap<String, Object> parameters = new HashMap<>();
 
         //sender data
@@ -221,40 +198,44 @@ public class EcmrPdfService {
         parameters.put("customCashOnDelivery", ecmrModel.getEcmrConsignment().getCashOnDelivery().getCustomCashOnDelivery());
 
         //Established
-        if (ecmrModel.getEcmrConsignment().getEstablished().getCustomEstablishedDate() != null)
+        if (ecmrModel.getEcmrConsignment().getEstablished().getCustomEstablishedDate() != null) {
             parameters.put("customEstablishedDate", Date.from(ecmrModel.getEcmrConsignment().getEstablished().getCustomEstablishedDate()));
+        }
         parameters.put("customEstablishedIn", ecmrModel.getEcmrConsignment().getEstablished().getCustomEstablishedIn());
 
-        if (sealedDocument != null) {
-            //Sender Seal
-            parameters.put("senderSealText", getSealText(sealedDocument.getSenderSeal().getSealMetadata()));
+        Optional<SealMetadata> senderSealMetaData = sealMetadata.stream().filter(x -> x.getRole() == TransportRole.SENDER).findFirst();
+        Optional<SealMetadata> carrierSealMetaData = sealMetadata.stream().filter(x -> x.getRole() == TransportRole.CARRIER).findFirst();
+        Optional<SealMetadata> consigneeSealMetaData = sealMetadata.stream().filter(x -> x.getRole() == TransportRole.CONSIGNEE).findFirst();
 
-            //Carrier Seal
-            if (sealedDocument.getCarrierSeal() != null) {
-                parameters.put("carrierSealText", getSealText(sealedDocument.getCarrierSeal().getSealMetadata()));
-
-                //Fields filled by the Consignee
-                parameters.put("consigneeSigningLocation",
-                        ecmrModel.getEcmrConsignment().getGoodsReceived().getConfirmedLogisticsLocationName());
-                if (ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignatureDate() != null) {
-                    parameters.put("consigneeSignatureDate",
-                            Date.from(ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignatureDate()));
-                }
-                parameters.put("consigneeReservationsObservations",
-                        ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeReservationsObservations());
-            }
-
-            //Consignee Signature
-            if (sealedDocument.getConsigneeSeal() != null) {
-                parameters.put("consigneeSealText", getSealText(sealedDocument.getConsigneeSeal().getSealMetadata()));
-            } else if (ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignature() != null) {
-                Renderable renderableSignature =
-                        this.decodeImage(ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignature().getData());
-                parameters.put("consigneeSignatureImage", renderableSignature);
-                parameters.put("consigneeSignatureText", getSignatureText(ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignature()));
-            }
+        //Sender Seal
+        if (senderSealMetaData.isPresent()) {
+            parameters.put("senderSealText", getSealText(senderSealMetaData.get()));
         }
 
+        //Carrier Seal
+        if (carrierSealMetaData.isPresent()) {
+            parameters.put("carrierSealText", getSealText(carrierSealMetaData.get()));
+
+            //Fields filled by the Consignee
+            parameters.put("consigneeSigningLocation",
+                    ecmrModel.getEcmrConsignment().getGoodsReceived().getConfirmedLogisticsLocationName());
+            if (ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignatureDate() != null) {
+                parameters.put("consigneeSignatureDate",
+                        Date.from(ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignatureDate()));
+            }
+            parameters.put("consigneeReservationsObservations",
+                    ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeReservationsObservations());
+        }
+
+        //Consignee Signature
+        if (consigneeSealMetaData.isPresent()) {
+            parameters.put("consigneeSealText", getSealText(consigneeSealMetaData.get()));
+        } else if (ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignature() != null) {
+            Renderable renderableSignature =
+                    this.decodeImage(ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignature().getData());
+            parameters.put("consigneeSignatureImage", renderableSignature);
+            parameters.put("consigneeSignatureText", getSignatureText(ecmrModel.getEcmrConsignment().getGoodsReceived().getConsigneeSignature()));
+        }
 
         //National International Information Text
         EcmrTransportType ecmrTransportType = getEcmrTransportType(ecmrModel);
@@ -336,8 +317,9 @@ public class EcmrPdfService {
 
     private String getSealText(SealMetadata sealMetadata) {
         String sealerText = sealMetadata.getSealer() != null ? sealMetadata.getSealer() : "";
+        String sealerCompany = sealMetadata.getSealerCompany() != null ? "\r\n" + sealMetadata.getSealerCompany() : "";
         String formattedDate = this.getFormattedDate(sealMetadata.getTimestamp());
-        return "Signed with eSeal on:\r\n" + formattedDate + "\r\nBy:\r\n" + sealerText;
+        return "Signed with eSeal on:\r\n" + formattedDate + "\r\nBy:\r\n" + sealerText + sealerCompany;
     }
 
     private String getSignatureText(Signature signature) {

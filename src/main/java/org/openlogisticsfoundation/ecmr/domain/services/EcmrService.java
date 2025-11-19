@@ -8,7 +8,10 @@
 
 package org.openlogisticsfoundation.ecmr.domain.services;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
@@ -103,7 +106,7 @@ public class EcmrService {
         return authorisationService.getRolesOfUser(internalOrExternalUser, ecmrId);
     }
 
-    public EcmrEntity clearPhoneNumbers(EcmrEntity ecmrEntity) {
+    public EcmrEntity cleanPhoneNumbers(EcmrEntity ecmrEntity) {
         ecmrEntity.getCarrierInformation().setPhone(
                 cleanPhoneNumber(ecmrEntity.getCarrierInformation().getPhone()));
 

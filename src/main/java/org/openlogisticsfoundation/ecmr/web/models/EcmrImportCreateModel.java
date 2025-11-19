@@ -10,19 +10,13 @@ package org.openlogisticsfoundation.ecmr.web.models;
 
 import java.util.UUID;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-@Valid
-public class EcmrImportWithoutUserMailModel {
-    @NotNull
-    private String url;
-    @NotNull
+public class EcmrImportCreateModel {
     private UUID ecmrId;
-    @NotNull
+    private String instanceUrl;
     private String shareToken;
 }

@@ -8,14 +8,19 @@
 
 package org.openlogisticsfoundation.ecmr.domain.models.commands;
 
-import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
+import java.util.UUID;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class SealCommand {
-    private TransportRole transportRole;
-    private String city;
+public class EcmrImportCreateCommand {
+    @NotNull
+    private UUID ecmrId;
+    @NotNull
+    private String instanceUrl;
+    @NotNull
+    private String shareToken;
 }

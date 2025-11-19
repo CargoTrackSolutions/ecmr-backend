@@ -10,6 +10,7 @@ package org.openlogisticsfoundation.ecmr.domain.services;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -23,7 +24,6 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.GroupPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.Group;
-import org.openlogisticsfoundation.ecmr.domain.models.User;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.GroupCreationCommand;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.GroupUpdateCommand;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrAssignmentEntity;
@@ -55,7 +55,7 @@ public class GroupService {
     }
 
     public List<Group> getGroupsForUser(AuthenticatedUser authenticatedUser) {
-       return this.getGroupsForUser(authenticatedUser.getUser().getId());
+        return this.getGroupsForUser(authenticatedUser.getUser().getId());
     }
 
     public List<Group> getGroupsForUser(long userId) {
@@ -65,10 +65,10 @@ public class GroupService {
         return usersGroups;
     }
 
-    public boolean areAllGroupIdsPartOfUsersGroup(AuthenticatedUser authenticatedUser, List<Long> groupIds) {
+    public boolean isOneGroupIdNotPartOfUsersGroups(AuthenticatedUser authenticatedUser, List<Long> groupIds) {
         List<Group> usersGroups = getGroupsForUser(authenticatedUser);
         List<Long> usersGroupIds = flatMapGroupTrees(usersGroups).stream().map(Group::getId).toList();
-        return groupIds.stream().allMatch(usersGroupIds::contains);
+        return !new HashSet<>(usersGroupIds).containsAll(groupIds);
     }
 
     private List<Group> removeGroupsThatAreDescendantsOfOtherGroups(List<Group> groups) {
@@ -93,10 +93,11 @@ public class GroupService {
         return groupRepository.findById(id).map(groupPersistenceMapper::toGroup).orElseThrow(() -> new GroupNotFoundException(id));
     }
 
-    public Group createGroup(AuthenticatedUser authenticatedUser, @Valid GroupCreationCommand command) throws GroupNotFoundException, NoPermissionException {
+    public Group createGroup(AuthenticatedUser authenticatedUser, @Valid GroupCreationCommand command)
+            throws GroupNotFoundException, NoPermissionException {
         GroupEntity parentGroup = groupRepository.findById(command.getParentId())
                 .orElseThrow(() -> new GroupNotFoundException(command.getParentId()));
-        if (!areAllGroupIdsPartOfUsersGroup(authenticatedUser, List.of(command.getParentId()))) {
+        if (isOneGroupIdNotPartOfUsersGroups(authenticatedUser, List.of(command.getParentId()))) {
             throw new NoPermissionException("No permission for parent group id " + command.getParentId());
         }
 
@@ -121,11 +122,11 @@ public class GroupService {
     public Boolean deleteGroup(long id) throws GroupNotFoundException, GroupHasChildrenException, GroupHasNoParentException, GroupHasUsersException {
         GroupEntity groupEntity = groupRepository.findById(id).orElseThrow(() -> new GroupNotFoundException(id));
 
-        if(userToGroupRepository.existsByGroupId(id)) {
+        if (userToGroupRepository.existsByGroupId(id)) {
             throw new GroupHasUsersException(id);
         }
 
-        if(groupEntity.getChildren().isEmpty() && groupEntity.getParent() != null) {
+        if (groupEntity.getChildren().isEmpty() && groupEntity.getParent() != null) {
             GroupEntity parentEntity = groupEntity.getParent();
 
             //Update user group id & user default group
@@ -138,21 +139,21 @@ public class GroupService {
 
             groupRepository.delete(groupEntity);
             return true;
-        } else if(!groupEntity.getChildren().isEmpty()){
+        } else if (!groupEntity.getChildren().isEmpty()) {
             throw new GroupHasChildrenException(groupEntity.getId());
         } else {
             throw new GroupHasNoParentException(groupEntity.getId());
         }
     }
 
-    public void updateUsersGroup(List<UserEntity> users, GroupEntity  newGroup, GroupEntity oldGroup) {
+    public void updateUsersGroup(List<UserEntity> users, GroupEntity newGroup, GroupEntity oldGroup) {
         for (UserEntity user : users) {
             userToGroupRepository.deleteByUserIdAndGroupId(user.getId(), oldGroup.getId());
 
             UserToGroupEntity newUserToGroup = new UserToGroupEntity(user, newGroup);
             userToGroupRepository.save(newUserToGroup);
 
-            if(user.getDefaultGroup().getId() == oldGroup.getId()){
+            if (user.getDefaultGroup().getId() == oldGroup.getId()) {
                 user.setDefaultGroup(newGroup);
                 userRepository.save(user);
             }
@@ -191,5 +192,9 @@ public class GroupService {
 
     List<GroupEntity> getGroupEntities(List<Long> groupIds) {
         return groupRepository.findAllById(groupIds);
+    }
+
+    GroupEntity getGroupEntity(long id) throws GroupNotFoundException {
+        return groupRepository.findById(id).orElseThrow(() -> new GroupNotFoundException(id));
     }
 }

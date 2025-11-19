@@ -22,7 +22,6 @@ import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrAssignmentRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.HistoryLogRepository;
-import org.openlogisticsfoundation.ecmr.persistence.repositories.SealedDocumentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +34,7 @@ public class EcmrDeleteService {
     private final EcmrAssignmentRepository ecmrAssignmentRepository;
     private final AuthorisationService authorisationService;
     private final HistoryLogRepository historyLogRepository;
-    private final SealedDocumentRepository sealedDocumentRepository;
+    private final SealMetadataService sealMetadataService;
     private final EcmrService ecmrService;
 
     @Transactional
@@ -45,7 +44,7 @@ public class EcmrDeleteService {
             throw new NoPermissionException("No permission for this task");
         }
 
-        if (sealedDocumentRepository.existsByEcmr_EcmrId(ecmrId)) {
+        if (sealMetadataService.sealExists(ecmrId)) {
             throw new ValidationException("Ecmr can not be deleted, is already sealed");
         }
 
@@ -57,12 +56,13 @@ public class EcmrDeleteService {
     }
 
     @Transactional
-    public void bulkDeleteEcmrs(List<UUID> ecmrIds, InternalOrExternalUser internalOrExternalUser) throws ValidationException, NoPermissionException, EcmrsNotFoundException {
+    public void bulkDeleteEcmrs(List<UUID> ecmrIds, InternalOrExternalUser internalOrExternalUser)
+            throws ValidationException, NoPermissionException, EcmrsNotFoundException {
         for (UUID ecmrId : ecmrIds) {
             if (authorisationService.doesNotHaveRole(internalOrExternalUser, ecmrId, EcmrRole.Sender)) {
                 throw new NoPermissionException("No permission for this task");
             }
-            if (sealedDocumentRepository.existsByEcmr_EcmrId(ecmrId)) {
+            if (sealMetadataService.sealExists(ecmrId)) {
                 throw new ValidationException("Ecmr can not be deleted, is already sealed");
             }
         }

@@ -78,7 +78,7 @@ public class UserService {
 
     private void validateAndSetGroup(AuthenticatedUser authenticatedUser, @Valid UserCommand userCommand, UserEntity userEntity)
             throws NoPermissionException, ValidationException, GroupNotFoundException {
-        if (!groupService.areAllGroupIdsPartOfUsersGroup(authenticatedUser, userCommand.getGroupIds())) {
+        if (groupService.isOneGroupIdNotPartOfUsersGroups(authenticatedUser, userCommand.getGroupIds())) {
             throw new NoPermissionException("At least one group without permission");
         }
 

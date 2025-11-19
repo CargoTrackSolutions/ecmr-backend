@@ -10,6 +10,7 @@ package org.openlogisticsfoundation.ecmr.domain.models;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 
+import jakarta.validation.Valid;
 import lombok.Data;
 
 @Data
@@ -17,5 +18,5 @@ public class TemplateUser {
     private Long id;
     private Integer templateUserNumber;
     private String name;
-    private EcmrModel ecmr;
+    private @Valid EcmrModel ecmr;
 }

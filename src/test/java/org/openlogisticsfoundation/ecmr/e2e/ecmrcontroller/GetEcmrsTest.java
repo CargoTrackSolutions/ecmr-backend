@@ -7,8 +7,14 @@
  */
 package org.openlogisticsfoundation.ecmr.e2e.ecmrcontroller;
 
-import io.restassured.response.Response;
-import org.junit.jupiter.api.*;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
@@ -17,11 +23,7 @@ import org.openlogisticsfoundation.ecmr.e2e.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import io.restassured.response.Response;
 
 public class GetEcmrsTest extends E2EBaseTest {
 
@@ -208,7 +210,6 @@ public class GetEcmrsTest extends E2EBaseTest {
             .body("totalElements", is(0));
     }
 
-    @Disabled("returns 500 but should return 400")
     @ParameterizedTest
     @CsvSource(
         {

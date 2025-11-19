@@ -16,4 +16,7 @@ import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrAssignmentEntit
 public interface EcmrAssignmentMapper {
     @Mapping(target = "ecmrId", source = "ecmr.ecmrId")
     EcmrAssignment map(EcmrAssignmentEntity ecmrAssignment);
+
+    @Mapping(target = "ecmr.ecmrId", source = "ecmrId")
+    EcmrAssignmentEntity map(EcmrAssignment ecmrAssignment);
 }
