@@ -70,13 +70,13 @@ class EcmrImportControllerTest {
     @WithMockUser(roles = "Admin")
     void testGetImports_Success() throws Exception {
         EcmrImport ecmrImport = Mockito.mock(EcmrImport.class);
-        when(ecmrImportService.getAllEcmrImports()).thenReturn(List.of(ecmrImport));
+        when(ecmrImportService.getAllNotImportedEcmrImports()).thenReturn(List.of(ecmrImport));
         when(ecmrImportWebMapper.toModel(ecmrImport)).thenReturn(ecmrImportModel);
 
         mockMvc.perform(get("/ecmr-import"))
                 .andExpect(status().isOk());
 
-        verify(ecmrImportService, times(1)).getAllEcmrImports();
+        verify(ecmrImportService, times(1)).getAllNotImportedEcmrImports();
         verify(ecmrImportWebMapper, times(1)).toModel(ecmrImport);
     }
 

@@ -22,7 +22,9 @@ public interface EcmrImportRepository extends JpaRepository<EcmrImportEntity, Lo
     @Query("SELECT ecmrImport.instanceUrl AS url, COUNT(ecmrImport.instanceUrl) AS count FROM EcmrImportEntity ecmrImport WHERE ecmrImport.instanceUrl NOT in (SELECT url FROM ApprovedUrlEntity ) GROUP BY ecmrImport.instanceUrl ORDER BY count DESC")
     List<PendingInstanceProjection> countAllGroupByInstanceUrl();
 
-    List<EcmrImportEntity> findAllByErrorMessageNull();
+    List<EcmrImportEntity> findAllByImportTimestampNull();
+
+    List<EcmrImportEntity> findAllByErrorMessageNullAndImportTimestampNull();
 
     @Modifying
     @Query("update EcmrImportEntity e set e.errorMessage = :errorMessage where e.id = :ecmrImportId")

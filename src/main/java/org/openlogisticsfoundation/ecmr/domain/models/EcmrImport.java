@@ -29,4 +29,5 @@ public class EcmrImport {
     private String carrierSeal;
     private String errorMessage;
     private Instant creationTimestamp;
+    private Instant importTimestamp;
 }

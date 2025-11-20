@@ -52,4 +52,5 @@ public class EcmrImportEntity extends BaseEntity {
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Instant creationTimestamp;
+    private Instant importTimestamp;
 }

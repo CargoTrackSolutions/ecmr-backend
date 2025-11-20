@@ -64,7 +64,7 @@ public class EcmrImportController {
             }
     )
     public ResponseEntity<List<EcmrImportModel>> getEcmrImports() {
-        return ResponseEntity.ok(ecmrImportService.getAllEcmrImports().stream().map(ecmrImportWebMapper::toModel).toList());
+        return ResponseEntity.ok(ecmrImportService.getAllNotImportedEcmrImports().stream().map(ecmrImportWebMapper::toModel).toList());
     }
 
     /**
