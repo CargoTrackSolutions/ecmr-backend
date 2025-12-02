@@ -20,4 +20,5 @@
     <include file="/db/changelog/15-add-company-name-to-user.xml"/>
     <include file="/db/changelog/16-new-seal-data-model.xml"/>
     <include file="/db/changelog/17-add-field-to-ecmr-import.xml"/>
+    <include file="/db/changelog/18-add-retry-timestamp-to-ecmr-import.xml"/>
 </databaseChangeLog>

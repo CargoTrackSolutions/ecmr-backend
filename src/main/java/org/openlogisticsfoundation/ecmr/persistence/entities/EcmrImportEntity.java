@@ -53,4 +53,5 @@ public class EcmrImportEntity extends BaseEntity {
     @CreationTimestamp
     private Instant creationTimestamp;
     private Instant importTimestamp;
+    private Instant nextRetryTimestamp;
 }

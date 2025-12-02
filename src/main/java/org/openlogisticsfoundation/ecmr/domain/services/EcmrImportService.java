@@ -43,6 +43,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import ecmr.seal.verify.rest.ESeal;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -61,6 +64,9 @@ public class EcmrImportService {
     private final EcmrCreationService ecmrCreationService;
     private final ExternalEcmrInstanceService externalEcmrInstanceService;
     private final SealMetadataService sealMetadataService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<EcmrImport> getAllNotImportedEcmrImports() {
         return ecmrImportRepository.findAllByImportTimestampNull().stream().map(ecmrImportPersistenceMapper::toEcmrImport).toList();
@@ -140,85 +146,110 @@ public class EcmrImportService {
     }
 
     @Transactional
-    public void importEcmrs() {
-        List<EcmrImport> ecmrToImport = this.getAllNotImportedEcmrImportsWithoutError();
-        if (ecmrToImport.isEmpty()) {
-            return;
+    public boolean importOneEcmr() {
+        List<EcmrImportEntity> ecmrImportEntities = entityManager.createQuery("""
+                        select e
+                        from EcmrImportEntity e
+                        where e.errorMessage IS null AND e.importTimestamp IS null
+                        AND (e.nextRetryTimestamp IS null OR e.nextRetryTimestamp <= :currentDate )
+                        order by e.creationTimestamp
+                        """, EcmrImportEntity.class)
+                .setParameter("currentDate", Instant.now())
+                .setMaxResults(1)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getResultList();
+        if (ecmrImportEntities.isEmpty()) {
+            return false;
         }
-        List<ApprovedUrl> approvedUrls = approvedUrlService.getAllApprovedUrls();
+        EcmrImportEntity ecmrImport = ecmrImportEntities.getFirst();
+        //Check if Url is approved
+        Optional<ApprovedUrl> approvedUrl = approvedUrlService.getApprovedUrl(ecmrImport.getInstanceUrl());
+        if (approvedUrl.isEmpty() || !approvedUrl.get().isApprovedState()) {
+            this.setErrorAndRetryState(ecmrImport, null);
+            return true;
+        }
 
-        for (EcmrImport ecmrImport : ecmrToImport) {
+        //Verify Seal
+        if (!sealService.verify(getListOfSeals(ecmrImport.getSenderSeal(), ecmrImport.getCarrierSeal()))) {
+            this.setErrorAndRetryState(ecmrImport, "INVALID_SEAL");
+            return true;
+        }
+
+        //Deserialize Seal Payload
+        boolean carrierSealPresent = StringUtils.isNotBlank(ecmrImport.getCarrierSeal());
+        SealedDocument sealedDocument;
+        try {
+            sealedDocument = sealService.deserializePayloadClaimJson(
+                    new ESeal(carrierSealPresent ? ecmrImport.getCarrierSeal() : ecmrImport.getSenderSeal(), null),
+                    SealedDocument.class);
+        } catch (JsonProcessingException e) {
+            this.setErrorAndRetryState(ecmrImport, "INVALID_SEAL");
+            return true;
+        }
+
+        if (!ecmrImport.getInstanceUrl().equals(sealedDocument.getEcmr().getEcmrId())) {
+            this.setErrorAndRetryState(ecmrImport, "URL_NOT_MATCHING");
+            return true;
+        }
+
+        //Check if user exists and has default group
+        User activeUserByEmail;
+        try {
+            activeUserByEmail = userService.getActiveUserByEmail(ecmrImport.getReceivingUserEmail());
+        } catch (UserNotFoundException e) {
+            this.setErrorAndRetryState(ecmrImport, "USER_NOT_EXISTS");
+            return true;
+        }
+        if (activeUserByEmail.getDefaultGroupId() == null) {
+            this.setErrorAndRetryState(ecmrImport, "USER_NO_DEFAULT_GROUP");
+            return true;
+        }
+
+        //Check if ecmr already exists
+        UUID ecmrId = UUID.fromString(sealedDocument.getEcmr().getEcmrId());
+        if (ecmrService.existsByEcmrId(ecmrId)) {
+            this.setErrorAndRetryState(ecmrImport, "ECMR_ALREADY_EXISTS");
+            return true;
+        }
+
+        //Save seals
+        if (carrierSealPresent) {
+            SealedDocument senderSealedDocument;
             try {
-                //Check if Url is approved
-                Optional<ApprovedUrl> approvedUrl = approvedUrls.stream()
-                        .filter(url -> url.getUrl().equals(ecmrImport.getInstanceUrl()))
-                        .findFirst();
-                if (approvedUrl.isEmpty() || !approvedUrl.get().isApprovedState()) {
-                    continue;
-                }
-
-                //Verify Seal
-                if (!sealService.verify(getListOfSeals(ecmrImport.getSenderSeal(), ecmrImport.getCarrierSeal()))) {
-                    this.setErrorState(ecmrImport, "INVALID_SEAL");
-                    continue;
-                }
-
-                //Deserialize Seal Payload
-                boolean carrierSealPresent = StringUtils.isNotBlank(ecmrImport.getCarrierSeal());
-                SealedDocument sealedDocument = sealService.deserializePayloadClaimJson(
-                        new ESeal(carrierSealPresent ? ecmrImport.getCarrierSeal() : ecmrImport.getSenderSeal(), null),
+                senderSealedDocument = sealService.deserializePayloadClaimJson(new ESeal(ecmrImport.getSenderSeal(), null),
                         SealedDocument.class);
-
-                if (!ecmrImport.getInstanceUrl().equals(sealedDocument.getEcmr().getEcmrId())) {
-                    this.setErrorState(ecmrImport, "URL_NOT_MATCHING");
-                    continue;
-                }
-
-                //Check if user exists and has default group
-                User activeUserByEmail = userService.getActiveUserByEmail(ecmrImport.getReceivingUserEmail());
-                if (activeUserByEmail.getDefaultGroupId() == null) {
-                    this.setErrorState(ecmrImport, "USER_NO_DEFAULT_GROUP");
-                    continue;
-                }
-
-                //Check if ecmr already exists
-                UUID ecmrId = UUID.fromString(sealedDocument.getEcmr().getEcmrId());
-                if (ecmrService.existsByEcmrId(ecmrId)) {
-                    this.setErrorState(ecmrImport, "ECMR_ALREADY_EXISTS");
-                    continue;
-                }
-
-                //Save seals
-                if (carrierSealPresent) {
-                    SealedDocument senderSealedDocument = sealService.deserializePayloadClaimJson(new ESeal(ecmrImport.getSenderSeal(), null),
-                            SealedDocument.class);
-                    SealMetadataEntity savedSenderSealMetadata = this.sealMetadataService.save(senderSealedDocument.getSealMetadata(), ecmrId);
-                    this.sealService.saveSeal(ecmrImport.getSenderSeal(), savedSenderSealMetadata);
-                }
-
-                SealMetadataEntity savedSealMetadata = this.sealMetadataService.save(sealedDocument.getSealMetadata(), ecmrId);
-                this.sealService.saveSeal(carrierSealPresent ? ecmrImport.getCarrierSeal() : ecmrImport.getSenderSeal(), savedSealMetadata);
-
-                //Create Ecmr
-                this.ecmrCreationService.createEcmrFromImport(sealedDocument.getEcmr(), activeUserByEmail,
-                        this.getNextRole(sealedDocument.getSealMetadata().getRole()), ecmrImport.getShareToken());
-
-                ecmrImport.setCarrierSeal(null);
-                ecmrImport.setSenderSeal(null);
-                ecmrImport.setImportTimestamp(Instant.now());
-                this.saveEcmrImport(ecmrImport);
             } catch (JsonProcessingException e) {
-                this.setErrorState(ecmrImport, "INVALID_SEAL");
-            } catch (UserNotFoundException e) {
-                this.setErrorState(ecmrImport, "USER_NOT_EXISTS");
-            } catch (NoPermissionException e) {
-                this.setErrorState(ecmrImport, "USER_NO_PERMISSION");
-            } catch (GroupNotFoundException e) {
-                this.setErrorState(ecmrImport, "USER_GROUP_NOT_FOUND");
-            } catch (ValidationException e) {
-                this.setErrorState(ecmrImport, "WRONG_ROLE");
+                this.setErrorAndRetryState(ecmrImport, "INVALID_SEAL");
+                return true;
             }
+
+            SealMetadataEntity savedSenderSealMetadata = this.sealMetadataService.save(senderSealedDocument.getSealMetadata(), ecmrId);
+            this.sealService.saveSeal(ecmrImport.getSenderSeal(), savedSenderSealMetadata);
         }
+
+        SealMetadataEntity savedSealMetadata = this.sealMetadataService.save(sealedDocument.getSealMetadata(), ecmrId);
+        this.sealService.saveSeal(carrierSealPresent ? ecmrImport.getCarrierSeal() : ecmrImport.getSenderSeal(), savedSealMetadata);
+
+        //Create Ecmr
+        try {
+            this.ecmrCreationService.createEcmrFromImport(sealedDocument.getEcmr(), activeUserByEmail,
+                    this.getNextRole(sealedDocument.getSealMetadata().getRole()), ecmrImport.getShareToken());
+        } catch (GroupNotFoundException e) {
+            this.setErrorAndRetryState(ecmrImport, "USER_GROUP_NOT_FOUND");
+            return true;
+        } catch (NoPermissionException e) {
+            this.setErrorAndRetryState(ecmrImport, "USER_NO_PERMISSION");
+            return true;
+        } catch (ValidationException e) {
+            this.setErrorAndRetryState(ecmrImport, "WRONG_ROLE");
+            return true;
+        }
+
+        ecmrImport.setCarrierSeal(null);
+        ecmrImport.setSenderSeal(null);
+        ecmrImport.setImportTimestamp(Instant.now());
+        ecmrImportRepository.save(ecmrImport);
+        return true;
     }
 
     private void checkUrlIsKnownAndApproved(String urlToCheck) throws UrlNotApprovedException {
@@ -244,12 +275,12 @@ public class EcmrImportService {
         throw new ValidationException("Wrong role shared");
     }
 
-    private List<EcmrImport> getAllNotImportedEcmrImportsWithoutError() {
-        return ecmrImportRepository.findAllByErrorMessageNullAndImportTimestampNull().stream().map(ecmrImportPersistenceMapper::toEcmrImport)
-                .toList();
-    }
-
-    private void setErrorState(EcmrImport ecmrImport, String error) {
-        this.ecmrImportRepository.updateEcmrImportStatus(error, ecmrImport.getId());
+    private void setErrorAndRetryState(EcmrImportEntity ecmrImport, @Nullable String error) {
+        Instant nextRetryDate = Instant.now().plusSeconds(5 * 60);
+        ecmrImport.setNextRetryTimestamp(nextRetryDate);
+        if (error != null) {
+            ecmrImport.setErrorMessage(error);
+        }
+        ecmrImportRepository.save(ecmrImport);
     }
 }

@@ -6,9 +6,10 @@
  * SPDX-License-Identifier: OLFL-1.3
  */
 
-package org.openlogisticsfoundation.ecmr.domain.scheduledtasks;
+package org.openlogisticsfoundation.ecmr.jobs;
 
 import org.openlogisticsfoundation.ecmr.domain.services.EcmrImportService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,12 +17,16 @@ import lombok.AllArgsConstructor;
 
 @Component
 @AllArgsConstructor
+@Profile("jobs")
 public class ImportEcmrsTask {
 
     private final EcmrImportService ecmrImportService;
 
     @Scheduled(cron = "${ecmr.cron.import}", zone = "UTC")
-    public void importEcmrs(){
-        ecmrImportService.importEcmrs();
+    public void importEcmrs() {
+        boolean isImportiert;
+        do {
+            isImportiert = ecmrImportService.importOneEcmr();
+        } while (isImportiert);
     }
 }
