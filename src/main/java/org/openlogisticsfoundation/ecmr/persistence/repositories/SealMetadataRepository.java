@@ -17,6 +17,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SealMetadataRepository extends JpaRepository<SealMetadataEntity, Long> {
     List<SealMetadataEntity> findByEcmrId(UUID ecmrId);
+    List<SealMetadataEntity> findAllByEcmrIdIn(List<UUID> ecmrIds);
 
     boolean existsByEcmrId(UUID ecmrId);
+
+    void deleteAllByEcmrIdIn(List<UUID> ecmrIds);
 }

@@ -39,7 +39,7 @@ public class SealMetadataEntity extends BaseEntity {
     private Instant created;
 
     @UpdateTimestamp
-    private Instant last_updated;
+    private Instant lastUpdated;
 
     @Column(name = "ecmr_id", nullable = false)
     private UUID ecmrId;

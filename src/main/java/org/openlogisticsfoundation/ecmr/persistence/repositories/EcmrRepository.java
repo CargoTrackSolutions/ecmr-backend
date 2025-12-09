@@ -8,6 +8,7 @@
 
 package org.openlogisticsfoundation.ecmr.persistence.repositories;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,9 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
     @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)
     List<EcmrEntity> findAllByEcmrStatusAndType(EcmrStatus ecmrStatus, EcmrType type);
 
+    @Query("SELECT e.ecmrId FROM EcmrEntity e WHERE e.type = :type AND e.editedAt < :timestamp")
+    List<UUID> findAllEcmrIdsByTypeAndEditedAtBefore(EcmrType type, Instant timestamp);
+
     @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)
     @Query("SELECT Distinct e FROM EcmrEntity e "
         + "WHERE e.type = :type "
@@ -58,4 +62,6 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
             Pageable pageable);
 
     boolean existsByEcmrId(UUID ecmrId);
+
+    void deleteAllByEcmrIdIn(List<UUID> ecmrIds);
 }

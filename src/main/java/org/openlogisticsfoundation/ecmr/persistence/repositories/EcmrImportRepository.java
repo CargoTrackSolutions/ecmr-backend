@@ -23,4 +23,7 @@ public interface EcmrImportRepository extends JpaRepository<EcmrImportEntity, Lo
     List<EcmrImportEntity> findAllByImportTimestampNull();
 
     boolean existsByEcmrId(UUID ecmrId);
+
+    void deleteByEcmrId(UUID ecmrId);
+    void deleteAllByEcmrIdIn(List<UUID> ecmrIds);
 }

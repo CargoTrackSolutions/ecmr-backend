@@ -53,6 +53,7 @@ public class EcmrUpdateService {
         if (ecmrEntity.getType() != EcmrType.ECMR) {
             throw new ValidationException("Only ecmrs can be archived");
         }
+        ecmrEntity.setEditedAt(Instant.now());
         ecmrEntity.setType(EcmrType.ARCHIVED);
         return persistenceMapper.toModel(this.ecmrRepository.save(ecmrEntity));
     }
@@ -68,22 +69,25 @@ public class EcmrUpdateService {
         }
 
         List<EcmrEntity> entities = ecmrService.getEcmrEntities(ecmrIds);
-        for(EcmrEntity entity : entities) {
-            entity.setType(EcmrType.ARCHIVED);
-        }
-        return this.ecmrRepository.saveAll(entities)
-            .stream()
-            .map(persistenceMapper::toModel)
-            .collect(Collectors.toList());
+
+        return this.archiveEcmrs(entities).stream()
+                .map(persistenceMapper::toModel)
+                .collect(Collectors.toList());
     }
 
     public void archiveEcmrs() {
         List<EcmrEntity> entities = ecmrRepository.findAllByEcmrStatusAndType(EcmrStatus.DELIVERED, EcmrType.ECMR);
+
+        this.archiveEcmrs(entities);
+    }
+
+    private List<EcmrEntity> archiveEcmrs(List<EcmrEntity> entities) {
         log.info("Archiving {} ECMRs", entities.size());
         for (EcmrEntity entity : entities) {
+            entity.setEditedAt(Instant.now());
             entity.setType(EcmrType.ARCHIVED);
         }
-        this.ecmrRepository.saveAll(entities);
+        return this.ecmrRepository.saveAll(entities);
     }
 
     public EcmrModel reactivateEcmr(UUID ecmrUuid, AuthenticatedUser authenticatedUser)

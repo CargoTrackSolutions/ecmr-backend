@@ -20,6 +20,6 @@ public interface SealMetadataPersistenceMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
-    @Mapping(target = "last_updated", ignore = true)
+    @Mapping(target = "lastUpdated", ignore = true)
     SealMetadataEntity toEntity(SealMetadata sealMetadata, UUID ecmrId);
 }
