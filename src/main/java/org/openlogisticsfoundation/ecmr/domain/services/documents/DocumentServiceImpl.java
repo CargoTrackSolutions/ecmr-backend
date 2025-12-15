@@ -8,6 +8,7 @@
 package org.openlogisticsfoundation.ecmr.domain.services.documents;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,5 +33,10 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public List<Document> getDocumentsByEcmrId(UUID ecmrId) {
         return List.of();
+    }
+
+    @Override
+    //TODO: Forward output/convert to file
+    public void downloadDocuments(UUID ecmrId, OutputStream output) {
     }
 }

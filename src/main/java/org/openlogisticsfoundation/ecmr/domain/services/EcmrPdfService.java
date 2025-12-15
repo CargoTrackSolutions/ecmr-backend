@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,6 +23,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.SealMetadata;
 import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
@@ -89,13 +92,43 @@ public class EcmrPdfService {
             HashMap<String, Object> parameters = setEcmrParameters(ecmrModel, sealMetadata, isCopy);
             parameters.put("items", itemDataSource);
 
-            return new PdfFile("eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf",
-                    JasperRunManager.runReportToPdf(jasperReport, parameters, new JREmptyDataSource()));
+            byte[] mainJasperPdf = JasperRunManager.runReportToPdf(jasperReport, parameters, new JREmptyDataSource());
+            //TODO: Download from blob storage, convert files to pdf using FileToPdfConverter (In services.documents) then merge using mergePdf
+            // Method below
+            byte[] mergedPdf = new byte[mainJasperPdf.length + 1000];
+
+            return new PdfFile("eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf", mergedPdf);
         } catch (JRException e) {
             log.error(e);
             throw new PdfCreationException("Error generating report: " + e.getMessage());
         } catch (IOException e) {
             throw new PdfCreationException("I/O error occurred: " + e.getMessage());
+        }
+    }
+
+    public void mergePdfs(List<InputStream> sources, OutputStream destination) {
+        PDFMergerUtility merger = new PDFMergerUtility();
+        merger.setDestinationStream(destination);
+
+        List<RandomAccessReadBuffer> buffers = new ArrayList<>();
+
+        try {
+            for (InputStream in : sources) {
+                RandomAccessReadBuffer buffer = new RandomAccessReadBuffer(in);
+                buffers.add(buffer);
+                merger.addSource(buffer);
+            }
+
+            merger.mergeDocuments(null);
+        } catch (IOException e) {
+            throw new IllegalStateException("PDF merge failed", e);
+
+        } finally {
+            buffers.forEach(buffer -> {
+                try {
+                    buffer.close();
+                } catch (IOException ignored) {}
+            });
         }
     }
 

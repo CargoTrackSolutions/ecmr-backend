@@ -36,7 +36,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class DocumentController {
 
-    private DocumentService documentService;
+    private final DocumentService documentService;
 
     @PostMapping(path = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadDocumentToEcmr(@RequestParam UUID ecmrId, @RequestPart("file") @Valid @NotNull MultipartFile file) {

@@ -8,6 +8,7 @@
 package org.openlogisticsfoundation.ecmr.domain.services.documents;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,4 +20,6 @@ public interface DocumentService {
     void uploadDocument(UUID ecmrId, MultipartFile file) throws IOException;
 
     List<Document> getDocumentsByEcmrId(UUID ecmrId);
+
+    void downloadDocuments(UUID ecmrId, OutputStream output);
 }

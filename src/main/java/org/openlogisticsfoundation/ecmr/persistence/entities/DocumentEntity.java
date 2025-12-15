@@ -11,10 +11,13 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.openlogisticsfoundation.ecmr.domain.models.DocumentMimeType;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -43,7 +46,8 @@ public class DocumentEntity extends BaseEntity {
     private Timestamp uploadDate;
 
     @NotNull
-    private String mimeType;
+    @Enumerated(EnumType.STRING)
+    private DocumentMimeType mimeType;
 
     @NotNull
     private int size;
@@ -51,7 +55,7 @@ public class DocumentEntity extends BaseEntity {
     public DocumentEntity(UUID ecmrId, MultipartFile file) {
         this.ecmrId = ecmrId;
         this.fileName = file.getOriginalFilename();
-        this.mimeType = file.getContentType();
+        this.mimeType = DocumentMimeType.fromContentType(file.getContentType());
         this.size = (int) file.getSize();
     }
 }
