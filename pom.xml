@@ -230,6 +230,12 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.32.0</version>
+        </dependency>
     </dependencies>
 
     <build>

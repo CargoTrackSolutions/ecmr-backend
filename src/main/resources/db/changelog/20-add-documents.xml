@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1765967534932-17" author="Artur.Blek">
+        <createTable tableName="ecmr_documents">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ecmr_documents"/>
+            </column>
+            <column name="storage_provider" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ecmr_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upload_date" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mime_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1765967534932-18" author="Artur.Blek">
+        <addUniqueConstraint columnNames="document_id" constraintName="uc_ecmr_documents_documentid" tableName="ecmr_documents"/>
+    </changeSet>
+    <changeSet id="1765967534932-19" author="Artur.Blek">
+        <createIndex indexName="idx_d1a38703beaf07e88632db019" tableName="ecmr_documents">
+            <column name="ecmr_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

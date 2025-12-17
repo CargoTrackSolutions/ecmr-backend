@@ -1,3 +1,10 @@
+/*
+ * Copyright Open Logistics Foundation
+ *
+ * Licensed under the Open Logistics Foundation License 1.3.
+ * For details on the licensing terms, see the LICENSE file.
+ * SPDX-License-Identifier: OLFL-1.3
+ */
 package org.openlogisticsfoundation.ecmr.domain.services.documents;
 
 import java.io.ByteArrayInputStream;
@@ -23,11 +30,11 @@ public class FileToPdfConverter {
     public void toPdf(DocumentEntity document, byte[] data, OutputStream output) {
 
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
-            if (document.getMimeType() == DocumentMimeType.PDF) {
+            if (DocumentMimeType.PDF.getMimeTypes().contains(document.getMimeType())) {
                 inputStream.transferTo(output);
             }
 
-            if (document.getMimeType() == DocumentMimeType.IMAGE) {
+            if (DocumentMimeType.IMAGE.getMimeTypes().contains(document.getMimeType())) {
                 imageToPdf(inputStream, output);
             }
 

@@ -8,6 +8,7 @@
 package org.openlogisticsfoundation.ecmr.persistence.entities;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,6 +19,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -25,17 +27,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Table(name = "ECMR_DOCUMENTS")
+@Table(name = "ECMR_DOCUMENTS", indexes = {
+        @Index(columnList = "ecmr_id")
+})
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class DocumentEntity extends BaseEntity {
-    @Column(unique = true)
+    @NotNull
+    private String storageProvider;
+
+    @Column(unique = true, nullable = false)
     private String documentId;
 
-    @NotNull
+    @Column(name = "ecmr_id", nullable = false)
     private UUID ecmrId;
 
     @NotNull
@@ -43,19 +50,12 @@ public class DocumentEntity extends BaseEntity {
 
     @NotNull
     @CreationTimestamp
-    private Timestamp uploadDate;
+    @Column(nullable = false, updatable = false)
+    private Instant uploadDate;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    private DocumentMimeType mimeType;
+    private String mimeType;
 
     @NotNull
-    private int size;
-
-    public DocumentEntity(UUID ecmrId, MultipartFile file) {
-        this.ecmrId = ecmrId;
-        this.fileName = file.getOriginalFilename();
-        this.mimeType = DocumentMimeType.fromContentType(file.getContentType());
-        this.size = (int) file.getSize();
-    }
+    private long size;
 }
