@@ -8,7 +8,6 @@
 package org.openlogisticsfoundation.ecmr.domain.services.documents;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
