@@ -92,12 +92,8 @@ public class EcmrPdfService {
             HashMap<String, Object> parameters = setEcmrParameters(ecmrModel, sealMetadata, isCopy);
             parameters.put("items", itemDataSource);
 
-            byte[] mainJasperPdf = JasperRunManager.runReportToPdf(jasperReport, parameters, new JREmptyDataSource());
-            //TODO: Download from blob storage, convert files to pdf using FileToPdfConverter (In services.documents) then merge using mergePdf
-            // Method below
-            byte[] mergedPdf = new byte[mainJasperPdf.length + 1000];
-
-            return new PdfFile("eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf", mergedPdf);
+            return new PdfFile("eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf",
+                    JasperRunManager.runReportToPdf(jasperReport, parameters, new JREmptyDataSource()));
         } catch (JRException e) {
             log.error(e);
             throw new PdfCreationException("Error generating report: " + e.getMessage());
