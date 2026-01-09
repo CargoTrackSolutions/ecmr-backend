@@ -49,14 +49,14 @@ class AzureBlobStorageProvider implements DocumentStorageProvider {
     }
 
     @Override
-    public InputStream downloadFile(String documentIdentifier) throws StorageProviderException {
-        BlobClient blobClient = blobContainerClient.getBlobClient(documentIdentifier);
+    public InputStream downloadFile(String documentId) throws StorageProviderException {
+        BlobClient blobClient = blobContainerClient.getBlobClient(documentId);
         return blobClient.openInputStream();
     }
 
     @Override
-    public boolean deleteFile(String documentIdentifier) {
-        BlobClient blobClient = blobContainerClient.getBlobClient(documentIdentifier);
+    public boolean deleteFile(String documentId) {
+        BlobClient blobClient = blobContainerClient.getBlobClient(documentId);
         return blobClient.deleteIfExists();
     }
 }

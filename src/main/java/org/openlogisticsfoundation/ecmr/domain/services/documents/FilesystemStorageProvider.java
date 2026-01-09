@@ -31,31 +31,31 @@ public class FilesystemStorageProvider implements DocumentStorageProvider {
     }
 
     public String uploadFile(UUID ecmrId, InputStream inputStream) throws StorageProviderException {
-        String documentIdentifier = generateUniqueFileId(ecmrId);
-        try (FileOutputStream fileOutputStream = new FileOutputStream(getFullPath(documentIdentifier))) {
+        String documentId = generateUniqueFileId(ecmrId);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(getFullPath(documentId))) {
             inputStream.transferTo(fileOutputStream);
-            return documentIdentifier;
+            return documentId;
         } catch (IOException e) {
             throw new StorageProviderException(e);
         }
     }
 
     @Override
-    public InputStream downloadFile(String documentIdentifier) throws StorageProviderException {
+    public InputStream downloadFile(String documentId) throws StorageProviderException {
         try {
-            return new FileInputStream(getFullPath(documentIdentifier));
+            return new FileInputStream(getFullPath(documentId));
         } catch (FileNotFoundException e) {
             throw new StorageProviderException(e);
         }
     }
 
     @Override
-    public boolean deleteFile(String documentIdentifier) {
-        String fullPath = getFullPath(documentIdentifier);
+    public boolean deleteFile(String documentId) {
+        String fullPath = getFullPath(documentId);
         return new File(fullPath).delete();
     }
 
-    private String getFullPath(String documentIdentifier) {
-        return directory + File.separator + documentIdentifier;
+    private String getFullPath(String documentId) {
+        return directory + File.separator + documentId;
     }
 }

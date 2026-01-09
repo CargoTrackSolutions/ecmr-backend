@@ -27,7 +27,7 @@ interface DocumentStorageProvider {
      *
      * @return Returns a stream that contains the content of the file
      */
-    InputStream downloadFile(String documentIdentifier) throws StorageProviderException;
+    InputStream downloadFile(String documentId) throws StorageProviderException;
 
     default String generateUniqueFileId(UUID ecmrId) {
         return ecmrId.toString() + "--" + UUID.randomUUID().toString();
@@ -35,8 +35,8 @@ interface DocumentStorageProvider {
 
     /**
      *
-     * @param documentIdentifier
+     * @param documentId
      * @return true when file was deleted, false when file does not exist
      */
-    boolean deleteFile(String documentIdentifier);
+    boolean deleteFile(String documentId);
 }
