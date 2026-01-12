@@ -36,7 +36,7 @@ public class EcmrCountMetric {
         Gauge.builder("ecmr_count", loadingCount, AtomicLong::get).tag("status", "loading").tag("type", "ecmr").register(meterRegistry);
         Gauge.builder("ecmr_count", inTransportCount, AtomicLong::get).tag("status", "in_transport").tag("type", "ecmr").register(meterRegistry);
         Gauge.builder("ecmr_count", deliveredCount, AtomicLong::get).tag("status", "delivered").tag("type", "ecmr").register(meterRegistry);
-        Gauge.builder("ecmr_count", archivedCount, AtomicLong::get).tag("type", "archived").register(meterRegistry);
+        Gauge.builder("ecmr_count", archivedCount, AtomicLong::get).tag("status", "").tag("type", "archived").register(meterRegistry);
     }
 
     @Scheduled(fixedDelayString = "PT60S")
