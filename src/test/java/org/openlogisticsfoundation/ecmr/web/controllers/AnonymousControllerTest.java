@@ -92,6 +92,7 @@ public class AnonymousControllerTest {
     private MockMvc mockMvc;
 
     private ExternalUserRegistrationModel registrationModel;
+    private ExternalUser externalUser;
 
     private final String validTan = "valid-tan";
     private final String validUserToken = "user-token";
@@ -99,6 +100,8 @@ public class AnonymousControllerTest {
     @BeforeEach
     void setUp() {
         registrationModel = new ExternalUserRegistrationModel(UUID.randomUUID(), "valid_share_token", "John", "Doe", "Example Company", "john.doe@example.com", "123456789");
+        externalUser = new ExternalUser(1L, "John", "Doe", "Example Company", "john.doe@example.com", "123456789", validUserToken, validTan,
+                Instant.MAX);
     }
 
     @Test
@@ -124,7 +127,7 @@ public class AnonymousControllerTest {
         ExternalUserRegistrationCommand command = new ExternalUserRegistrationCommand(registrationModel.getEcmrId(), registrationModel.getShareToken(), registrationModel.getFirstName(), registrationModel.getLastName(), registrationModel.getCompany(), registrationModel.getEmail(), registrationModel.getPhone());
 
         when(externalUserWebMapper.map(any())).thenReturn(command);
-        when(externalUserService.registerExternalUser(command)).thenReturn(validUserToken);
+        when(externalUserService.registerExternalUser(command)).thenReturn(externalUser);
 
         String jsonRequest = new ObjectMapper().writeValueAsString(registrationModel);
 
