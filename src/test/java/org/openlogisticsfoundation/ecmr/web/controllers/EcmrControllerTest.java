@@ -207,6 +207,7 @@ public class EcmrControllerTest {
         // Arrange
         when(authenticationService.getAuthenticatedUser(true)).thenReturn(authenticatedUser);
         when(ecmrWebMapper.toCommand(ecmrModel)).thenReturn(ecmrCommand);
+        when(ecmrCreationService.createEcmr(eq(ecmrCommand), eq(authenticatedUser), any())).thenReturn(ecmrModel);
 
         // Act
         mockMvc.perform(post("/ecmr").param("groupId", "1,2").contentType(MediaType.APPLICATION_JSON).content(jsonRequest))
