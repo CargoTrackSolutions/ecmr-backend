@@ -107,7 +107,7 @@ public class EcmrImportService {
     //    }
 
     @Transactional
-    public void importEcmrFromExternal(ExternalEcmrSharingCommand command)
+    public UUID importEcmrFromExternal(ExternalEcmrSharingCommand command)
             throws ValidationException, ShareExternallyException, InvalidSealException, UserNotFoundException, UrlNotApprovedException,
             EcmrAlreadyExistsException {
 
@@ -140,6 +140,7 @@ public class EcmrImportService {
                     command.getReceivingUserEmail(), command.getShareToken(), command.getSenderSeal(), command.getCarrierSeal(), null,
                     Instant.now(), null);
             this.saveEcmrImport(ecmrImport);
+            return ecmrId;
         } catch (JsonProcessingException e) {
             throw new ValidationException("No valid ecmr seal, could not extract data: " + e.getMessage());
         }

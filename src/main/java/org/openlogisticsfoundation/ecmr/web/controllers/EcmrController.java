@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.SealMetadata;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
@@ -78,10 +79,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @RestController
 @RequestMapping("/ecmr")
 @RequiredArgsConstructor
+@Log4j2
 public class EcmrController {
 
     private final EcmrService ecmrService;
@@ -207,6 +210,7 @@ public class EcmrController {
         try {
             AuthenticatedUser authenticatedUser = this.authenticationService.getAuthenticatedUser(true);
             createdEcmr = this.ecmrCreationService.createEcmr(ecmrCommand, authenticatedUser, groupIds);
+            log.info("Created ecmr {} by user {}", createdEcmr.getEcmrId(), authenticatedUser);
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (NoPermissionException e) {
@@ -239,6 +243,7 @@ public class EcmrController {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
             ecmrDeleteService.deleteEcmr(ecmrId, new InternalOrExternalUser(authenticatedUser.getUser()));
+            log.info("Deleted ecmr {} by user {}", ecmrId, authenticatedUser);
         } catch (ValidationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (AuthenticationException e) {
@@ -277,6 +282,7 @@ public class EcmrController {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
             ecmrDeleteService.bulkDeleteEcmrs(request.getEcmrIds(), new InternalOrExternalUser(authenticatedUser.getUser()));
+            log.info("Deleted ecmrs {} by user {}", String.join(",", request.getEcmrIds().stream().map(UUID::toString).toList()), authenticatedUser);
         } catch (ValidationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (AuthenticationException e) {
@@ -315,6 +321,7 @@ public class EcmrController {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
             EcmrModel result = this.ecmrUpdateService.archiveEcmr(ecmrId, authenticatedUser);
+            log.info("Archived ecmr {} by user {}", ecmrId, authenticatedUser);
             return ResponseEntity.ok(result);
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -359,8 +366,8 @@ public class EcmrController {
     public ResponseEntity<List<EcmrModel>> bulkArchiveEcmrs(@RequestBody @Valid BulkRequest request) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-
             List<EcmrModel> results = this.ecmrUpdateService.bulkArchiveEcmrs(request.getEcmrIds(), authenticatedUser);
+            log.info("Archived ecmrs {} by user {}", String.join(",", request.getEcmrIds().stream().map(UUID::toString).toList()), authenticatedUser);
             return ResponseEntity.ok(results);
         } catch (EcmrsNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -400,6 +407,7 @@ public class EcmrController {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
             EcmrModel result = this.ecmrUpdateService.reactivateEcmr(ecmrId, authenticatedUser);
+            log.info("Unarchived ecmr {} by user {}", ecmrId, authenticatedUser);
             return ResponseEntity.ok(result);
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -444,9 +452,9 @@ public class EcmrController {
             @RequestBody @Valid EcmrShareModel ecmrShareModel) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-            return ResponseEntity.ok(
-                    this.ecmrShareService.shareEcmr(new InternalOrExternalUser(authenticatedUser.getUser()), ecmrId, ecmrShareModel.getEmail(),
-                            ecmrShareModel.getRole()));
+            EcmrShareResponse ecmrShareResponse = this.ecmrShareService
+                    .shareEcmr(new InternalOrExternalUser(authenticatedUser.getUser()), ecmrId, ecmrShareModel.getEmail(), ecmrShareModel.getRole());
+            return ResponseEntity.ok(ecmrShareResponse);
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         } catch (NotImplementedException e) {
@@ -577,6 +585,7 @@ public class EcmrController {
             UUID ecmrId = UUID.fromString(ecmrModel.getEcmrId());
             EcmrCommand ecmrCommand = ecmrWebMapper.toCommand(ecmrModel);
             EcmrModel result = this.ecmrUpdateService.updateEcmr(ecmrCommand, ecmrId, new InternalOrExternalUser(authenticatedUser.getUser()));
+            log.info("Updated ecmr {} by user {}", ecmrId, authenticatedUser);
             return ResponseEntity.ok(result);
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());

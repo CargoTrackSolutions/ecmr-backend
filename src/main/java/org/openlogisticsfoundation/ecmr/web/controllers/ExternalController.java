@@ -7,6 +7,8 @@
  */
 package org.openlogisticsfoundation.ecmr.web.controllers;
 
+import java.util.UUID;
+
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrAlreadyExistsException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.InvalidSealException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ShareExternallyException;
@@ -34,10 +36,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/external")
 @RequiredArgsConstructor
+@Slf4j
 public class ExternalController {
 
     private final EcmrShareService ecmrShareService;
@@ -89,7 +93,8 @@ public class ExternalController {
     public ResponseEntity<Void> importEcmrFromExternal(@RequestBody @NotNull @Valid ExternalEcmrSharingModel model) {
         try {
             ExternalEcmrSharingCommand externalEcmrSharingCommand = externalEcmrSharingMapper.toCommand(model);
-            this.ecmrImportService.importEcmrFromExternal(externalEcmrSharingCommand);
+            UUID ecmrId = this.ecmrImportService.importEcmrFromExternal(externalEcmrSharingCommand);
+            log.info("Added ecmr {} from external to import queue", ecmrId);
             return ResponseEntity.ok().build();
         } catch (InvalidSealException | ValidationException | ShareExternallyException | UrlNotApprovedException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());

@@ -69,10 +69,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @RestController
 @RequestMapping("/anonymous")
 @RequiredArgsConstructor
+@Log4j2
 public class AnonymousController {
     private final EcmrShareService ecmrShareService;
     private final ExternalUserWebMapper externalUserWebMapper;
@@ -138,8 +140,9 @@ public class AnonymousController {
             @Valid @RequestBody ExternalUserRegistrationModel externalUserRegistrationModel) {
         try {
             ExternalUserRegistrationCommand command = externalUserWebMapper.map(externalUserRegistrationModel);
-            String userToken = this.externalUserService.registerExternalUser(command);
-            return ResponseEntity.ok(new ExternalUserRegistrationResponseModel(command.getEcmrId(), userToken));
+            ExternalUser externalUser = this.externalUserService.registerExternalUser(command);
+            log.info("Registered external user {} for ecmr {}", externalUser, command.getEcmrId());
+            return ResponseEntity.ok(new ExternalUserRegistrationResponseModel(command.getEcmrId(), externalUser.getUserToken()));
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (ValidationException e) {
@@ -257,6 +260,7 @@ public class AnonymousController {
             ExternalUser externalUser = this.authenticationService.getExternalUser(ecmrId, userToken, tan);
             EcmrCommand ecmrCommand = ecmrWebMapper.toCommand(ecmrModel);
             EcmrModel result = this.ecmrUpdateService.updateEcmr(ecmrCommand, ecmrId, new InternalOrExternalUser(externalUser));
+            log.info("Updated ecmr {} by external user {}", ecmrId, externalUser);
             return ResponseEntity.ok(result);
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -295,6 +299,7 @@ public class AnonymousController {
         try {
             ExternalUser externalUser = this.authenticationService.getExternalUser(ecmrId, userToken, tan);
             this.ecmrSealService.sealEcmr(ecmrId, new InternalOrExternalUser(externalUser));
+            log.info("Sealed ecmr {} by external user {}", ecmrId, externalUser);
             return ResponseEntity.ok().build();
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());

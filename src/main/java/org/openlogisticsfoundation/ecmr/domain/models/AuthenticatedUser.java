@@ -14,4 +14,9 @@ import lombok.Getter;
 @Getter
 public class AuthenticatedUser {
     private final User user;
+
+    @Override
+    public String toString() {
+        return "[id=" + user.getId() + ", email=" + user.getEmail() + "]";
+    }
 }

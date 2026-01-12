@@ -64,4 +64,7 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
     boolean existsByEcmrId(UUID ecmrId);
 
     void deleteAllByEcmrIdIn(List<UUID> ecmrIds);
+
+    int countByType(EcmrType type);
+    int countByTypeAndEcmrStatus(EcmrType type, EcmrStatus status);
 }

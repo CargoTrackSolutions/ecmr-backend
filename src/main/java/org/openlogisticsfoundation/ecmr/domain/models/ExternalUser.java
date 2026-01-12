@@ -24,4 +24,9 @@ public class ExternalUser {
     private String userToken;
     private String tan;
     private Instant tanValidUntil;
+
+    @Override
+    public String toString() {
+        return "[id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + "]";
+    }
 }

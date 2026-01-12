@@ -95,7 +95,7 @@ public class ExternalUserService {
     }
 
     ///  Return the user token
-    public String registerExternalUser(@Valid ExternalUserRegistrationCommand command)
+    public ExternalUser registerExternalUser(@Valid ExternalUserRegistrationCommand command)
             throws EcmrNotFoundException, ValidationException, MessageProviderException, RateLimitException {
         if (StringUtils.isBlank(command.getPhone())) {
             // Currently only phone is supported. Sharing an ecmr via e-mail could be a security risk
@@ -128,7 +128,7 @@ public class ExternalUserService {
                 .replace("{tan}", tan);
         String tanMessage = "Your tan code is " + tan + " Please enter your code or click on the following link: " + ecmrLink;
         this.phoneMessageProvider.sendMessage(command.getPhone(), tanMessage);
-        return userToken;
+        return externalUserPersistenceMapper.toDomain(externalUserEntity);
     }
 
     private ExternalUserEntity createAndSaveExternalUser(final ExternalUserRegistrationCommand command, final String userToken, final String tan) {
