@@ -22,6 +22,7 @@ import org.openlogisticsfoundation.ecmr.domain.mappers.SealMetadataPersistenceMa
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.persistence.entities.SealMetadataEntity;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.SealMetadataRepository;
+import org.openlogisticsfoundation.ecmr.persistence.repositories.SealRepository;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
@@ -34,6 +35,7 @@ public class SealMetadataService {
     private final SealMetadataRepository sealMetadataRepository;
     private final AuthorisationService authorisationService;
     private final SealMetadataPersistenceMapper sealMetadataPersistenceMapper;
+    private final SealRepository sealRepository;
 
     public boolean sealExists(UUID ecmrId) {
         return sealMetadataRepository.existsByEcmrId(ecmrId);
@@ -45,18 +47,23 @@ public class SealMetadataService {
                 .toList();
     }
 
-    List<SealMetadata> getSealMetadata(UUID ecmrId) {
-        return sealMetadataRepository.findByEcmrId(ecmrId).stream()
-                .map(sealMetadataPersistenceMapper::toDomain)
-                .toList();
+    public String getSealByMetadataId(long id) {
+        //Throw an IllegalStateException when no seal was found for this sealmetadata.id
+        return sealRepository.findByMetadataId(id).orElseThrow(() -> new IllegalStateException("No seal found for seal metadata id " + id)).getSeal();
     }
 
-    List<SealMetadataEntity> getSealMetadataEntities(UUID ecmrId, InternalOrExternalUser internalOrExternalUser) throws NoPermissionException {
+    public List<SealMetadataEntity> getSealMetadataEntities(UUID ecmrId, InternalOrExternalUser internalOrExternalUser) throws NoPermissionException {
         if (authorisationService.hasNoRole(internalOrExternalUser, ecmrId)) {
             throw new NoPermissionException("No permission to load seal metadata");
         }
         this.getSealMetadataEntities(ecmrId);
         return this.getSealMetadataEntities(ecmrId);
+    }
+
+    List<SealMetadata> getSealMetadata(UUID ecmrId) {
+        return sealMetadataRepository.findByEcmrId(ecmrId).stream()
+                .map(sealMetadataPersistenceMapper::toDomain)
+                .toList();
     }
 
     Map<TransportRole, SealMetadataEntity> getSealMetadataEntitiesMap(UUID ecmrId, InternalOrExternalUser internalOrExternalUser) throws NoPermissionException {

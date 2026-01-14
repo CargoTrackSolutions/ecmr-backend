@@ -94,7 +94,7 @@ public class SealService {
         Optional<SealMetadataEntity> currentSealMetadata = sealMetadataService.getCurrentSealMetadataEntity(ecmrId, internalOrExternalUser);
 
         //When currentSealMetadata is present, load the corresponding sealentity and return the actual seal string
-        Optional<String> currentSeal = currentSealMetadata.map(sealMetadata -> this.getSealByMetadataId(sealMetadata.getId()));
+        Optional<String> currentSeal = currentSealMetadata.map(sealMetadata -> sealMetadataService.getSealByMetadataId(sealMetadata.getId()));
 
         // Get the TransportRole of the seal that will be created
         TransportRole nextSealRole = TransportRole.SENDER;
@@ -112,11 +112,6 @@ public class SealService {
         this.createSeal(ecmrEntity, currentSeal.orElse(null), internalOrExternalUser, nextSealRole);
 
         this.ecmrStatusService.setEcmrStatus(ecmrEntity, internalOrExternalUser);
-    }
-
-    String getSealByMetadataId(long id) {
-        //Throw an IllegalStateException when no seal was found for this sealmetadata.id
-        return sealRepository.findByMetadataId(id).orElseThrow(() -> new IllegalStateException("No seal found for seal metadata id " + id)).getSeal();
     }
 
     private void createSeal(EcmrEntity ecmrEntity, @Nullable String precedingSeal, InternalOrExternalUser user, TransportRole role) {

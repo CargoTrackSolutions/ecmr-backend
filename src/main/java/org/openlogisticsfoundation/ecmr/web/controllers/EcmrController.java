@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.SealMetadata;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;

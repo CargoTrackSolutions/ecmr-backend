@@ -162,13 +162,15 @@ public class EcmrShareService {
         externalEcmrSharingModel.setSharingUserEmail(
                 internalOrExternalUser.isInternalUser() ? internalOrExternalUser.getInternalUser().getEmail() : null);
         try {
-            externalEcmrSharingModel.setSenderSeal(sealService.getSealByMetadataId(validatedEcmrForSharing.sealMetadata.get(TransportRole.SENDER).getId()));
+            externalEcmrSharingModel.setSenderSeal(
+                    sealMetadataService.getSealByMetadataId(validatedEcmrForSharing.sealMetadata.get(TransportRole.SENDER).getId()));
         } catch (NullPointerException e) {
             throw new ValidationException("Sender Seal Missing");
         }
 
         if(validatedEcmrForSharing.sealMetadata.containsKey(TransportRole.CARRIER)) {
-            externalEcmrSharingModel.setSenderSeal(sealService.getSealByMetadataId(validatedEcmrForSharing.sealMetadata.get(TransportRole.CARRIER).getId()));
+            externalEcmrSharingModel.setSenderSeal(
+                    sealMetadataService.getSealByMetadataId(validatedEcmrForSharing.sealMetadata.get(TransportRole.CARRIER).getId()));
         }
         return externalEcmrSharingModel;
     }
