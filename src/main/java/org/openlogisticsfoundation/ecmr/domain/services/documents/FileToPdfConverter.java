@@ -7,18 +7,19 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.services.documents;
 
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.openlogisticsfoundation.ecmr.domain.models.Document;
 import org.openlogisticsfoundation.ecmr.domain.models.DocumentMimeType;
-import org.openlogisticsfoundation.ecmr.persistence.entities.DocumentEntity;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.log4j.Log4j2;
@@ -27,15 +28,17 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class FileToPdfConverter {
 
-    public void toPdf(DocumentEntity document, byte[] data, OutputStream output) {
+    public RandomAccessReadBuffer toPdf(Document document, InputStream input) {
 
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
+        try {
             if (DocumentMimeType.PDF.getMimeTypes().contains(document.getMimeType())) {
-                inputStream.transferTo(output);
+                return new RandomAccessReadBuffer(input);
             }
 
             if (DocumentMimeType.IMAGE.getMimeTypes().contains(document.getMimeType())) {
-                imageToPdf(inputStream, output);
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                imageToPdf(input, output);
+                return new RandomAccessReadBuffer(output.toByteArray());
             }
 
             throw new IllegalArgumentException("Unsupported document type");
@@ -44,11 +47,18 @@ public class FileToPdfConverter {
         }
     }
 
-    public void imageToPdf(InputStream imageStream, OutputStream out)
+    private void imageToPdf(InputStream imageStream, OutputStream out)
             throws IOException {
-        try (PDDocument doc = new PDDocument()) {
 
-            PDImageXObject image = PDImageXObject.createFromByteArray(doc, imageStream.readAllBytes(), null);
+        try (PDDocument doc = new PDDocument()) {
+            byte[] imageBytes = imageStream.readAllBytes();
+
+            if (imageBytes.length > 20 * 1024 * 1024) {
+                throw new IllegalStateException("Image too large");
+            }
+
+            PDImageXObject image =
+                    PDImageXObject.createFromByteArray(doc, imageBytes, null);
 
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);

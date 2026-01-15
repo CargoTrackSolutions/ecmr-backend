@@ -8,6 +8,7 @@
 package org.openlogisticsfoundation.ecmr.domain.services;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -19,8 +20,10 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
@@ -36,8 +39,11 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrPersistenceMapper;
+import org.openlogisticsfoundation.ecmr.domain.models.Document;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.PdfFile;
+import org.openlogisticsfoundation.ecmr.domain.services.documents.DocumentService;
+import org.openlogisticsfoundation.ecmr.domain.services.documents.FileToPdfConverter;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.ResourceLoader;
@@ -48,8 +54,10 @@ import lombok.extern.log4j.Log4j2;
 import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.JasperRunManager;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.renderers.Renderable;
 import net.sf.jasperreports.renderers.SimpleDataRenderer;
@@ -63,15 +71,17 @@ public class EcmrPdfService {
     private final EcmrService ecmrService;
     private final EcmrPersistenceMapper ecmrPersistenceMapper;
     private final SealMetadataService sealMetadataService;
+    private final DocumentService documentService;
+    private final FileToPdfConverter fileToPdfConverter;
 
-    public PdfFile createJasperReportForEcmr(UUID id, InternalOrExternalUser internalOrExternalUser, boolean isCopy)
+    public PdfFile createJasperReportForEcmr(UUID id, InternalOrExternalUser internalOrExternalUser, boolean isCopy, boolean withDocuments)
             throws NoPermissionException, EcmrNotFoundException, PdfCreationException {
         EcmrModel ecmrModel = this.ecmrService.getEcmr(id, internalOrExternalUser);
         List<SealMetadata> sealMetadata = sealMetadataService.getSealMetadata(id, internalOrExternalUser);
-        return this.createJasperReportForEcmr(ecmrModel, sealMetadata, isCopy);
+        return this.createJasperReportForEcmr(ecmrModel, sealMetadata, isCopy, withDocuments);
     }
 
-    public PdfFile createJasperReportForEcmrReader(UUID id, String shareToken, boolean isCopy)
+    public PdfFile createJasperReportForEcmrReader(UUID id, String shareToken, boolean isCopy, boolean withDocuments)
             throws NoPermissionException, EcmrNotFoundException, PdfCreationException {
         EcmrEntity ecmrEntity = this.ecmrService.getEcmrEntity(id);
         if (!ecmrEntity.getShareWithReaderToken().equals(shareToken)) {
@@ -79,38 +89,73 @@ public class EcmrPdfService {
         }
 
         List<SealMetadata> sealMetadata = sealMetadataService.getSealMetadata(id);
-        return this.createJasperReportForEcmr(ecmrPersistenceMapper.toModel(ecmrEntity), sealMetadata, isCopy);
+        return this.createJasperReportForEcmr(ecmrPersistenceMapper.toModel(ecmrEntity), sealMetadata, isCopy, withDocuments);
     }
 
-    private PdfFile createJasperReportForEcmr(EcmrModel ecmrModel, List<SealMetadata> sealMetadata, boolean isCopy) throws PdfCreationException {
-        try {
-            InputStream ecmrReportStream = getClass().getResourceAsStream("/reports/ecmr.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(ecmrReportStream);
+    private PdfFile createJasperReportForEcmr(EcmrModel ecmrModel, List<SealMetadata> sealMetadata, boolean isCopy, boolean withDocuments)
+            throws PdfCreationException {
+        String filename = "eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf";
 
-            List<ItemBean> itemBeans = convertToItemBeans(ecmrModel.getEcmrConsignment().getItemList());
-            JRBeanCollectionDataSource itemDataSource = new JRBeanCollectionDataSource(itemBeans);
-            HashMap<String, Object> parameters = setEcmrParameters(ecmrModel, sealMetadata, isCopy);
-            parameters.put("items", itemDataSource);
+        Consumer<OutputStream> pdfWriter = outputStream -> {
+            try (InputStream ecmrReportStream = getClass().getResourceAsStream("/reports/ecmr.jrxml")) {
+                JasperReport jasperReport = JasperCompileManager.compileReport(ecmrReportStream);
 
-            return new PdfFile("eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf",
-                    JasperRunManager.runReportToPdf(jasperReport, parameters, new JREmptyDataSource()));
-        } catch (JRException e) {
-            log.error(e);
-            throw new PdfCreationException("Error generating report: " + e.getMessage());
-        } catch (IOException e) {
-            throw new PdfCreationException("I/O error occurred: " + e.getMessage());
-        }
+                List<ItemBean> itemBeans = convertToItemBeans(ecmrModel.getEcmrConsignment().getItemList());
+                JRBeanCollectionDataSource itemDataSource = new JRBeanCollectionDataSource(itemBeans);
+
+                Map<String, Object> parameters = setEcmrParameters(ecmrModel, sealMetadata, isCopy);
+                parameters.put("items", itemDataSource);
+
+                JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+                List<RandomAccessReadBuffer> pdfSources = new ArrayList<>();
+
+                if (withDocuments) {
+                    try (ByteArrayOutputStream jasperPdfTmp = new ByteArrayOutputStream()) {
+                        JasperExportManager.exportReportToPdfStream(print, jasperPdfTmp);
+                        pdfSources.add(new RandomAccessReadBuffer(jasperPdfTmp.toByteArray()));
+                    }
+
+                    List<RandomAccessReadBuffer> ecmrFiles = downloadEcmrFiles(UUID.fromString(ecmrModel.getEcmrId()));
+
+                    pdfSources.addAll(ecmrFiles);
+
+                    mergePdfs(pdfSources, outputStream);
+                } else {
+                    JasperExportManager.exportReportToPdfStream(print, outputStream);
+                }
+            } catch (JRException e) {
+                throw new RuntimeException(new PdfCreationException("Error generating report"));
+            } catch (IOException e) {
+                throw new RuntimeException(new PdfCreationException("I/O error occurred"));
+            }
+        };
+
+        return new PdfFile(filename, pdfWriter);
     }
 
-    public void mergePdfs(List<InputStream> sources, OutputStream destination) {
+    private List<RandomAccessReadBuffer> downloadEcmrFiles(UUID ecmrId) {
+        List<Document> documents = documentService.getDocumentsByEcmrId(ecmrId);
+        List<RandomAccessReadBuffer> sources = new ArrayList<>();
+
+        documents.forEach(document -> {
+            try (InputStream documentStream = documentService.downloadDocument(document.getId())) {
+                sources.add(fileToPdfConverter.toPdf(document, documentStream));
+            } catch (Exception e) {
+                log.warn("Failed to process document with id {} | {}", document.getId(), e.getMessage());
+            }
+        });
+
+        return sources;
+    }
+
+    private void mergePdfs(List<RandomAccessReadBuffer> sources, OutputStream destination) {
         PDFMergerUtility merger = new PDFMergerUtility();
         merger.setDestinationStream(destination);
 
         List<RandomAccessReadBuffer> buffers = new ArrayList<>();
 
         try {
-            for (InputStream in : sources) {
-                RandomAccessReadBuffer buffer = new RandomAccessReadBuffer(in);
+            for (RandomAccessReadBuffer buffer : sources) {
                 buffers.add(buffer);
                 merger.addSource(buffer);
             }
@@ -123,7 +168,8 @@ public class EcmrPdfService {
             buffers.forEach(buffer -> {
                 try {
                     buffer.close();
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                }
             });
         }
     }

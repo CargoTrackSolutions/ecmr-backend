@@ -61,6 +61,10 @@ public class DocumentService {
         if (authorisationService.hasNoRole(user, ecmrId)) {
             throw new NoPermissionException("No permission to get documents for ECMR: " + ecmrId);
         }
+        return getDocumentsByEcmrId(ecmrId);
+    }
+
+    public List<Document> getDocumentsByEcmrId(UUID ecmrId) {
         return documentRepository.findByEcmrId(ecmrId).stream().map(documentPersistenceMapper::toDocument).toList();
     }
 
@@ -79,6 +83,11 @@ public class DocumentService {
         if (authorisationService.hasNoRole(user, documentEntity.getEcmrId())) {
             throw new NoPermissionException("No permission to download documents for ECMR: " + documentEntity.getEcmrId());
         }
+        return downloadDocument(documentId);
+    }
+
+    public InputStream downloadDocument(long documentId) throws DocumentNotFoundException {
+        DocumentEntity documentEntity = documentRepository.findById(documentId).orElseThrow(() -> new DocumentNotFoundException(documentId));
         return documentStorageProvider.downloadFile(documentEntity.getDocumentId());
     }
 
