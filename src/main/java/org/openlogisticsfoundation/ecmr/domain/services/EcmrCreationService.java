@@ -90,8 +90,6 @@ public class EcmrCreationService {
         ecmrAssignmentEntity.setGroup(groupEntity);
         ecmrAssignmentEntity.setRole(ecmrRole);
         ecmrAssignmentRepository.save(ecmrAssignmentEntity);
-
-        this.ecmrStatusService.setEcmrStatus(ecmrEntity, new InternalOrExternalUser(user));
     }
 
     private EcmrEntity createEcmr(EcmrEntity ecmrEntity, EcmrType type, String fullName, @Nullable String importToken, ActionType actionType) {

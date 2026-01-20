@@ -8,6 +8,8 @@
 
 package org.openlogisticsfoundation.ecmr.domain.services;
 
+import java.util.List;
+
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
@@ -32,12 +34,24 @@ public class EcmrStatusService {
     private final SealMetadataService sealMetadataService;
 
     public EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity, InternalOrExternalUser user) throws NoPermissionException {
-        EcmrStatus previousState = ecmrEntity.getEcmrStatus();
-
         @Nullable
         TransportRole currentSealRole = sealMetadataService.getCurrentSealMetadataEntity(ecmrEntity.getEcmrId(), user)
                 .map(SealMetadataEntity::getRole)
                 .orElse(null);
+        return setEcmrStatus(ecmrEntity, currentSealRole, user);
+
+    }
+
+    EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity) {
+        List<SealMetadataEntity> sealMetadataEntities = sealMetadataService.getSealMetadataEntities(ecmrEntity.getEcmrId());
+        SealMetadataEntity currentSealMetadataEntity = sealMetadataService.getCurrentSealMetadataEntity(sealMetadataEntities).orElse(null);
+        TransportRole currentRole = currentSealMetadataEntity != null ? currentSealMetadataEntity.getRole() : TransportRole.SENDER;
+
+        return setEcmrStatus(ecmrEntity, currentRole, null);
+    }
+
+    private EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity, @Nullable TransportRole currentSealRole, @Nullable InternalOrExternalUser user) {
+        EcmrStatus previousState = ecmrEntity.getEcmrStatus();
 
         ecmrEntity.setEcmrStatus(EcmrStatus.NEW);
         if (currentSealRole == TransportRole.CONSIGNEE) {
@@ -50,6 +64,7 @@ public class EcmrStatusService {
 
         ecmrEntity = ecmrRepository.save(ecmrEntity);
         ecmrStatusChangedService.ecmrStatusChanged(previousState, ecmrEntity, user);
+
         return ecmrEntity;
     }
 }

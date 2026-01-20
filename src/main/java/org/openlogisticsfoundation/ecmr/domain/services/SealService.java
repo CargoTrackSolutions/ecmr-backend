@@ -180,8 +180,7 @@ public class SealService {
                 throw new InvalidSealException("Fingerprints not valid");
             }
             return jws.getLeafCertificateHeaderValue();
-        } catch (JsonProcessingException | ExecutionException | InterruptedException | TextParseException | JoseException |
-                 IllegalArgumentException e) {
+        } catch (JsonProcessingException | ExecutionException | InterruptedException | TextParseException | JoseException | IllegalArgumentException e) {
             throw new InvalidSealException(e.getMessage());
         }
     }

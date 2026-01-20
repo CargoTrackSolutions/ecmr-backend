@@ -5,6 +5,7 @@
  * For details on the licensing terms, see the LICENSE file.
  * SPDX-License-Identifier: OLFL-1.3
  */
+
 package org.openlogisticsfoundation.ecmr.persistence.entities;
 
 import java.time.Instant;

@@ -30,6 +30,7 @@ import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -59,7 +60,7 @@ public class EcmrUpdateService {
     }
 
     public List<EcmrModel> bulkArchiveEcmrs(List<UUID> ecmrIds, AuthenticatedUser authenticatedUser)
-        throws ValidationException, NoPermissionException, EcmrsNotFoundException {
+            throws ValidationException, NoPermissionException, EcmrsNotFoundException {
 
         InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
         for (UUID ecmrId : ecmrIds) {
@@ -91,7 +92,7 @@ public class EcmrUpdateService {
     }
 
     public EcmrModel reactivateEcmr(UUID ecmrUuid, AuthenticatedUser authenticatedUser)
-        throws EcmrNotFoundException, ValidationException, NoPermissionException {
+            throws EcmrNotFoundException, ValidationException, NoPermissionException {
         if (authorisationService.hasNoRole(new InternalOrExternalUser(authenticatedUser.getUser()), ecmrUuid)) {
             throw new NoPermissionException("No permission for this task");
         }
@@ -106,24 +107,45 @@ public class EcmrUpdateService {
     @Transactional
     public EcmrModel updateEcmr(EcmrCommand ecmrCommand, UUID ecmrId, InternalOrExternalUser internalOrExternalUser)
             throws EcmrNotFoundException, NoPermissionException {
+
+        return updateEcmrInternal(ecmrCommand, ecmrId, internalOrExternalUser);
+    }
+
+    @Transactional
+    public EcmrModel updateEcmr(EcmrCommand ecmrCommand, UUID ecmrId)
+            throws EcmrNotFoundException, NoPermissionException {
+
+        return updateEcmrInternal(ecmrCommand, ecmrId, null);
+    }
+
+    private EcmrModel updateEcmrInternal(EcmrCommand ecmrCommand, UUID ecmrId, @Nullable InternalOrExternalUser user)
+            throws EcmrNotFoundException, NoPermissionException {
         EcmrEntity ecmrEntity = ecmrRepository.findByEcmrId(ecmrId)
                 .orElseThrow(() -> new EcmrNotFoundException(ecmrId));
 
-        if (!authorisationService.validateUpdateCommand(ecmrCommand, ecmrEntity, internalOrExternalUser)) {
-            throw new NoPermissionException("Update is not allowed");
+        if (user != null) {
+            if (!authorisationService.validateUpdateCommand(ecmrCommand, ecmrEntity, user)) {
+                throw new NoPermissionException("Update is not allowed");
+            }
         }
+
+        String userName = user != null ? user.getFullName() : "System User";
 
         ecmrEntity = persistenceMapper.toEntity(ecmrEntity, ecmrCommand, EcmrType.ECMR);
 
         ecmrEntity.setEditedAt(Instant.now());
-        ecmrEntity.setEditedBy(internalOrExternalUser.getFullName());
+        ecmrEntity.setEditedBy(userName);
 
         ecmrEntity = ecmrService.cleanPhoneNumbers(ecmrEntity);
-
         ecmrEntity = ecmrRepository.save(ecmrEntity);
-        ecmrEntity = this.ecmrStatusService.setEcmrStatus(ecmrEntity, internalOrExternalUser);
 
-        historyLogService.writeHistoryLog(ecmrEntity, internalOrExternalUser.getFullName(), ActionType.Edit);
+        if (user != null) {
+            ecmrEntity = ecmrStatusService.setEcmrStatus(ecmrEntity, user);
+        } else {
+            ecmrEntity = ecmrStatusService.setEcmrStatus(ecmrEntity);
+        }
+
+        historyLogService.writeHistoryLog(ecmrEntity, userName, ActionType.Edit);
 
         return persistenceMapper.toModel(ecmrEntity);
     }

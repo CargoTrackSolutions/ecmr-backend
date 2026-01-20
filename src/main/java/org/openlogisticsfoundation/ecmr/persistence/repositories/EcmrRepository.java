@@ -67,4 +67,12 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
 
     int countByType(EcmrType type);
     int countByTypeAndEcmrStatus(EcmrType type, EcmrStatus status);
+
+    @Query("""
+       SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END
+       FROM EcmrEntity e
+       WHERE e.ecmrId = :ecmrId
+       AND (e.shareWithSenderToken = :shareToken OR e.shareWithCarrierToken = :shareToken OR e.shareWithConsigneeToken = :shareToken)
+       """)
+    boolean shareTokenExists(UUID ecmrId, String shareToken);
 }

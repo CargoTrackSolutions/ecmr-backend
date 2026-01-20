@@ -84,7 +84,7 @@ public class SealMetadataService {
         return getCurrentSealMetadataEntity(sealMetadataEntities);
     }
 
-    private Optional<SealMetadataEntity> getCurrentSealMetadataEntity(List<SealMetadataEntity> sealMetadataEntities) {
+    Optional<SealMetadataEntity> getCurrentSealMetadataEntity(List<SealMetadataEntity> sealMetadataEntities) {
         Optional<SealMetadataEntity> consigneeSeal = sealMetadataEntities.stream().filter(x -> x.getRole() == TransportRole.CONSIGNEE).findFirst();
         Optional<SealMetadataEntity> carrierSeal = sealMetadataEntities.stream().filter(x -> x.getRole() == TransportRole.CARRIER).findFirst();
         Optional<SealMetadataEntity> senderSeal = sealMetadataEntities.stream().filter(x -> x.getRole() == TransportRole.SENDER).findFirst();

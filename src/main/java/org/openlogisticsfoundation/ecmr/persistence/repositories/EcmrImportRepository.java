@@ -26,4 +26,6 @@ public interface EcmrImportRepository extends JpaRepository<EcmrImportEntity, Lo
 
     void deleteByEcmrId(UUID ecmrId);
     void deleteAllByEcmrIdIn(List<UUID> ecmrIds);
+
+    EcmrImportEntity findByEcmrId(UUID ecmrId);
 }

@@ -72,6 +72,10 @@ public class EcmrImportService {
         return ecmrImportRepository.findAllByImportTimestampNull().stream().map(ecmrImportPersistenceMapper::toEcmrImport).toList();
     }
 
+    public EcmrImportEntity getEcmrImportEntity(UUID ecmrId) {
+        return ecmrImportRepository.findByEcmrId(ecmrId);
+    }
+
     void saveEcmrImport(EcmrImport ecmrImport) {
         EcmrImportEntity importEntity = ecmrImportPersistenceMapper.toEcmrImportEntity(ecmrImport);
         ecmrImportRepository.save(importEntity);
@@ -188,7 +192,7 @@ public class EcmrImportService {
             return true;
         }
 
-        if (!ecmrImport.getInstanceUrl().equals(sealedDocument.getEcmr().getEcmrId())) {
+        if (!ecmrImport.getInstanceUrl().equals(sealedDocument.getSealMetadata().getOriginUrl())) {
             this.setErrorAndRetryState(ecmrImport, "URL_NOT_MATCHING");
             return true;
         }
