@@ -51,6 +51,7 @@ whose goal is to define and implement digital document standards (like eCMR, del
 - Spring Boot 3.4.5
 - OpenAPI Specification
 - Docker
+- Docker Compose setup uses eclipse-temurin-21
 
 ## Documentation
 
