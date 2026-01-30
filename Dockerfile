@@ -1,8 +1,10 @@
-FROM eclipse-temurin:21_35-jre-jammy
+FROM eclipse-temurin:21.0.9_10-jre-noble
+
+#Update packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG APPLICATION_VERSION=n.a
 ENV APPLICATION_VERSION=$APPLICATION_VERSION
-
 
 COPY startup.sh /root/startup.sh
 RUN chmod +x /root/startup.sh \

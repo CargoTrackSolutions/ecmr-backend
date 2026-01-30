@@ -8,7 +8,11 @@ COPY src/ /app/src/
 RUN mvn clean package \
     -DskipTests -Dmaven.source.skip=true -Dmaven.javadoc.skip=true
 
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21.0.9_10-jre-noble
+
+#Update packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir /app && chmod ugo+rwx /app
 COPY --from=build /app/target/ecmr-backend-*.jar /app/ecmr-backend.jar
 EXPOSE 8080
