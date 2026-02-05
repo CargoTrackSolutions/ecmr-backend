@@ -15,15 +15,19 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
+import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserManagementNotAvailableException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserAlreadyExistsException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotExternalException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.UserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.Group;
 import org.openlogisticsfoundation.ecmr.domain.models.User;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.UserCommand;
+import org.openlogisticsfoundation.ecmr.domain.services.ExternalUserManagementFacade;
 import org.openlogisticsfoundation.ecmr.domain.services.UserService;
 import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
 import org.openlogisticsfoundation.ecmr.web.mappers.UserWebMapper;
@@ -47,6 +51,7 @@ public class UserController {
     private final UserService userService;
     private final UserWebMapper userWebMapper;
     private final AuthenticationService authenticationService;
+    private final ExternalUserManagementFacade externalUserManagementFacade;
 
     /**
      * Retrieves the currently authenticated user.
@@ -313,4 +318,49 @@ public class UserController {
         }
     }
 
+
+    @PostMapping("/reset-password")
+    @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    public void resetPassword(@RequestParam() String email) {
+        try {
+            User user = userService.getActiveUserByEmail(email);
+            externalUserManagementFacade.resetPassword(user);
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (ExternalUserManagementNotAvailableException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
+        } catch (UserNotExternalException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @GetMapping("/mfa")
+    @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    public boolean getExternalUserMfaStatus(@RequestParam String email) {
+        try {
+            User user = userService.getActiveUserByEmail(email);
+            return externalUserManagementFacade.getExternalUserMfaStatus(user);
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (ExternalUserManagementNotAvailableException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
+        } catch (UserNotExternalException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @PatchMapping("/mfa")
+    @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    public void changeMfa(@RequestParam() String email, @RequestParam() boolean mfaEnabled) {
+        try {
+            User user = userService.getActiveUserByEmail(email);
+            externalUserManagementFacade.changeMfa(user, mfaEnabled);
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (ExternalUserManagementNotAvailableException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
+        } catch (UserNotExternalException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
 }

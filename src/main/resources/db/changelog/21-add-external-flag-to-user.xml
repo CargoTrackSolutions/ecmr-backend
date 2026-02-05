@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1769614190103-24" author="thomas.dukvin">
+        <addColumn tableName="ecmr_user">
+            <column name="external_account" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1769614190103-25" author="thomas.dukvin">
+        <update tableName="ecmr_user">
+            <column name="external_account" valueBoolean="false"/>
+            <where>external_account IS NULL</where>
+        </update>
+    </changeSet>
+    <changeSet id="1769614190103-26" author="thomas.dukvin">
+        <addNotNullConstraint columnDataType="BOOLEAN" columnName="external_account" tableName="ecmr_user"/>
+    </changeSet>
+</databaseChangeLog>

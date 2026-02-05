@@ -21,7 +21,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -52,6 +54,9 @@ import lombok.extern.log4j.Log4j2;
 @Sql(value = { "/clear-all-tables.sql" }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @Sql(value = { "/test-data.sql" })
 public class AbstractIntegrationTest {
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
     @Autowired
     protected MockMvc mvc;
 

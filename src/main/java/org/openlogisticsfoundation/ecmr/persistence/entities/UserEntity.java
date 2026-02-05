@@ -54,4 +54,5 @@ public class UserEntity extends BaseEntity {
     private boolean deactivated = false;
     @ColumnDefault("false")
     private boolean technical = false;
+    private boolean externalAccount = false;
 }

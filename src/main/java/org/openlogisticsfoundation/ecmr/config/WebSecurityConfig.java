@@ -19,6 +19,7 @@ import org.openlogisticsfoundation.ecmr.domain.services.ApiKeyAuthenticationServ
 import org.openlogisticsfoundation.ecmr.domain.services.RoleService;
 import org.openlogisticsfoundation.ecmr.persistence.entities.UserEntity;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -31,6 +32,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -70,7 +73,9 @@ public class WebSecurityConfig {
     }
 
     private Set<String> getRoles(Jwt jwt) {
-        Optional<String> emailOpt = Optional.ofNullable(jwt.getClaimAsString("email")).or(() -> Optional.ofNullable(jwt.getClaimAsString("upn")));
+        Optional<String> emailOpt = Optional.ofNullable(jwt.getClaimAsString("email"))
+                        .or(() -> Optional.ofNullable(jwt.getClaimAsString("upn")))
+                        .or(() -> Optional.ofNullable(jwt.getClaimAsString("sub")));
         if (emailOpt.isEmpty()) {
             return Set.of();
         }
@@ -98,6 +103,11 @@ public class WebSecurityConfig {
         http.anonymous(AbstractHttpConfigurer::disable);
         http.exceptionHandling(x -> x.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
         return http.build();
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri) {
+        return JwtDecoders.fromIssuerLocation(issuerUri);
     }
 
     @AllArgsConstructor

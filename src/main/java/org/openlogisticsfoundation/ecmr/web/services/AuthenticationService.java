@@ -61,11 +61,14 @@ public class AuthenticationService {
     private User getUserFromJwt(Jwt jwt) throws AuthenticationException {
         Optional<String> emailClaim = Optional.ofNullable(jwt.getClaimAsString("email"));
         Optional<String> upnClaim = Optional.ofNullable(jwt.getClaimAsString("upn"));
+        Optional<String> subClaim = Optional.ofNullable(jwt.getClaimAsString("sub"));
         String email;
         if (emailClaim.isPresent()) {
             email = emailClaim.get();
         } else if (upnClaim.isPresent()) {
             email = upnClaim.get();
+        } else if (subClaim.isPresent()) {
+            email = subClaim.get();
         } else {
             throw new AuthenticationException("Authentication has no claim of type email or upn");
         }

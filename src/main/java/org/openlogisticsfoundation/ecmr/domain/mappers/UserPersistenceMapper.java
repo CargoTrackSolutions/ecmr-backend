@@ -21,12 +21,14 @@ public interface UserPersistenceMapper {
     @Mapping(target = "defaultGroup", ignore = true)
     @Mapping(target = "deactivated", ignore = true)
     @Mapping(target = "technical", ignore = true)
+    @Mapping(target = "externalAccount", ignore = true)
     UserEntity toUserEntity(UserCommand userCommand);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "defaultGroup", ignore = true)
     @Mapping(target = "deactivated", ignore = true)
     @Mapping(target = "technical", ignore = true)
+    @Mapping(target = "externalAccount", ignore = true)
     UserEntity toUserEntity(@MappingTarget UserEntity entity, UserCommand userCommand);
 
     @Mapping(target = "defaultGroupId", source = "defaultGroup.id")

@@ -22,6 +22,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.Group;
 import org.openlogisticsfoundation.ecmr.domain.models.User;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.UserCommand;
+import org.openlogisticsfoundation.ecmr.domain.services.usermanagement.UserCreated;
 import org.openlogisticsfoundation.ecmr.persistence.entities.GroupEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.UserEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.UserToGroupEntity;
@@ -43,6 +44,7 @@ public class UserService {
     private final GroupRepository groupRepository;
     private final UserToGroupRepository userToGroupRepository;
     private final GroupPersistenceMapper groupPersistenceMapper;
+    private final List<UserCreated> userCreatedListener;
     private final GroupService groupService;
 
     public List<String> getAllUserEmails() {
@@ -73,7 +75,14 @@ public class UserService {
             UserToGroupEntity userToGroupEntity = new UserToGroupEntity(userEntity, groupEntity);
             this.userToGroupRepository.save(userToGroupEntity);
         }
-        return userPersistenceMapper.toUser(userEntity);
+
+        User newUser = userPersistenceMapper.toUser(userEntity);
+
+        for(UserCreated listener : userCreatedListener) {
+            listener.onUserCreated(newUser);
+        }
+
+        return newUser;
     }
 
     private void validateAndSetGroup(AuthenticatedUser authenticatedUser, @Valid UserCommand userCommand, UserEntity userEntity)

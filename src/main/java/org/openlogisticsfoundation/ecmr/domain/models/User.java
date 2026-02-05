@@ -27,4 +27,5 @@ public class User {
     private Long defaultGroupId;
     private boolean deactivated;
     private boolean technical;
+    private boolean externalAccount;
 }
