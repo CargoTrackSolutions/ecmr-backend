@@ -14,16 +14,20 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Component
 @AllArgsConstructor
 @Profile("jobs")
+@Log4j2
 public class DeleteEcmrsTask {
 
     private final DeleteOldEcmrsService deleteOldEcmrsService;
 
     @Scheduled(cron = "${ecmr.cron.delete}", zone = "UTC")
     public void deleteOldEcmrs(){
+        log.info("--- Delete old Ecmrs Job started");
         deleteOldEcmrsService.deleteOldEcmrs();
+        log.info("--- Delete old Ecmrs Job end");
     }
 }

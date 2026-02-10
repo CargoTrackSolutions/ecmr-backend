@@ -14,19 +14,23 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Component
 @AllArgsConstructor
 @Profile("jobs")
+@Log4j2
 public class ForwardSyncTask {
 
     private final EcmrForwardSyncService ecmrForwardSyncService;
 
     @Scheduled(cron = "${ecmr.cron.forward-sync}", zone = "UTC")
     public void forwardSyncToExternalInstance() {
+        log.info("--- Forward Sync Job started");
         boolean isSynced;
         do {
             isSynced = ecmrForwardSyncService.forwardSyncToExternalInstance();
         } while (isSynced);
+        log.info("--- Forward Sync Job end");
     }
 }

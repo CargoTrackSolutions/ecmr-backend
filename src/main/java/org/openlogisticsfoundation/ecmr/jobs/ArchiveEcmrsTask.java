@@ -14,17 +14,20 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
-
+import lombok.extern.log4j.Log4j2;
 
 @Component
 @AllArgsConstructor
 @Profile("jobs")
+@Log4j2
 public class ArchiveEcmrsTask {
 
     private final EcmrUpdateService ecmrUpdateService;
 
     @Scheduled(cron = "${ecmr.cron.archive}", zone = "UTC")
     public void archiveEcmrs(){
+        log.info("--- Archive Ecmrs Job started");
         ecmrUpdateService.archiveEcmrs();
+        log.info("--- Archive Ecmrs Job started");
     }
 }
