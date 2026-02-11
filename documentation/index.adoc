@@ -11,14 +11,11 @@
 
 === Motivation
 
-This documentation describes an implementation of digital convention relative au contrat de transport international de marchandises par route (eCMR) and focuses on the backend application including an api / interfaces.
-This document is written to be published under the Open Logistics Foundation License 1.3 (OLFL-1.3).
+This documentation describes the implementation of digital convention relative au contrat de transport international de marchandises par route (eCMR) and focuses on the backend application including an api / interfaces. This document is written to be published under the Open Logistics Foundation License 1.3 (OLFL-1.3).
 
 === Scope
 
-The ecmr backend is the core component of the ecmr service and is intended to be used for the exchange and processing of eCMRs. An important part of the project is
-the ecmr service api for the communication with the service as well as for the
-interaction between several ecmr service instances.
+The ecmr backend is the core component of the ecmr service and is intended to be used for the exchange and processing of eCMRs. An important part of the project is the ecmr service api for the communication with the service as well as for the interaction between several ecmr service instances.
 
 === Documentation Approach
 
@@ -26,7 +23,13 @@ The documentation of the individual projects is in English and is based on
 the link:https://docs.arc42.org/home/[arc42 template] using the AsciiDoc plan
 text markup language.
 
-https://docs.gitlab.com/ee/user/asciidoc.html[GitLab Asciidoc] gives an overview of how to use asciidoc in a GitLab project.
+Additionally, we have added a distinct chapter <<eCMR-component-configuration>> that describes the configuration of all components, including
+eSEAL,
+attaching a User Management System and a database.
+
+You will find a glossary at the very end of the documentation.
+
+https://docs.gitlab.com/ee/user/asciidoc.html[GitLab AsciiDoc] gives an overview of how to use AsciiDoc in a GitLab project.
 
 === Main Authors
 
@@ -37,7 +40,6 @@ https://docs.gitlab.com/ee/user/asciidoc.html[GitLab Asciidoc] gives an overview
 
 |Björn Krämer | <bjoern.kraemer@iml.fraunhofer.de>
 |Niklas Burczyk | <niklas.burczyk@iml.fraunhofer.de>
-|Lisa Gebel| <lisa.gebel@iml.fraunhofer.de>
 |Jens Leveling  |<Jens.Leveling@iml.fraunhofer.de>
 |Marcus Schröer| <Marcus.Schroeer@iml.fraunhofer.de>
 
@@ -58,11 +60,11 @@ include::02_architecture_constraints.adoc[]
 
 <<<
 // 3. System Scope and Context
-include::03_system_scope_and_context.adoc[]
+// include::03_system_scope_and_context.adoc[]
 
 <<<
 // 4. Solution Strategy
-include::04_solution_strategy.adoc[]
+// include::04_solution_strategy.adoc[]
 
 <<<
 // 5. Building Block View
@@ -70,15 +72,15 @@ include::05_building_block_view.adoc[]
 
 <<<
 // 6. Runtime View
-include::06_runtime_view.adoc[]
+//include::06_runtime_view.adoc[]
 
 <<<
 // 7. Deployment View
-// include::07_deployment_view.adoc[]
+include::07_deployment_view.adoc[]
 
 <<<
 // 8. Concepts
-// include::08_concepts.adoc[]
+include::08_concepts.adoc[]
 
 <<<
 // 9. Design Decisions
@@ -93,12 +95,12 @@ include::06_runtime_view.adoc[]
 // include::11_technical_risks.adoc[]
 
 <<<
-// 12. Tutorial
-include::12-development-guidelines.adoc[]
+// 13. Tutorial --> Component Configuration
+include::13_component_configuration.adoc[]
 
 <<<
-// 13. Tutorial
-include::13_tutorial.adoc[]
+// 14. Development Guidelines
+include::14_development-guidelines.adoc[]
 
 <<<
 // Glossary

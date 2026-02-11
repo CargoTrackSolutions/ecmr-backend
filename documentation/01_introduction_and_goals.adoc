@@ -3,30 +3,50 @@
 
 This sections describes the background and origin of the eCMR
 
+=== Project description
+
+The eCMR (electronic consignment note) is an open source standard and software solution developed by the Open Logistics Foundation to digitally modernize the international consignment note (CMR) and enable seamless, interoperable transport documentation across the supply chain.
+
+*Who built it?*
+More than 28 logistics service providers, transport platforms, and logistics and IT service providers worked together on the new standard.
+These organizations represent a wide range of European countries and contribute diverse perspectives based on company size, operational roles, and real-world practice.
+
+*Why was it built?*
+This project was initiated to address the ongoing challenges of paper-based transport documentation and fragmented digital solutions.
+The goal was to create a shared, open and interoperable approach without forcing organizations into proprietary systems or vendor lock ins.
+
+*For whom is it intended?*
+The eCMR is designed for all key stakeholders involved in road freight transport, including:
+
+- logistics service providers and carriers
+- shippers and consignees
+- transport platforms and freight networks
+- IT and software providers supporting transport processes
+
 === Initial Position and Current Complications
 
-A consignment note or CMR is a shipping document, that accompanies freight transport nationally and internationally.
-In both areas the document contains similar contents and fulfills functions such as information carrier or evidential functions.
+A consignment note, or CMR, is a shipping document that accompanies freight transport nationally and internationally.
+In both areas, the document contains similar contents and fulfills functions such as information carrier or evidential functions.
 Today, CMRs are usually filled out manually and analogically on paper, which creates a large effort when trying to handle all documents included in one shipment.
 In practice, there is also not a consistent layout of the CMR, neither in national nor in international transportation.
-Furthermore, the CMR often is not the only document carried along with a shipment, usually further supporting documents such as documents relating to dangerous goods or samples are included.
+Furthermore, the CMR is often not the only document carried along with a shipment — usually further supporting documents such as documents relating to dangerous goods or samples are included.
 The necessity of organizing and archiving this multitude of documents leads to higher efforts when trying to retrieve documents or in administrative management.
 Along the chain of information there is a risk of media breaks, transmission errors and misinformation caused by the storage and further processing of the documents.
-The CMR note is legally recognized in over 55 states around the world.
+The CMR note is legally recognized in over 55 countries around the world.
 
-=== eCMR as a Solution to the Prevalent Problems
+=== eCMR as a Solution to Prevalent Problems
 
-Therefore, the vision driving the development of the eCMR is the development and implementation of a digital service that enables the creation, storage, and further processing of eCMR both for the national and international transport.
+Therefore, the vision driving the development of the eCMR is the development and implementation of a digital service that enables the creation, storage, and further processing of eCMR, both for the national and international transport.
 This eCMR is machine and human-readable, offers a standardized layout, and ensures easy handling of all documents when exchanging with partners.
 To eliminate the effort associated with the administration of the multitude of documents accompanying a shipment, the eCMR makes the attachment of further supporting documents possible.
 Those documents will only be available in human-readable form.
-The administration expense is thereby reduced by https://www.dvz.de/rubriken/logistik/detail/news/unterwegs-noch-wenig-digital.html[4 €] – https://rio.cloud/de/news/branche/digitaler-frachtbrief[13 €] which results in a cost reduction of 50 % compared to the paper-based version.
-Furthermore, the improvement in efficiency and sustainability resulting from the digitalization of cargo transportation and logistics services leads to saving of time in information transfer and https://vrioeurope.com/en/digital-transformation-ecmr-a-digital-future-for-the-cmr-document/[reduced use in resources] since paper is no longer necessary.
-
-Another goal of the eCMR is to eliminate unauthorized third-party access, thus an access security system (authentication service) with specifically defined access rights for authorized parties is implemented.
-The risk of media breaks, transmission errors and misinformation is also reduced because subsequent editing of the eCMR is possible, however manipulation of previously saved information remains unchangeable.
-For any additions features such as digital stamping is available.
-All processes along the route of transportation are saved in the processing protocol and are saved along with the data set.
+The administration expense is thereby reduced by between 4 € and 13 €, which results in a cost reduction of 50 % compared to the paper-based version.
+Furthermore, the improvement in efficiency and sustainability resulting from the digitalization of cargo transportation and logistics services leads to time saved in information transfer and reduced use in resources since paper is no longer necessary.
+Another goal of the eCMR is to eliminate unauthorized third-party access.
+Thus, an access security system (authentication service) with specifically defined access rights for authorized parties is implemented.
+The risk of media breaks, transmission errors and misinformation is also reduced because subsequent editing of the eCMR is possible, while previously saved information remains uncompromisable.
+Additional features such as digital stamping are available.
+All processes along the route of transportation are saved in the processing protocol along with the data set.
 
 === Requirements Overview
 
@@ -81,8 +101,8 @@ a|- Agreement relating the contract of carriage in the international road freigh
 
 |CMR template of International Road Transport Union (IRU)
 |Strong resemblance of eCMR-layout to the IRU template
-a|- CMR template of International Road Transport Union (IRU)
-- Template available since 2007 and is widely prevalent in paper based CMRs
+a| CMR template of International Road Transport Union (IRU) that has been available since 2007 and is widely prevalent
+in paper based CMRs
 |https://www.iru.org/resources/iru-library/iru-cmr-model-2007[Link]
 
 |eCMR protocol

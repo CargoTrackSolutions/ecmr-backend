@@ -1,20 +1,22 @@
-[[section-tutorial]]
+[[section-component-configuration]]
 
-== Tutorial
+[#eCMR-component-configuration]
+== eCMR component configuration
 
-There is a tutorial to show how to setup, start and use the ecmr service.
+There is a guide to show how to set up, start and configure the ecmr service and its components.
 
-// We need an tutorial to setup an ecmr instance that includes:
+You will find all important environment variables in this chapter.
 
 The eCMR components are developed and maintained in the Open Logistics Foundation's GitLab repository. The source code and documentation can be accessed at:
 GitLab https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr[Repository]
 
-=== Contact
+=== Give Feedback & Get Involved
 
-If you have any question or for feedback please contact us via ecmr-feedback@lists.openlogisticsfoundation.org
+Your feedback helps improve the eCMR service and its interoperability in real-world logistics environments. Share
+your ideas, report issues, or suggest improvements directly via ecmr-feedback@lists.openlogisticsfoundation.org
+or https://git.openlogisticsfoundation.org/groups/wg-electronictransportdocuments/ecmr/-/boards/132[GitLab Issue Board]
 
-If you found an issue or if you have an change request please visit our
-https://git.openlogisticsfoundation.org/groups/wg-electronictransportdocuments/ecmr/-/boards/132[GitLab Issue Board]
+Whether it’s a question, integration experience, or a merge request — contributions from the community are welcome and encouraged.
 
 ===  General information
 
@@ -22,16 +24,6 @@ This tutorial provides step-by-step instructions on how to set up, start, and us
 
 * ecmr data model description https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-model/-/tree/main/documentation?ref_type=heads[Link]
 * API description https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/fd4f0f6e22b895f4c676b28e25b1b19f5571c05c/openapi.yaml[Link]
-
-=== General requirements
-
-Before setting up eCMR, ensure the following requirements are met:
-
-* Docker environment
-* A Database Management System (DBMS). The ecmr Instance is tested with Postgres
-and Microsoft SQL Server
-* A User Management System that supports OAuth. The ecmr Instance is tested
-with keycloak
 
 === Running the docker-compose setup
 
@@ -57,6 +49,7 @@ Verify all containers are running:
 
   docker ps
 
+[#frontend-configuration]
 === Setup eCMR Frontend
 
 To use the frontend the following variables need to be set through environment variables:
@@ -66,7 +59,7 @@ To use the frontend the following variables need to be set through environment v
 * optional: OAUTH_ADDITIONAL_SCOPES
 * BACKEND_API_URL
 
-==== Backend in einem Container starten
+==== build and start ecmr-frontend container
 Build the project using the following command:
 [source, bash]
 ----
@@ -79,6 +72,7 @@ Start the container using the following command:
 docker run -p 8080:8080 [optional: --env-file .env] ecmr-frontend
 ----
 
+[#backend-configuration]
 === Setup eCMR Backend
 
 To start the eCMR backend, a DBMS (e.g. postgres) and a User Management System (e.g. keycloak) must be available.
@@ -94,6 +88,7 @@ To use postgres, the following properties must be set:
 
 When starting the backend for the first time, all database tables are created through liquibase.
 
+[#backend-configuration-usermanagement]
 ==== User Management System
 To use keycloak for user management, the following property must be set:
 ----
@@ -130,7 +125,7 @@ Also make sure to set these properties correctly:
 * web.cors.origins: the url to your eCMR frontend
 * app.origin.url: the value for the property "originUrl" for signed eCMRs, should be the url to your eCMR backend application. This is also used in the e-mail when sharing an eCMR
 
-==== Backend in einem Container starten
+==== Start backend container
 Build the project using the following command:
 [source, bash]
 ----
@@ -143,6 +138,7 @@ Start the container using the following command:
 docker run -p 8080:8080 [optional: --env-file .env] ecmr-backend
 ----
 
+[#eseal-configuraton]
 === Setup eSEAL
 
 The eSeal dependencies for both the verifier and the signer are included through maven in this project.
@@ -233,11 +229,3 @@ Store your public key (in the truststore) in a location accessible (e.g. a gitla
 1. Create a repository for the truststore. Make sure the repository is publicly available.
 2. Add your truststore with the key to the gitlab repository.
 3. Use the link to the truststore in your project (e.g. https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal-public-keystore/-/raw/main/fraunhofer-test-truststore.jks)
-
-=== Setup Start eCMR
-
-===  How to establish sharing eCMR
-
-Overview, architecture and workflow sharing eCMRs between instances
-
-...

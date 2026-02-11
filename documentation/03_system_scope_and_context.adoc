@@ -1,4 +1,4 @@
 [[section-system-scope-and-context]]
 == System Scope and Context
 
-This section describes the scope of the eCMR backend.
+This section is currently not in use.

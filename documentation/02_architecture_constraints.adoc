@@ -32,23 +32,18 @@ The following organizational constraints apply:
 |===
 | Id | Constraint | Background and / or Motivation
 
-| O1 | Schedule   | Milestones:
-
-04/2021 completion of Version 0.1 for eCMR
-
-| O2 | Parts         |
-| O3 | Process model | Development, agile/Scrum. To describe the architecture arc42 is used.
-| O4 | Development tools |
+| O1 | Process model | Development, agile/Scrum. To describe the architecture arc42 is used.
+| O2 | Development tools |
 
 Java source code created in IntelliJ.
-| O5 | Configuration management      | Git at GitLab hosted by Open Logistics Foundation
-| O6 | Test tools and test processes | Unit testing as part of a CI/CD Pipeline (stage test)
+| O3 | Configuration management      | Git at GitLab hosted by Open Logistics Foundation
+| O4 | Test tools and test processes | Unit testing as part of a CI/CD Pipeline (stage test)
 
 Java based components: SpringBootTest
 
-| O7 | Other tools | Maven 3.8.6 for Build Management
+| O5 | Other tools | Maven 3.8.6 for Build Management
 
-Spring Boot 3.2.4 as Application Framework (Java)
+Spring Boot 3.4.5 as Application Framework (Java)
 
 Java 17
 

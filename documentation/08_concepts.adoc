@@ -1,5 +1,9 @@
 [[section-concepts]]
 
+== Concepts
+
+This section describes core concepts of the ecmr service.
+
 === Domain Model
 
 See https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-model[eCMR data model] for

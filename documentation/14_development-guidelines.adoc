@@ -1,9 +1,11 @@
 
-= Development Guidelines
+== Development Guidelines
 :toc:
 :toclevels: 2
 
-== Docker Compose Setup (Development Only)
+This chapter serves as an onboarding guide for new developers and outlines the prerequisites, development setup, and key concepts required to start contributing to the eCMR project.
+
+=== Docker Compose Setup (Development Only)
 
 We use `docker-compose.yaml` for local development and testing. This setup includes application containers and essential services like databases or message queues.
 
@@ -31,7 +33,7 @@ the parameters of your smtp server (if you want to be able to share eCMRs with e
 Change the user password in the realm configuration files.
 To add other users you must add them to realm config file and to the backend project (resources/db/init-data.xml). Please verify that the email addresses are identical.
 
-=== Usage
+==== Usage
 
 [source, bash]
 ----
@@ -51,12 +53,12 @@ docker-compose up --build
 The backend is available at `http://localhost:8081`.
 The frontend is available at `http://localhost:8082`.
 
-=== Common pitfalls
+==== Common pitfalls
 
 - Ensure Docker Desktop or Docker Engine is running.
 - Use `.env` files for local configuration, but do *not* commit secrets.
 
-== Import commands for development
+=== Import commands for development
 
 The following commands are useful for typical development workflows:
 This section is split into the ecmr components:
@@ -64,15 +66,15 @@ This section is split into the ecmr components:
 * ecmr-backend
 * ecmr-frontend
 
-=== ecmr-backend
+==== ecmr-backend
 
-==== Run tests
+===== Run tests
 
 Docker must be available to run the integration tests (src/test/e2e) as it is used to start the keycloak testcontainer.
 
   mvn test
 
-==== Licenses of third-party dependencies
+===== Licenses of third-party dependencies
 The licenses used by this project's third-party dependencies are documented in the third-party-licenses directory.
 This is done to encourage developers to check the licenses used by the third-party dependencies to ensure they do not conflict with the license of
 this project itself.
@@ -108,29 +110,29 @@ Check all files, if a license header is given
 
   mvn  license:check
 
-=== ecmr-frontend
+==== ecmr-frontend
 
-==== Build
+===== Build
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
-==== Adding texts to the privacy disclaimer and imprint components
+===== Adding texts to the privacy disclaimer and imprint components
 
-Add texts as html files to the assets/texts folders in the following scheme:
+Add texts as HTML files to the assets/texts folders in the following scheme:
 
   - privacy disclaimer: privacy.\[language].html
   - example: privacy.de.html
   - imprint and legal matter: imprint.\[language].html
   - example: imprint.de.html
 
-==== Run Tests
+===== Run Tests
 
 Run ``ng test`` to execute the unit tests via Karma. Use the --code-coverage flag to analyze code coverage.
 Run ``ng test --watch false --progress false --code-coverage --browsers=ChromeHeadless`` for testing in any
 environment without an X Server.
 
 
-==== Third Party License Overview
+===== Third Party License Overview
 
 *Generate Third Party License File*
 
