@@ -117,6 +117,7 @@ public class EcmrImportService {
 
         //Verify Seal
         if (!sealService.verify(this.getListOfSeals(command.getSenderSeal(), command.getCarrierSeal()))) {
+            log.debug("Seal verification failed while importing sender={}, carrier={}", command.getSenderSeal(), command.getCarrierSeal());
             throw new InvalidSealException();
         }
         try {
@@ -130,12 +131,14 @@ public class EcmrImportService {
             //Check if user exists and has default group
             User activeUserByEmail = userService.getActiveUserByEmail(command.getReceivingUserEmail());
             if (activeUserByEmail.getDefaultGroupId() == null) {
+                log.debug("User {} has no Default Group", command.getReceivingUserEmail());
                 throw new ValidationException("User has no Default Group");
             }
 
             //Check if ecmr already exists
             UUID ecmrId = UUID.fromString(sealedDocument.getEcmr().getEcmrId());
             if (ecmrService.existsByEcmrId(ecmrId) || ecmrImportRepository.existsByEcmrId(ecmrId)) {
+                log.debug("Ecmr {} already exists", ecmrId);
                 throw new EcmrAlreadyExistsException(ecmrId);
             }
 
@@ -146,6 +149,7 @@ public class EcmrImportService {
             this.saveEcmrImport(ecmrImport);
             return ecmrId;
         } catch (JsonProcessingException e) {
+            log.debug("Could not deserialize seal payload: {}", e.getMessage(), e);
             throw new ValidationException("No valid ecmr seal, could not extract data: " + e.getMessage());
         }
     }
@@ -171,12 +175,14 @@ public class EcmrImportService {
         Optional<ApprovedUrl> approvedUrl = approvedUrlService.getApprovedUrl(ecmrImport.getInstanceUrl());
         if (approvedUrl.isEmpty() || !approvedUrl.get().isApprovedState()) {
             this.setErrorAndRetryState(ecmrImport, null);
+            log.debug("Url {} of ecmrImport {} is empty or not approved", ecmrImport.getInstanceUrl(), ecmrImport.getId());
             return true;
         }
 
         //Verify Seal
         if (!sealService.verify(getListOfSeals(ecmrImport.getSenderSeal(), ecmrImport.getCarrierSeal()))) {
             this.setErrorAndRetryState(ecmrImport, "INVALID_SEAL");
+            log.debug("Seal of ecmrImport {} is invalid", ecmrImport.getId());
             return true;
         }
 
@@ -189,11 +195,14 @@ public class EcmrImportService {
                     SealedDocument.class);
         } catch (JsonProcessingException e) {
             this.setErrorAndRetryState(ecmrImport, "INVALID_SEAL");
+            log.debug("Seal of ecmrImport {} is invalid", ecmrImport.getId());
             return true;
         }
 
         if (!ecmrImport.getInstanceUrl().equals(sealedDocument.getSealMetadata().getOriginUrl())) {
             this.setErrorAndRetryState(ecmrImport, "URL_NOT_MATCHING");
+            log.debug("Url {} of ecmrImport {} does not match with originUrl {} of seal", ecmrImport.getInstanceUrl(), ecmrImport.getId(),
+                    sealedDocument.getSealMetadata().getOriginUrl());
             return true;
         }
 
@@ -203,10 +212,12 @@ public class EcmrImportService {
             activeUserByEmail = userService.getActiveUserByEmail(ecmrImport.getReceivingUserEmail());
         } catch (UserNotFoundException e) {
             this.setErrorAndRetryState(ecmrImport, "USER_NOT_EXISTS");
+            log.debug("User {} of ecmrImport {} does not exist", ecmrImport.getReceivingUserEmail(), ecmrImport.getId());
             return true;
         }
         if (activeUserByEmail.getDefaultGroupId() == null) {
             this.setErrorAndRetryState(ecmrImport, "USER_NO_DEFAULT_GROUP");
+            log.debug("User {} of ecmrImport {} has no default group", ecmrImport.getReceivingUserEmail(), ecmrImport.getId());
             return true;
         }
 
@@ -214,6 +225,7 @@ public class EcmrImportService {
         UUID ecmrId = UUID.fromString(sealedDocument.getEcmr().getEcmrId());
         if (ecmrService.existsByEcmrId(ecmrId)) {
             this.setErrorAndRetryState(ecmrImport, "ECMR_ALREADY_EXISTS");
+            log.debug("Ecmr {} of ecmrImport {} already exists", ecmrId, ecmrImport.getId());
             return true;
         }
 
@@ -225,6 +237,7 @@ public class EcmrImportService {
                         SealedDocument.class);
             } catch (JsonProcessingException e) {
                 this.setErrorAndRetryState(ecmrImport, "INVALID_SEAL");
+                log.debug("Seal of ecmrImport {} is invalid | {}", ecmrImport.getId(), e.getMessage());
                 return true;
             }
 
@@ -241,12 +254,16 @@ public class EcmrImportService {
                     this.getNextRole(sealedDocument.getSealMetadata().getRole()), ecmrImport.getShareToken());
         } catch (GroupNotFoundException e) {
             this.setErrorAndRetryState(ecmrImport, "USER_GROUP_NOT_FOUND");
+            log.debug("User {} of ecmrImport {} has no default group | {}", ecmrImport.getReceivingUserEmail(), ecmrImport.getId(), e.getMessage());
             return true;
         } catch (NoPermissionException e) {
             this.setErrorAndRetryState(ecmrImport, "USER_NO_PERMISSION");
+            log.debug("User {} of ecmrImport {} has no permission to create ecmr | {}", ecmrImport.getReceivingUserEmail(), ecmrImport.getId(),
+                    e.getMessage());
             return true;
         } catch (ValidationException e) {
             this.setErrorAndRetryState(ecmrImport, "WRONG_ROLE");
+            log.debug("Wrong role shared of ecmrImport {} | {}", ecmrImport.getId(), e.getMessage());
             return true;
         }
 

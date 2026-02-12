@@ -73,6 +73,7 @@ public class EcmrForwardSyncService {
 
         if(lastSealMetadata == null) {
             setErrorAndRetryState(ecmrSyncEntity, "NO_SEAL_FOUND");
+            log.debug("No Seal found for ecmrId {}", ecmrSyncEntity.getEcmrId());
             return true;
         }
         String lastSeal = sealMetadataService.getSealByMetadataId(lastSealMetadata.getId());
