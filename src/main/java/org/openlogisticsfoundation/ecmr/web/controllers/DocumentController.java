@@ -15,6 +15,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.DocumentNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
@@ -56,6 +63,21 @@ public class DocumentController {
     private final DocumentWebMapper documentWebMapper;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+        tags = "Document",
+        summary = "Upload a document to an eCMR",
+        parameters = {
+            @Parameter(name = "ecmrId", description = "UUID of the ECMR", required = true, schema = @Schema(type = "string", format = "uuid")),
+            @Parameter(name = "file", description = "File to upload", required = true, content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE))
+        },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Document uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+        }
+    )
     public ResponseEntity<Void> uploadDocumentToEcmr(@RequestParam UUID ecmrId, @RequestPart("file") @Valid @NotNull MultipartFile file) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
@@ -72,6 +94,24 @@ public class DocumentController {
     }
 
     @GetMapping
+    @Operation(
+        summary = "List documents of an eCMR",
+        tags = "Document",
+        parameters = {
+            @Parameter(name = "ecmrId", description = "UUID of the ECMR", required = true, schema = @Schema(type = "string", format = "uuid"))
+        },
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "List of documents",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = DocumentModel.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid ecmrId"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+        }
+    )
     public ResponseEntity<List<DocumentModel>> getEcmrDocuments(@RequestParam UUID ecmrId) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
@@ -85,6 +125,24 @@ public class DocumentController {
     }
 
     @GetMapping("{id}/download")
+    @Operation(
+        summary = "Download a document",
+        tags = "Document",
+        parameters = {
+            @Parameter(name = "id", description = "Document ID", required = true, schema = @Schema(type = "long"))
+        },
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Document stream",
+                content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid document id"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Document not found")
+        }
+    )
     public ResponseEntity<InputStreamResource> downloadDocument(@PathVariable long id) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
@@ -92,10 +150,10 @@ public class DocumentController {
             InputStream fileStream = documentService.downloadDocument(id, authenticatedUser);
             InputStreamResource inputStreamResource = new InputStreamResource(fileStream);
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFileName() + "\"")
-                    .contentLength(document.getSize())
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(inputStreamResource);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFileName() + "\"")
+                .contentLength(document.getSize())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(inputStreamResource);
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (NoPermissionException e) {
@@ -106,6 +164,20 @@ public class DocumentController {
     }
 
     @DeleteMapping("{id}")
+    @Operation(
+        summary = "Delete a document",
+        tags = "Document",
+        parameters = {
+            @Parameter(name = "id", description = "Document ID", required = true, schema = @Schema(type = "long"))
+        },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Document deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid document id"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Document not found")
+        }
+    )
     public ResponseEntity<Void> deleteDocument(@PathVariable long id) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
