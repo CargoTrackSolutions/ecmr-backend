@@ -126,7 +126,7 @@ public class ExternalUserService {
                 .replace("{ecmrId}", command.getEcmrId().toString())
                 .replace("{user-token}", userToken)
                 .replace("{tan}", tan);
-        String tanMessage = "Your tan code is " + tan + " Please enter your code or click on the following link: " + ecmrLink;
+        String tanMessage = "Your tan code is " + tan + ". Enter the code or click the link: " + ecmrLink;
         this.phoneMessageProvider.sendMessage(command.getPhone(), tanMessage);
         return externalUserPersistenceMapper.toDomain(externalUserEntity);
     }
