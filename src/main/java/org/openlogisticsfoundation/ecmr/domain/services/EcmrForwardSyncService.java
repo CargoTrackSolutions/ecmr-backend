@@ -52,7 +52,7 @@ public class EcmrForwardSyncService {
         List<EcmrSyncEntity> ecmrSyncEntities = entityManager.createQuery("""
                         select e
                         from EcmrSyncEntity e
-                        where e.retryCount <= 3 OR e.retryCount IS null
+                        where (e.retryCount <= 3 OR e.retryCount IS null)
                         AND (e.nextRetryTimestamp IS null OR e.nextRetryTimestamp <= :currentDate)
                         order by e.creationTimestamp
                         """, EcmrSyncEntity.class)
@@ -82,11 +82,11 @@ public class EcmrForwardSyncService {
         newSync.setSeal(lastSeal);
         newSync.setShareToken(ecmrImportEntity.getShareToken());
 
-        sendToExternalInstance(newSync, ecmrImportEntity.getInstanceUrl());
+        sendToExternalInstance(newSync, ecmrSyncEntity, ecmrImportEntity.getInstanceUrl());
         return true;
     }
 
-    private void sendToExternalInstance(EcmrSync ecmrSync, String instanceUrl) {
+    private void sendToExternalInstance(EcmrSync ecmrSync, EcmrSyncEntity ecmrSyncEntity, String instanceUrl) {
         WebClient webClient = webClientBuilder.baseUrl(instanceUrl).build();
 
         try {
@@ -109,7 +109,9 @@ public class EcmrForwardSyncService {
 
             ecmrSyncRepository.deleteByEcmrId(ecmrSync.getEcmrId());
         } catch (Exception e) {
-            setErrorAndRetryState(ecmrSyncPersistenceMapper.toEcmrSyncEntity(ecmrSync), "FAILED_TO_FORWARD_SYNC");
+            log.warn("Failed to forward Sync to External Instance: {}", e.getMessage());
+            log.debug(e);
+            setErrorAndRetryState(ecmrSyncEntity, "FAILED_TO_FORWARD_SYNC");
         }
     }
 

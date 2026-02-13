@@ -38,19 +38,23 @@ public class EcmrStatusService {
         TransportRole currentSealRole = sealMetadataService.getCurrentSealMetadataEntity(ecmrEntity.getEcmrId(), user)
                 .map(SealMetadataEntity::getRole)
                 .orElse(null);
-        return setEcmrStatus(ecmrEntity, currentSealRole, user);
-
+        return setEcmrStatus(ecmrEntity, currentSealRole, user, true);
     }
 
     EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity) {
+        return setEcmrStatus(ecmrEntity, true);
+    }
+
+    EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity, boolean triggerStatusChanged) {
         List<SealMetadataEntity> sealMetadataEntities = sealMetadataService.getSealMetadataEntities(ecmrEntity.getEcmrId());
         SealMetadataEntity currentSealMetadataEntity = sealMetadataService.getCurrentSealMetadataEntity(sealMetadataEntities).orElse(null);
         TransportRole currentRole = currentSealMetadataEntity != null ? currentSealMetadataEntity.getRole() : TransportRole.SENDER;
 
-        return setEcmrStatus(ecmrEntity, currentRole, null);
+        return setEcmrStatus(ecmrEntity, currentRole, null, triggerStatusChanged);
     }
 
-    private EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity, @Nullable TransportRole currentSealRole, @Nullable InternalOrExternalUser user) {
+    private EcmrEntity setEcmrStatus(EcmrEntity ecmrEntity, @Nullable TransportRole currentSealRole, @Nullable InternalOrExternalUser user,
+            boolean triggerStatusChanged) {
         EcmrStatus previousState = ecmrEntity.getEcmrStatus();
 
         ecmrEntity.setEcmrStatus(EcmrStatus.NEW);
@@ -63,7 +67,10 @@ public class EcmrStatusService {
         }
 
         ecmrEntity = ecmrRepository.save(ecmrEntity);
-        ecmrStatusChangedService.ecmrStatusChanged(previousState, ecmrEntity, user);
+
+        if(triggerStatusChanged) {
+            ecmrStatusChangedService.ecmrStatusChanged(previousState, ecmrEntity, user);
+        }
 
         return ecmrEntity;
     }
