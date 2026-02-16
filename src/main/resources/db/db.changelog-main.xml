@@ -24,4 +24,5 @@
     <include file="/db/changelog/19-add-ecmr-sync-table.xml"/>
     <include file="/db/changelog/20-add-documents.xml"/>
     <include file="db/changelog/21-add-external-flag-to-user.xml"/>
+    <include file="db/changelog/22-add-missing-indexes.xml"/>
 </databaseChangeLog>

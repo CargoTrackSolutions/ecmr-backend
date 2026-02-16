@@ -9,9 +9,11 @@
 package org.openlogisticsfoundation.ecmr.domain.services;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
@@ -21,6 +23,7 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrPersistenceMapper;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
+import org.openlogisticsfoundation.ecmr.domain.models.EcmrTransportType;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrType;
 import org.openlogisticsfoundation.ecmr.domain.models.Group;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
@@ -28,6 +31,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.SortingField;
 import org.openlogisticsfoundation.ecmr.domain.models.SortingOrder;
 import org.openlogisticsfoundation.ecmr.domain.models.commands.FilterRequestCommand;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
+import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrRepository;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrPageModel;
 import org.springframework.data.domain.Page;
@@ -87,14 +91,32 @@ public class EcmrService {
         List<Group> usersGroups = groupService.getGroupsForUser(authenticatedUser);
         List<Long> usersGroupIds = groupService.flatMapGroupTrees(usersGroups).stream().map(Group::getId).toList();
 
-        final Page<EcmrEntity> ecmrPage = ecmrRepository.findAllByTypeAndAssignedGroupIds(ecmrType, usersGroupIds,
+        Boolean isInternational = filterRequestCommand.getTransportType() == null ?
+                null :
+                filterRequestCommand.getTransportType().equals(EcmrTransportType.International);
+
+        final Page<EcmrIdProjection> ecmrPage = ecmrRepository.findAllByTypeAndAssignedGroupIds(ecmrType, usersGroupIds,
                 filterRequestCommand.getReferenceId(), filterRequestCommand.getFrom(), filterRequestCommand.getTo(),
-                Optional.ofNullable(filterRequestCommand.getTransportType()).map(Enum::name).orElse(null),
-                filterRequestCommand.getStatus(), filterRequestCommand.getLicensePlate(), filterRequestCommand.getCarrierName(),
-                filterRequestCommand.getCarrierPostCode(), filterRequestCommand.getConsigneePostCode(), filterRequestCommand.getLastEditor(),
+                isInternational, filterRequestCommand.getStatus(), filterRequestCommand.getLicensePlate(),
+                filterRequestCommand.getCarrierName(), filterRequestCommand.getCarrierPostCode(), filterRequestCommand.getConsigneePostCode(),
+                filterRequestCommand.getLastEditor(),
                 pageable);
 
-        return new EcmrPageModel(ecmrPage.getTotalPages(), ecmrPage.getTotalElements(), ecmrPage.get().map(ecmrPersistenceMapper::toModel).toList());
+        List<Long> idsInOrder = ecmrPage.get().map(EcmrIdProjection::getId).toList();
+        List<EcmrEntity> entities = ecmrRepository.findAllByIdIn(idsInOrder);
+
+        //Map for reordering
+        Map<Long, EcmrEntity> entityMap = entities.stream()
+                .collect(Collectors.toMap(EcmrEntity::getId, Function.identity()));
+
+        // Reordering
+        List<EcmrEntity> sortedEntities = idsInOrder.stream()
+                .map(entityMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new EcmrPageModel(ecmrPage.getTotalPages(), ecmrPage.getTotalElements(),
+                sortedEntities.stream().map(ecmrPersistenceMapper::toModel).toList());
     }
 
     @Transactional

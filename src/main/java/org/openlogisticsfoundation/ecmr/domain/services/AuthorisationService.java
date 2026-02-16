@@ -7,6 +7,7 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.services;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -32,7 +33,6 @@ import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrMemberEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.GoodsReceivedEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.ItemEntity;
-import org.openlogisticsfoundation.ecmr.persistence.entities.LogisticsShippingMarksCustomBarcodeEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.TakingOverTheGoodsEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.ToBePaidByEntity;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrAssignmentRepository;
@@ -169,10 +169,9 @@ public class AuthorisationService {
             ItemEntity entity = entities.get(i);
 
             List<String> commandBarcodesAsString = command.getLogisticsShippingMarksCustomBarcodeList().stream()
-                            .map(LogisticsShippingMarksCustomBarcodeCommand::getBarcode)
-                            .sorted().toList();
-            List<String> entityBarcodesAsString = entity.getLogisticsShippingMarksCustomBarcodeList().stream()
-                    .map(LogisticsShippingMarksCustomBarcodeEntity::getBarcode)
+                    .map(LogisticsShippingMarksCustomBarcodeCommand::getBarcode)
+                    .sorted().toList();
+            List<String> entityBarcodesAsString = Arrays.stream(entity.getLogisticsShippingMarksCustomBarcodes().split("\\|"))
                     .sorted().toList();
 
             if(!Objects.equals(command.getLogisticsPackageType(), entity.getLogisticsPackageType())

@@ -7,6 +7,11 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.mappers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import org.apache.commons.lang3.StringUtils;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -54,7 +59,6 @@ public interface EcmrPersistenceMapper {
     @Mapping(target = "toBePaidBy.id", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "ecmrId", ignore = true)
-    @Mapping(target = "template", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "editedBy", ignore = true)
@@ -63,7 +67,7 @@ public interface EcmrPersistenceMapper {
     @Mapping(target = "shareWithCarrierToken", ignore = true)
     @Mapping(target = "shareWithConsigneeToken", ignore = true)
     @Mapping(target = "shareWithReaderToken", ignore = true)
-    @Mapping(target = "importToken",  ignore = true)
+    @Mapping(target = "importToken", ignore = true)
     EcmrEntity toEntity(EcmrCommand ecmrModel, EcmrType type, EcmrStatus ecmrStatus);
 
     @Mapping(target = "id", ignore = true)
@@ -153,7 +157,7 @@ public interface EcmrPersistenceMapper {
     @Mapping(source = "logisticsPackageItemQuantity", target = "numberOfPackages.logisticsPackageItemQuantity")
     @Mapping(source = "logisticsPackageType", target = "methodOfPacking.logisticsPackageType")
     @Mapping(source = "logisticsShippingMarksMarking", target = "marksAndNos.logisticsShippingMarksMarking")
-    @Mapping(source = "logisticsShippingMarksCustomBarcodeList", target = "marksAndNos.logisticsShippingMarksCustomBarcodeList")
+    @Mapping(target = "marksAndNos.logisticsShippingMarksCustomBarcodeList", ignore = true)
     @Mapping(source = "supplyChainConsignmentItemGrossVolume", target = "volumeInM3.supplyChainConsignmentItemGrossVolume")
     @Mapping(source = "supplyChainConsignmentItemGrossWeight", target = "grossWeightInKg.supplyChainConsignmentItemGrossWeight")
     @Mapping(source = "transportCargoIdentification", target = "natureOfTheGoods.transportCargoIdentification")
@@ -169,7 +173,6 @@ public interface EcmrPersistenceMapper {
     @Mapping(target = "toBePaidBy.id", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "ecmrId", ignore = true)
-    @Mapping(target = "template", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "editedBy", ignore = true)
@@ -179,12 +182,11 @@ public interface EcmrPersistenceMapper {
     @Mapping(target = "shareWithConsigneeToken", ignore = true)
     @Mapping(target = "shareWithReaderToken", ignore = true)
     @Mapping(target = "ecmrStatus", ignore = true)
-    @Mapping(target = "importToken",  ignore = true)
+    @Mapping(target = "importToken", ignore = true)
     EcmrEntity toEntity(@MappingTarget EcmrEntity ecmrEntity, EcmrCommand ecmrCommand, EcmrType type);
 
     @Mapping(target = "itemList", source = "ecmrConsignment.itemList")
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "template", ignore = true)
     @Mapping(target = "shareWithSenderToken", ignore = true)
     @Mapping(target = "shareWithCarrierToken", ignore = true)
     @Mapping(target = "shareWithConsigneeToken", ignore = true)
@@ -209,7 +211,7 @@ public interface EcmrPersistenceMapper {
     @Mapping(source = "ecmrConsignment.toBePaidBy", target = "toBePaidBy")
     @Mapping(source = "ecmrConsignment.goodsReceived", target = "goodsReceived")
     @Mapping(target = "type", ignore = true)
-    @Mapping(target = "importToken",  ignore = true)
+    @Mapping(target = "importToken", ignore = true)
     EcmrEntity toEntity(EcmrModel ecmrModel);
 
     @Mapping(target = "id", ignore = true)
@@ -275,7 +277,7 @@ public interface EcmrPersistenceMapper {
     CustomChargeEntity map(CustomCharge value);
 
     @Mapping(source = "marksAndNos.logisticsShippingMarksMarking", target = "logisticsShippingMarksMarking")
-    @Mapping(source = "marksAndNos.logisticsShippingMarksCustomBarcodeList", target = "logisticsShippingMarksCustomBarcodeList")
+    @Mapping(target = "logisticsShippingMarksCustomBarcodes", ignore = true)
     @Mapping(source = "numberOfPackages.logisticsPackageItemQuantity", target = "logisticsPackageItemQuantity")
     @Mapping(source = "methodOfPacking.logisticsPackageType", target = "logisticsPackageType")
     @Mapping(source = "natureOfTheGoods.transportCargoIdentification", target = "transportCargoIdentification")
@@ -286,4 +288,42 @@ public interface EcmrPersistenceMapper {
 
     @Mapping(target = "id", ignore = true)
     LogisticsShippingMarksCustomBarcodeEntity map(LogisticsShippingMarksCustomBarcode value);
+
+    @AfterMapping
+    default void updateBarcodes(ItemEntity entity, @MappingTarget Item domain) {
+        if (entity.getLogisticsShippingMarksCustomBarcodes() != null && !StringUtils.isBlank(entity.getLogisticsShippingMarksCustomBarcodes())) {
+            domain.getMarksAndNos().setLogisticsShippingMarksCustomBarcodeList(new ArrayList<>(Arrays.stream(entity.getLogisticsShippingMarksCustomBarcodes().split("\\|")).map(this::mapToBarcode).toList()));
+        } else {
+            domain.getMarksAndNos().setLogisticsShippingMarksCustomBarcodeList(null);
+        }
+    }
+
+    @AfterMapping
+    default void updateBarcodes(Item domain, @MappingTarget ItemEntity entity) {
+        if (domain.getMarksAndNos().getLogisticsShippingMarksCustomBarcodeList() != null && !domain.getMarksAndNos().getLogisticsShippingMarksCustomBarcodeList().isEmpty()) {
+            entity.setLogisticsShippingMarksCustomBarcodes(String.join("|",
+                    domain.getMarksAndNos().getLogisticsShippingMarksCustomBarcodeList().stream().map(LogisticsShippingMarksCustomBarcode::getBarcode).toList()));
+        } else {
+            entity.setLogisticsShippingMarksCustomBarcodes(null);
+        }
+    }
+
+    @AfterMapping
+    default void updateBarcodes(ItemCommand command, @MappingTarget ItemEntity entity) {
+        if (command.getLogisticsShippingMarksCustomBarcodeList() != null && !command.getLogisticsShippingMarksCustomBarcodeList().isEmpty()) {
+            entity.setLogisticsShippingMarksCustomBarcodes(String.join("|",
+                    command.getLogisticsShippingMarksCustomBarcodeList().stream().map(LogisticsShippingMarksCustomBarcodeCommand::getBarcode).toList()));
+        } else {
+            entity.setLogisticsShippingMarksCustomBarcodes(null);
+        }
+    }
+
+    default LogisticsShippingMarksCustomBarcode mapToBarcode(String barcode) {
+        if (barcode == null || StringUtils.isBlank(barcode)) {
+            return null;
+        }
+        LogisticsShippingMarksCustomBarcode logisticsShippingMarksCustomBarcode = new LogisticsShippingMarksCustomBarcode();
+        logisticsShippingMarksCustomBarcode.setBarcode(barcode);
+        return logisticsShippingMarksCustomBarcode;
+    }
 }

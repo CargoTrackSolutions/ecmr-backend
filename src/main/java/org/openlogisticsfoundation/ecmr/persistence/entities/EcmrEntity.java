@@ -11,10 +11,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.BatchSize;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrType;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -41,7 +40,10 @@ import lombok.Setter;
         @Index(columnList = "successive_carrier_information_id"),
         @Index(columnList = "taking_over_the_goods_id"),
         @Index(columnList = "delivery_of_the_goods_id"),
-        @Index(columnList = "to_be_paid_by")
+        @Index(columnList = "to_be_paid_by"),
+        @Index(name = "idx_ecmr_ecmr_id", columnList = "ecmr_id", unique = true),
+        @Index(name = "idx_ecmr_type", columnList = "type"),
+        @Index(name = "idx_ecmr_ecmr_status", columnList = "ecmr_status"),
 })
 @Getter
 @Setter
@@ -56,7 +58,6 @@ import lombok.Setter;
                 @NamedAttributeNode(value = "carrierInformation"),
                 @NamedAttributeNode(value = "consigneeInformation"),
                 @NamedAttributeNode(value = "successiveCarrierInformation"),
-                @NamedAttributeNode("itemList"),
                 @NamedAttributeNode(value = "toBePaidBy", subgraph = "toBePaidBy.all"),
         }, subgraphs = {
         @NamedSubgraph(name = "toBePaidBy.all", attributeNodes = {
@@ -64,7 +65,7 @@ import lombok.Setter;
                 @NamedAttributeNode("customChargeCustomsDuties"),
                 @NamedAttributeNode("customChargeOther"),
                 @NamedAttributeNode("customChargeSupplementary"),
-        }),
+        })
 })
 public class EcmrEntity extends BaseEntity {
     @NotNull
@@ -89,6 +90,7 @@ public class EcmrEntity extends BaseEntity {
     private SuccessiveCarrierInformationEntity successiveCarrierInformation;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "ECMR_ID")
+    @BatchSize(size = 100)
     private List<ItemEntity> itemList;
     @Valid
     @JoinColumn(name = "taking_over_the_goods_id")
@@ -133,8 +135,4 @@ public class EcmrEntity extends BaseEntity {
     private String shareWithConsigneeToken;
     private String shareWithReaderToken;
     private String importToken;
-
-    @OneToOne(mappedBy = "ecmr")
-    @JsonManagedReference
-    private TemplateUserEntity template;
 }

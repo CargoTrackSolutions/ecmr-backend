@@ -9,12 +9,14 @@
 package org.openlogisticsfoundation.ecmr.persistence.repositories;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrType;
+import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,41 +40,49 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
     @Query("SELECT e.ecmrId FROM EcmrEntity e WHERE e.type = :type AND e.editedAt < :timestamp")
     List<UUID> findAllEcmrIdsByTypeAndEditedAtBefore(EcmrType type, Instant timestamp);
 
-    @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)
-    @Query("SELECT Distinct e FROM EcmrEntity e "
-        + "WHERE e.type = :type "
-        + "AND (:referenceId is null or e.referenceIdentificationNumber LIKE CONCAT('%', cast(:referenceId as text), '%')) "
-        + "AND (:from is null or e.senderInformation.companyName LIKE  CONCAT('%', cast(:from as text), '%')) "
-        + "AND (:to is null or e.consigneeInformation.companyName LIKE  CONCAT('%', cast(:to as text), '%')) "
-        + "AND (:ecmrStatus is null or e.ecmrStatus = :ecmrStatus)"
-        + "AND (:licensePlate is null or e.carrierInformation.carrierLicensePlate LIKE  CONCAT('%', cast(:licensePlate as text), '%')) "
-        + "AND (:carrierName is null or e.carrierInformation.companyName LIKE  CONCAT('%', cast(:carrierName as text), '%')) "
-        + "AND (:carrierPostCode is null or e.carrierInformation.postcode LIKE  CONCAT('%', cast(:carrierPostCode as text), '%')) "
-        + "AND (:consigneePostCode is null or e.consigneeInformation.postcode LIKE  CONCAT('%', cast(:consigneePostCode as text), '%')) "
-        + "AND (:lastEditor is null or e.editedBy LIKE CONCAT('%', cast(:lastEditor as text), '%')) "
-        + "AND (:ecmrTransportType is null OR "
-        + "((:ecmrTransportType = 'National' AND e.senderInformation.countryCode = e.consigneeInformation.countryCode)"
-        + "OR (:ecmrTransportType = 'International' AND e.senderInformation.countryCode != e.consigneeInformation.countryCode)))"
-        + "AND e.id IN (SELECT ea.ecmr.id FROM EcmrAssignmentEntity ea WHERE ea.group.id in :groupIds)")
-    Page<EcmrEntity> findAllByTypeAndAssignedGroupIds(@Param("type") EcmrType type, @Param("groupIds") List<Long> groupIds,
+    @Query("""
+            SELECT new org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection(e.id),
+                e.referenceIdentificationNumber, e.senderInformation.companyName,e.consigneeInformation.companyName,
+                e.ecmrStatus, e.carrierInformation.carrierLicensePlate,e.carrierInformation.companyName, e.carrierInformation.postcode,
+                e.editedBy, e.editedAt, e.createdAt
+                FROM EcmrEntity e
+                WHERE e.type = :type
+                AND (:referenceId is null or e.referenceIdentificationNumber LIKE CONCAT('%', cast(:referenceId as text), '%'))
+                AND (:from is null or e.senderInformation.companyName LIKE  CONCAT('%', cast(:from as text), '%'))
+                AND (:to is null or e.consigneeInformation.companyName LIKE  CONCAT('%', cast(:to as text), '%'))
+                AND (:ecmrStatus is null or e.ecmrStatus = :ecmrStatus)
+                AND (:licensePlate is null or e.carrierInformation.carrierLicensePlate LIKE  CONCAT('%', cast(:licensePlate as text), '%'))
+                AND (:carrierName is null or e.carrierInformation.companyName LIKE  CONCAT('%', cast(:carrierName as text), '%'))
+                AND (:carrierPostCode is null or e.carrierInformation.postcode LIKE  CONCAT('%', cast(:carrierPostCode as text), '%'))
+                AND (:consigneePostCode is null or e.consigneeInformation.postcode LIKE  CONCAT('%', cast(:consigneePostCode as text), '%'))
+                AND (:lastEditor is null or e.editedBy LIKE CONCAT('%', cast(:lastEditor as text), '%'))
+                AND (:isInternational is null OR ((:isInternational = true AND e.senderInformation.countryCode != e.consigneeInformation.countryCode)
+                    OR (:isInternational = false AND e.senderInformation.countryCode = e.consigneeInformation.countryCode)))
+                AND EXISTS (SELECT 1 FROM EcmrAssignmentEntity ea WHERE ea.ecmr = e AND ea.group.id in :groupIds)
+            """)
+    Page<EcmrIdProjection> findAllByTypeAndAssignedGroupIds(@Param("type") EcmrType type, @Param("groupIds") List<Long> groupIds,
             @Param("referenceId") String referenceId, @Param("from") String from, @Param("to") String to,
-            @Param("ecmrTransportType") String ecmrTransportType, @Param("ecmrStatus") EcmrStatus ecmrStatus,
+            @Param("isInternational") Boolean isInternational, @Param("ecmrStatus") EcmrStatus ecmrStatus,
             @Param("licensePlate") String licensePlate, @Param("carrierName") String carrierName, @Param("carrierPostCode") String carrierPostCode,
             @Param("consigneePostCode") String consigneePostCode, @Param("lastEditor") String lastEditor,
             Pageable pageable);
+
+    @EntityGraph(value = "Ecmr.all", type = EntityGraph.EntityGraphType.FETCH)
+    List<EcmrEntity> findAllByIdIn(Collection<Long> ids);
 
     boolean existsByEcmrId(UUID ecmrId);
 
     void deleteAllByEcmrIdIn(List<UUID> ecmrIds);
 
     int countByType(EcmrType type);
+
     int countByTypeAndEcmrStatus(EcmrType type, EcmrStatus status);
 
     @Query("""
-       SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END
-       FROM EcmrEntity e
-       WHERE e.ecmrId = :ecmrId
-       AND (e.shareWithSenderToken = :shareToken OR e.shareWithCarrierToken = :shareToken OR e.shareWithConsigneeToken = :shareToken)
-       """)
+            SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END
+            FROM EcmrEntity e
+            WHERE e.ecmrId = :ecmrId
+            AND (e.shareWithSenderToken = :shareToken OR e.shareWithCarrierToken = :shareToken OR e.shareWithConsigneeToken = :shareToken)
+            """)
     boolean shareTokenExists(UUID ecmrId, String shareToken);
 }

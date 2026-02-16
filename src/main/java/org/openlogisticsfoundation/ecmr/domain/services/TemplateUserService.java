@@ -8,7 +8,6 @@
 
 package org.openlogisticsfoundation.ecmr.domain.services;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
@@ -64,10 +63,6 @@ public class TemplateUserService {
         TemplateUserEntity templateUser = new TemplateUserEntity();
         templateUser.setUser(userRepository.findById(user.getUser().getId())
                 .orElseThrow(() -> new UserNotFoundException(user.getUser().getId())));
-
-        String fullName = String.format("%s %s", user.getUser().getFirstName(), user.getUser().getLastName());
-        ecmr.setCreatedBy(fullName);
-        ecmr.setCreatedAt(Instant.now());
 
         templateUser.setEcmr(ecmr);
         templateUser.setName(name);

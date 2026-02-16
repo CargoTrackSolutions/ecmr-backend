@@ -8,13 +8,17 @@
 package org.openlogisticsfoundation.ecmr.persistence.entities;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "SENDER_INFORMATION")
+@Table(name = "SENDER_INFORMATION", indexes = {
+        @Index(name = "idx_sender_information_country_code", columnList = "country_code")
+
+})
 @Getter
 @Setter
 @NoArgsConstructor

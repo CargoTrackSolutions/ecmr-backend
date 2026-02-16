@@ -12,6 +12,7 @@ import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -22,7 +23,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "ECMR_ASSIGNMENT")
+@Table(name = "ECMR_ASSIGNMENT", indexes = {
+        @Index(name = "idx_ecmr_assignment_ecmr_id", columnList = "ecmr_id"),
+        @Index(name = "idx_ecmr_assignment_group_id", columnList = "group_id"),
+        @Index(name = "idx_ecmr_assignment_external_user_id", columnList = "external_user_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,9 +35,9 @@ import lombok.Setter;
 public class EcmrAssignmentEntity extends BaseEntity {
     @OneToOne(optional = false)
     private EcmrEntity ecmr;
-    @ManyToOne(optional = true)
+    @ManyToOne
     private GroupEntity group;
-    @ManyToOne(optional = true)
+    @ManyToOne
     private ExternalUserEntity externalUser;
     @NotNull
     @Enumerated(EnumType.STRING)

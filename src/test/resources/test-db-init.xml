@@ -22,4 +22,5 @@
     <include file="/db/changelog/17-add-field-to-ecmr-import.xml"/>
     <include file="/db/changelog/18-add-retry-timestamp-to-ecmr-import.xml"/>
     <include file="/db/changelog/21-add-external-flag-to-user.xml"/>
+    <include file="/db/changelog/22-add-missing-indexes.xml"/>
 </databaseChangeLog>

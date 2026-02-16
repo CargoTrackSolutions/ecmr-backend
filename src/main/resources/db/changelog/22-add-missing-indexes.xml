@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1770884371657-17" author="benedikt.hilbert">
+        <createIndex indexName="idx_consignee_information_country_code" tableName="consignee_information">
+            <column name="country_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-18" author="benedikt.hilbert">
+        <createIndex indexName="idx_ecmr_assignment_ecmr_id" tableName="ecmr_assignment">
+            <column name="ecmr_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-19" author="benedikt.hilbert">
+        <createIndex indexName="idx_ecmr_assignment_external_user_id" tableName="ecmr_assignment">
+            <column name="external_user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-20" author="benedikt.hilbert">
+        <createIndex indexName="idx_ecmr_assignment_group_id" tableName="ecmr_assignment">
+            <column name="group_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-21" author="benedikt.hilbert">
+        <createIndex indexName="idx_ecmr_ecmr_id"
+                     tableName="ecmr"
+                     unique="true">
+            <column name="ecmr_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-22" author="benedikt.hilbert">
+        <createIndex indexName="idx_ecmr_ecmr_status" tableName="ecmr">
+            <column name="ecmr_status"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-23" author="benedikt.hilbert">
+        <createIndex indexName="idx_ecmr_type" tableName="ecmr">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1770884371657-24" author="benedikt.hilbert">
+        <createIndex indexName="idx_sender_information_country_code" tableName="sender_information">
+            <column name="country_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260213-01-add-string-barcodes-column" author="benedikt.hilbert">
+        <addColumn tableName="ITEM">
+            <column name="logistics_shipping_marks_custom_barcodes" type="VARCHAR(350)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260213-02-migrate-barcodes" author="benedikt.hilbert">
+        <customChange class="org.openlogisticsfoundation.ecmr.persistence.migration.LiquibaseBarcodeMigration"/>
+    </changeSet>
+
+    <changeSet id="20260213-03-drop-old-table" author="benedikt.hilbert">
+        <dropTable tableName="logistics_shipping_marks_custom_barcode"/>
+    </changeSet>
+</databaseChangeLog>
