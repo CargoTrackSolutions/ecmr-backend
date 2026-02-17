@@ -36,6 +36,7 @@ class ControllerExceptionHandler {
     public ResponseEntity<ApiError> handle(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getErrorCount() > 0 ? exception.getBindingResult().getAllErrors().getFirst().toString() : "Validation failed";
         ApiError apiError = new ApiError(Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), message);
+        log.debug("MethodArgumentNotValidException {}", message);
         return ResponseEntity.badRequest().body(apiError);
     }
 
