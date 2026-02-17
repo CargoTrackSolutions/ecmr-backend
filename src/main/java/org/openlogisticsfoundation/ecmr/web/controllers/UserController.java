@@ -318,9 +318,25 @@ public class UserController {
         }
     }
 
-
+    /**
+     * Reset the password for given email
+     *
+     * @param email Email of user to reset password
+     */
     @PostMapping("/reset-password")
     @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    @Operation(
+            tags = "User",
+            summary = "Reset Password",
+            parameters = {
+                    @Parameter(name = "email", description = "Email of the user to reset password for", required = true, schema = @Schema(type =
+                            "string"))
+            },
+            responses = {
+                    @ApiResponse(description = "User not found", responseCode = "404"),
+                    @ApiResponse(description = "Not implemented", responseCode = "501"),
+                    @ApiResponse(description = "User not external", responseCode = "400")
+            })
     public void resetPassword(@RequestParam() String email) {
         try {
             User user = userService.getActiveUserByEmail(email);
@@ -334,8 +350,27 @@ public class UserController {
         }
     }
 
+    /**
+     * Get the MFA status for given email
+     *
+     * @param email Email of user to get MFA status for
+     * @return true if MFA is enabled for user, false otherwise
+     */
     @GetMapping("/mfa")
     @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    @Operation(
+            tags = "User",
+            summary = "Get MFA status",
+            parameters = {
+                    @Parameter(name = "email", description = "Email of the user to get the mfa status for", required = true, schema = @Schema(type =
+                            "string"))
+            },
+            responses = {
+                    @ApiResponse(description = "MFA status", responseCode = "200"),
+                    @ApiResponse(description = "User not found", responseCode = "404"),
+                    @ApiResponse(description = "Not implemented", responseCode = "501"),
+                    @ApiResponse(description = "User not external", responseCode = "400")
+            })
     public boolean getExternalUserMfaStatus(@RequestParam String email) {
         try {
             User user = userService.getActiveUserByEmail(email);
@@ -349,8 +384,30 @@ public class UserController {
         }
     }
 
+    /**
+     * Change the MFA status for given email
+     *
+     * @param email Email of user to change MFA status for
+     * @param mfaEnabled true to enable MFA, false to disable MFA
+     */
     @PatchMapping("/mfa")
     @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    @Operation(
+            tags = "User",
+            summary = "Change MFA status",
+            parameters = {
+                    @Parameter(name = "email", description = "Email of the user to change the mfa status for", required = true, schema =
+                    @Schema(type =
+                            "string")),
+                    @Parameter(name = "mfaEnabled", description = "True/False to enable or disable mfa", required = true, schema =
+                    @Schema(type =
+                            "boolean"))
+            },
+            responses = {
+                    @ApiResponse(description = "User not found", responseCode = "404"),
+                    @ApiResponse(description = "Not implemented", responseCode = "501"),
+                    @ApiResponse(description = "User not external", responseCode = "400")
+            })
     public void changeMfa(@RequestParam() String email, @RequestParam() boolean mfaEnabled) {
         try {
             User user = userService.getActiveUserByEmail(email);
