@@ -10,5 +10,6 @@ package org.openlogisticsfoundation.ecmr.domain.models;
 
 public enum UserRole {
     Admin,
-    User
+    User,
+    NoEcmrCreationUser
 }

@@ -211,7 +211,7 @@ public class EcmrControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "User")
     public void testCreateEcmr_Success() throws Exception {
         // Arrange
         when(authenticationService.getAuthenticatedUser(true)).thenReturn(authenticatedUser);

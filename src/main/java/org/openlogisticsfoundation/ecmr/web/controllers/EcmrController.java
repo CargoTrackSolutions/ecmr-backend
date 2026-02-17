@@ -190,7 +190,7 @@ public class EcmrController {
      * @return The created eCMR
      */
     @PostMapping()
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() && hasRole('User')")
     @Operation(
             tags = "ECMR",
             summary = "Create a new eCMR",

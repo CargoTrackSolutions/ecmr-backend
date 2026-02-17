@@ -20,7 +20,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoleService {
     public Set<String> mapUserRoleToStrings(UserRole userRole) {
-        return (userRole == UserRole.Admin) ? Set.of(UserRole.Admin.name(), UserRole.User.name()) : Set.of(UserRole.User.name());
+        Set<String> roles = Set.of();
+
+        if(userRole == UserRole.Admin) {
+            roles = Set.of(UserRole.Admin.name(), UserRole.User.name(), UserRole.NoEcmrCreationUser.name());
+        } else if(userRole == UserRole.User) {
+            roles = Set.of(UserRole.User.name(), UserRole.NoEcmrCreationUser.name());
+        } else if(userRole == UserRole.NoEcmrCreationUser) {
+            roles = Set.of(UserRole.NoEcmrCreationUser.name());
+        }
+
+        return roles;
     }
 
     public List<SimpleGrantedAuthority> mapRolesToGrantedAuthorities(Set<String> userRoles) {
