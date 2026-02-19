@@ -10,6 +10,7 @@ package org.openlogisticsfoundation.ecmr.domain.services;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -67,6 +68,17 @@ public class ExternalUserService {
         }
 
         return externalUserPersistenceMapper.toDomain(externalUser);
+    }
+
+    public List<ExternalUser> findExternalUsers(UUID ecmrId) {
+        List<ExternalUser> externalUsers = new ArrayList<>();
+        List<ExternalUserEntity> externalUserEntities = externalUserRepository.findExternalUsersByEcmrId(ecmrId);
+
+        for (ExternalUserEntity externalUserEntity : externalUserEntities) {
+            externalUsers.add(this.externalUserPersistenceMapper.toDomain(externalUserEntity));
+        }
+
+        return externalUsers;
     }
 
     public boolean isTanValid(@Valid @NotNull UUID ecmrId, @Valid @NotNull String userToken, @Valid @NotNull String tan)

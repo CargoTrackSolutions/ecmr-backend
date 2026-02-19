@@ -14,28 +14,33 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
+
+import java.util.*;
+
+import jakarta.mail.MessagingException;
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.*;
+import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrAssignmentMapper;
 import org.openlogisticsfoundation.ecmr.domain.mappers.GroupPersistenceMapper;
-import org.openlogisticsfoundation.ecmr.domain.models.ActionType;
-import org.openlogisticsfoundation.ecmr.domain.models.ApprovedUrl;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
-import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
-import org.openlogisticsfoundation.ecmr.domain.models.Group;
-import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
-import org.openlogisticsfoundation.ecmr.domain.models.ShareEcmrResult;
+import org.openlogisticsfoundation.ecmr.domain.models.*;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrAssignmentEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.GroupEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.SealMetadataEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.UserEntity;
+import org.openlogisticsfoundation.ecmr.persistence.repositories.EcmrAssignmentRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.GroupRepository;
 import org.openlogisticsfoundation.ecmr.persistence.repositories.UserRepository;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalEcmrSharingModel;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 
 import jakarta.validation.Valid;
@@ -44,9 +49,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class EcmrShareService {
     private final EcmrService ecmrService;
     private final EcmrAssignmentService ecmrAssignmentService;
+    private final EcmrAssignmentRepository ecmrAssignmentRepository;
     private final UserRepository userRepository;
     private final GroupPersistenceMapper groupPersistenceMapper;
     private final AuthorisationService authorisationService;
@@ -58,6 +65,8 @@ public class EcmrShareService {
     private final MailSuffixService mailSuffixService;
     private final SealMetadataService sealMetadataService;
     private final SealService sealService;
+    private final EcmrAssignmentMapper ecmrAssignmentMapper;
+    private final EcmrPdfService ecmrPdfService;
 
     @Value("${app.origin.url}")
     private String originUrl;
@@ -295,27 +304,70 @@ public class EcmrShareService {
         String mailText = """
                 Sehr geehrte Damen und Herren,
                 im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:
-                
+
                 {{url}}
-                
+
                 Wenn bei Ihnen eine eigene Instanz des eCMR Systems besteht, können Sie den eCMR auch in Ihre Instanz importieren. Melden Sie sich dazu bei Ihrer Instanz an und fügen die obige URL in den Import Dialog ein.
-                
+
                 Bitte beachten Sie, dass der Link aus Sicherheitsgründen nur für einen begrenzten Zeitraum gültig ist. Sollten Sie Rückfragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.
                 Vielen Dank für die Zusammenarbeit.
-                
+
                 ---
-                
+
                 Dear Sir or Madam,
                 As part of our current transport, we are providing you with the electronic consignment note (eCMR). You can view, edit, and digitally sign the document using the following link:
-                
+
                 {{url}}
-                
+
                 If you have your own instance of the eCMR system, you can also import the eCMR into your instance. To do this, log in to your instance and paste the above URL into the import dialog.
-                
+
                 Please note that the link is only valid for a limited time for security reasons. If you have any questions or need assistance, feel free to contact us.
                 Thank you for your cooperation.
                 """;
         mailService.sendMail(receiverEmail, "Import eCMR", mailText.replace("{{url}}", shareUrl));
         return new EcmrShareResponse(ShareEcmrResult.SharedExternal, null, null);
+    }
+
+    public void sendPdfToExternalUsersPerEmail(EcmrEntity ecmrEntity,
+                                               InternalOrExternalUser internalOrExternalUser,
+                                               List<String> receiverEmails)
+        throws PdfCreationException, EcmrNotFoundException, NoPermissionException {
+
+        if (ecmrEntity.getEcmrStatus() != EcmrStatus.DELIVERED) return;
+        if (receiverEmails.isEmpty()) return;
+
+        String subject = String.format("Completed eCMR for Shipment [%s]",
+            ecmrEntity.getReferenceIdentificationNumber()
+        );
+
+        String text = String.format("""
+            Dear Sir or Madam,
+
+            Please find attached the completed eCMR for the shipment [%s].
+            You are receiving this document as a PDF by email because you were involved in the process as a guest.
+            You can keep the eCMR in your records if needed.
+            This is an automated e-mail, please do not respond!
+
+            Best regards
+            """, ecmrEntity.getReferenceIdentificationNumber());
+
+        PdfFile pdfFile = ecmrPdfService.createJasperReportForEcmr(ecmrEntity.getEcmrId(), internalOrExternalUser, true, true);
+
+        for (String email : receiverEmails) {
+            if (StringUtils.isBlank(email)) continue;
+            try {
+                mailService.sendMailWithPdfAttachment(email, subject, text, pdfFile);
+            } catch (MessagingException | MailException e) {
+                log.error("Could not send mail to <{}>: {}", email, e.getMessage());
+                log.debug(e);
+            }
+        }
+    }
+
+    public List<EcmrAssignment> getAssignmentsOfEcmr(UUID ecmrId, InternalOrExternalUser internalOrExternalUser) throws NoPermissionException {
+        if (authorisationService.hasNoRole(internalOrExternalUser, ecmrId)) {
+            throw new NoPermissionException("No permission to load ecmr assignments");
+        }
+        return this.ecmrAssignmentRepository.findByEcmr_EcmrId(ecmrId).stream().map(ecmrAssignmentMapper::map).toList();
     }
 }
