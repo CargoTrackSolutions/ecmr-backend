@@ -10,6 +10,7 @@ package org.openlogisticsfoundation.ecmr.domain.services;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -168,11 +169,13 @@ public class AuthorisationService {
             ItemCommand command = commands.get(i);
             ItemEntity entity = entities.get(i);
 
-            List<String> commandBarcodesAsString = command.getLogisticsShippingMarksCustomBarcodeList().stream()
-                    .map(LogisticsShippingMarksCustomBarcodeCommand::getBarcode)
-                    .sorted().toList();
-            List<String> entityBarcodesAsString = Arrays.stream(entity.getLogisticsShippingMarksCustomBarcodes().split("\\|"))
-                    .sorted().toList();
+            List<String> commandBarcodesAsString = Optional.ofNullable(command.getLogisticsShippingMarksCustomBarcodeList())
+                    .map(list -> list.stream()
+                            .map(LogisticsShippingMarksCustomBarcodeCommand::getBarcode)
+                            .sorted().toList()).orElse(List.of());
+            List<String> entityBarcodesAsString = Optional.ofNullable(entity.getLogisticsShippingMarksCustomBarcodes())
+                    .map(barcodeString -> Arrays.stream(barcodeString.split(
+                            "\\|")).sorted().toList()).orElse(List.of());
 
             if(!Objects.equals(command.getLogisticsPackageType(), entity.getLogisticsPackageType())
             || !Objects.equals(command.getLogisticsPackageItemQuantity(), entity.getLogisticsPackageItemQuantity())
