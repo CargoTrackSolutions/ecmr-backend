@@ -92,8 +92,7 @@ public class EcmrPdfService {
         return this.createJasperReportForEcmr(ecmrPersistenceMapper.toModel(ecmrEntity), sealMetadata, isCopy, withDocuments);
     }
 
-    private PdfFile createJasperReportForEcmr(EcmrModel ecmrModel, List<SealMetadata> sealMetadata, boolean isCopy, boolean withDocuments)
-            throws PdfCreationException {
+    private PdfFile createJasperReportForEcmr(EcmrModel ecmrModel, List<SealMetadata> sealMetadata, boolean isCopy, boolean withDocuments) {
         String filename = "eCMR-" + ecmrModel.getEcmrConsignment().getReferenceIdentificationNumber().getValue() + ".pdf";
 
         Consumer<OutputStream> pdfWriter = outputStream -> {
@@ -416,9 +415,13 @@ public class EcmrPdfService {
         for (Item item : items) {
             ItemBean itemBean = new ItemBean();
 
+            String barcodes = Optional.ofNullable(item.getMarksAndNos().getLogisticsShippingMarksCustomBarcodeList())
+                    .map(barcodeList -> barcodeList.stream()
+                            .map(LogisticsShippingMarksCustomBarcode::getBarcode).collect(Collectors.joining(", ")))
+                    .orElse("");
+
             itemBean.setLogisticsShippingMarksMarking(item.getMarksAndNos().getLogisticsShippingMarksMarking());
-            itemBean.setLogisticsShippingMarksCustomBarcode(item.getMarksAndNos().getLogisticsShippingMarksCustomBarcodeList().stream()
-                    .map(LogisticsShippingMarksCustomBarcode::getBarcode).collect(Collectors.joining(", ")));
+            itemBean.setLogisticsShippingMarksCustomBarcode(barcodes);
             itemBean.setLogisticsPackageItemQuantity(item.getNumberOfPackages().getLogisticsPackageItemQuantity());
             itemBean.setLogisticsPackageType(item.getMethodOfPacking().getLogisticsPackageType());
             itemBean.setTransportCargoIdentification(item.getNatureOfTheGoods().getTransportCargoIdentification());
