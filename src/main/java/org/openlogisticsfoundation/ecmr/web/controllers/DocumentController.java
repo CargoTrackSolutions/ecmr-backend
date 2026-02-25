@@ -9,23 +9,14 @@ package org.openlogisticsfoundation.ecmr.web.controllers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.DocumentNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.Document;
+import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.services.documents.DocumentService;
 import org.openlogisticsfoundation.ecmr.web.exceptions.AuthenticationException;
 import org.openlogisticsfoundation.ecmr.web.mappers.DocumentWebMapper;
@@ -47,6 +38,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -81,7 +77,7 @@ public class DocumentController {
     public ResponseEntity<Void> uploadDocumentToEcmr(@RequestParam UUID ecmrId, @RequestPart("file") @Valid @NotNull MultipartFile file) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-            documentService.uploadDocument(ecmrId, file, authenticatedUser);
+            documentService.uploadDocument(ecmrId, file, new InternalOrExternalUser(authenticatedUser.getUser()));
             return ResponseEntity.ok().build();
         } catch (IOException e) {
             log.error("Error attaching document to ECMR", e);
@@ -115,7 +111,7 @@ public class DocumentController {
     public ResponseEntity<List<DocumentModel>> getEcmrDocuments(@RequestParam UUID ecmrId) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-            List<Document> documents = documentService.getDocumentsByEcmrId(ecmrId, authenticatedUser);
+            List<Document> documents = documentService.getDocumentsByEcmrId(ecmrId, new InternalOrExternalUser(authenticatedUser.getUser()));
             return ResponseEntity.ok(documents.stream().map(documentWebMapper::toModel).toList());
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
@@ -146,8 +142,8 @@ public class DocumentController {
     public ResponseEntity<InputStreamResource> downloadDocument(@PathVariable long id) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-            Document document = documentService.getDocument(id, authenticatedUser);
-            InputStream fileStream = documentService.downloadDocument(id, authenticatedUser);
+            Document document = documentService.getDocument(id, new InternalOrExternalUser(authenticatedUser.getUser()));
+            InputStream fileStream = documentService.downloadDocument(id, new InternalOrExternalUser(authenticatedUser.getUser()));
             InputStreamResource inputStreamResource = new InputStreamResource(fileStream);
             return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFileName() + "\"")
@@ -181,7 +177,7 @@ public class DocumentController {
     public ResponseEntity<Void> deleteDocument(@PathVariable long id) {
         try {
             AuthenticatedUser authenticatedUser = authenticationService.getAuthenticatedUser();
-            documentService.deleteDocument(id, authenticatedUser);
+            documentService.deleteDocument(id, new InternalOrExternalUser(authenticatedUser.getUser()));
             return ResponseEntity.ok().build();
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());

@@ -23,6 +23,8 @@ public interface ExternalUserRepository extends JpaRepository<ExternalUserEntity
             + "WHERE a.ecmr.ecmrId = :ecmrId AND e.userToken = :userToken AND e.isActive = true")
     Optional<ExternalUserEntity> findExtenalUserByUserTokenAndEcmrId(String userToken,  UUID ecmrId);
 
+    Optional<ExternalUserEntity> findByUserTokenAndIsActiveTrue(String userToken);
+
     @Query("SELECT e FROM ExternalUserEntity e Inner Join EcmrAssignmentEntity a on e.id = a.externalUser.id "
             + "WHERE a.ecmr.ecmrId = :ecmrId AND e.isActive = true")
     List<ExternalUserEntity> findExternalUsersByEcmrId(UUID ecmrId);

@@ -84,6 +84,10 @@ public class AuthenticationService {
         return this.externalUserService.findExternalUser(ecmrId, userToken, tan);
     }
 
+    public ExternalUser getExternalUser(String userToken, String tan) throws ExternalUserNotFoundException, ExternalUserInvalidTanException {
+        return this.externalUserService.findExternalUser(userToken, tan);
+    }
+
     private Authentication getAuthentication() throws AuthenticationException {
         SecurityContext securityContext = Optional.ofNullable(SecurityContextHolder.getContext())
                 .orElseThrow(() -> new AuthenticationException("SecurityContext is empty"));

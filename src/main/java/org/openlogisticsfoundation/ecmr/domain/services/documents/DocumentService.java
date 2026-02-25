@@ -16,7 +16,6 @@ import java.util.UUID;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.DocumentNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.mappers.DocumentPersistenceMapper;
-import org.openlogisticsfoundation.ecmr.domain.models.AuthenticatedUser;
 import org.openlogisticsfoundation.ecmr.domain.models.Document;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.services.AuthorisationService;
@@ -37,8 +36,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentPersistenceMapper documentPersistenceMapper;
 
-    public Document uploadDocument(UUID ecmrId, MultipartFile file, AuthenticatedUser authenticatedUser) throws IOException, NoPermissionException {
-        InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
+    public Document uploadDocument(UUID ecmrId, MultipartFile file, InternalOrExternalUser user) throws IOException, NoPermissionException {
         if (authorisationService.hasNoRole(user, ecmrId)) {
             throw new NoPermissionException("No permission to upload documents for ECMR: " + ecmrId);
         }
@@ -56,8 +54,7 @@ public class DocumentService {
         return documentPersistenceMapper.toDocument(documentEntity);
     }
 
-    public List<Document> getDocumentsByEcmrId(UUID ecmrId, AuthenticatedUser authenticatedUser) throws NoPermissionException {
-        InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
+    public List<Document> getDocumentsByEcmrId(UUID ecmrId, InternalOrExternalUser user) throws NoPermissionException {
         if (authorisationService.hasNoRole(user, ecmrId)) {
             throw new NoPermissionException("No permission to get documents for ECMR: " + ecmrId);
         }
@@ -68,18 +65,16 @@ public class DocumentService {
         return documentRepository.findByEcmrId(ecmrId).stream().map(documentPersistenceMapper::toDocument).toList();
     }
 
-    public Document getDocument(long documentId, AuthenticatedUser authenticatedUser) throws NoPermissionException, DocumentNotFoundException {
+    public Document getDocument(long documentId, InternalOrExternalUser user) throws NoPermissionException, DocumentNotFoundException {
         DocumentEntity documentEntity = documentRepository.findById(documentId).orElseThrow(() -> new DocumentNotFoundException(documentId));
-        InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
         if (authorisationService.hasNoRole(user, documentEntity.getEcmrId())) {
             throw new NoPermissionException("No permission to get document for ECMR: " + documentEntity.getEcmrId());
         }
         return documentPersistenceMapper.toDocument(documentEntity);
     }
 
-    public InputStream downloadDocument(long documentId, AuthenticatedUser authenticatedUser) throws NoPermissionException, DocumentNotFoundException {
+    public InputStream downloadDocument(long documentId, InternalOrExternalUser user) throws NoPermissionException, DocumentNotFoundException {
         DocumentEntity documentEntity = documentRepository.findById(documentId).orElseThrow(() -> new DocumentNotFoundException(documentId));
-        InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
         if (authorisationService.hasNoRole(user, documentEntity.getEcmrId())) {
             throw new NoPermissionException("No permission to download documents for ECMR: " + documentEntity.getEcmrId());
         }
@@ -91,9 +86,8 @@ public class DocumentService {
         return documentStorageProvider.downloadFile(documentEntity.getDocumentId());
     }
 
-    public void deleteDocument(long documentId, AuthenticatedUser authenticatedUser) throws NoPermissionException, DocumentNotFoundException {
+    public void deleteDocument(long documentId, InternalOrExternalUser user) throws NoPermissionException, DocumentNotFoundException {
         DocumentEntity documentEntity = documentRepository.findById(documentId).orElseThrow(() -> new DocumentNotFoundException(documentId));
-        InternalOrExternalUser user = new InternalOrExternalUser(authenticatedUser.getUser());
         if (authorisationService.hasNoRole(user, documentEntity.getEcmrId())) {
             throw new NoPermissionException("No permission to delete document for ECMR: " + documentEntity.getEcmrId());
         }

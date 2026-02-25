@@ -40,7 +40,7 @@ public class CapabilitiesController {
      * @return A list of backend capabilities from interface implementations.
      */
     @GetMapping()
-    @PreAuthorize("isAuthenticated() && hasRole('Admin')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             tags = "Capabilities",
             summary = "Get backend capabilities",

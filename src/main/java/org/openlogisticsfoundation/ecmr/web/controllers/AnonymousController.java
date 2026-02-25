@@ -11,12 +11,15 @@ package org.openlogisticsfoundation.ecmr.web.controllers;
 
 import static org.openlogisticsfoundation.ecmr.web.controllers.PdfHelper.createPdfResponse;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrModel;
 import org.openlogisticsfoundation.ecmr.api.model.SealMetadata;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.DocumentNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserInvalidTanException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserNotFoundException;
@@ -24,6 +27,7 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.RateLimitException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
+import org.openlogisticsfoundation.ecmr.domain.models.Document;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
 import org.openlogisticsfoundation.ecmr.domain.models.ExternalUser;
@@ -39,16 +43,22 @@ import org.openlogisticsfoundation.ecmr.domain.services.EcmrUpdateService;
 import org.openlogisticsfoundation.ecmr.domain.services.ExternalUserService;
 import org.openlogisticsfoundation.ecmr.domain.services.SealMetadataService;
 import org.openlogisticsfoundation.ecmr.domain.services.SealService;
+import org.openlogisticsfoundation.ecmr.domain.services.documents.DocumentService;
 import org.openlogisticsfoundation.ecmr.domain.services.tan.MessageProviderException;
+import org.openlogisticsfoundation.ecmr.web.mappers.DocumentWebMapper;
 import org.openlogisticsfoundation.ecmr.web.mappers.EcmrWebMapper;
 import org.openlogisticsfoundation.ecmr.web.mappers.ExternalUserWebMapper;
+import org.openlogisticsfoundation.ecmr.web.models.DocumentModel;
 import org.openlogisticsfoundation.ecmr.web.models.EcmrShareModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationModel;
 import org.openlogisticsfoundation.ecmr.web.models.ExternalUserRegistrationResponseModel;
 import org.openlogisticsfoundation.ecmr.web.services.AuthenticationService;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,7 +67,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -86,6 +98,8 @@ public class AnonymousController {
     private final SealService ecmrSealService;
     private final EcmrPdfService ecmrPdfService;
     private final SealMetadataService sealMetadataService;
+    private final DocumentService documentService;
+    private final DocumentWebMapper documentWebMapper;
 
     /**
      * Checks if the provided TAN is valid for a given ECMR ID.
@@ -551,6 +565,140 @@ public class AnonymousController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        }
+    }
+
+    @PostMapping(path = "/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            tags = "Document",
+            summary = "Upload a document to an eCMR",
+            parameters = {
+                    @Parameter(name = "ecmrId", description = "UUID of the ECMR", required = true, schema = @Schema(type = "string", format = "uuid")),
+                    @Parameter(name = "file", description = "File to upload", required = true, content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Document uploaded successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid request"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public ResponseEntity<Void> uploadDocumentToEcmr(@RequestParam UUID ecmrId, @RequestPart("file") @Valid @NotNull MultipartFile file,
+            @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "tan") @Valid @NotNull String tan) {
+        try {
+            ExternalUser externalUser = authenticationService.getExternalUser(ecmrId, userToken, tan);
+            documentService.uploadDocument(ecmrId, file, new InternalOrExternalUser(externalUser));
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            log.error("Error attaching document to ECMR", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (ExternalUserInvalidTanException | ExternalUserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (NoPermissionException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        }
+    }
+
+    @GetMapping("/document")
+    @Operation(
+            summary = "List documents of an eCMR",
+            tags = "Document",
+            parameters = {
+                    @Parameter(name = "ecmrId", description = "UUID of the ECMR", required = true, schema = @Schema(type = "string", format = "uuid"))
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of documents",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = DocumentModel.class))
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Invalid ecmrId"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden")
+            }
+    )
+    public ResponseEntity<List<DocumentModel>> getEcmrDocuments(@RequestParam UUID ecmrId,
+            @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "tan") @Valid @NotNull String tan) {
+        try {
+            ExternalUser externalUser = authenticationService.getExternalUser(ecmrId, userToken, tan);
+            List<Document> documents = documentService.getDocumentsByEcmrId(ecmrId, new InternalOrExternalUser(externalUser));
+            return ResponseEntity.ok(documents.stream().map(documentWebMapper::toModel).toList());
+        } catch (ExternalUserInvalidTanException | ExternalUserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (NoPermissionException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        }
+    }
+
+    @GetMapping("/document/{id}/download")
+    @Operation(
+            summary = "Download a document",
+            tags = "Document",
+            parameters = {
+                    @Parameter(name = "id", description = "Document ID", required = true, schema = @Schema(type = "long"))
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Document stream",
+                            content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Invalid document id"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Document not found")
+            }
+    )
+    public ResponseEntity<InputStreamResource> downloadDocument(@PathVariable long id,
+            @RequestParam(name = "userToken") @Valid @NotNull String userToken, @RequestParam(name = "tan") @Valid @NotNull String tan) {
+        try {
+            ExternalUser externalUser = authenticationService.getExternalUser(userToken, tan);
+            Document document = documentService.getDocument(id, new InternalOrExternalUser(externalUser));
+            InputStream fileStream = documentService.downloadDocument(id, new InternalOrExternalUser(externalUser));
+            InputStreamResource inputStreamResource = new InputStreamResource(fileStream);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFileName() + "\"")
+                    .contentLength(document.getSize())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(inputStreamResource);
+        } catch (ExternalUserInvalidTanException | ExternalUserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (NoPermissionException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (DocumentNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/document/{id}")
+    @Operation(
+            summary = "Delete a document",
+            tags = "Document",
+            parameters = {
+                    @Parameter(name = "id", description = "Document ID", required = true, schema = @Schema(type = "long"))
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Document deleted successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid document id"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Document not found")
+            }
+    )
+    public ResponseEntity<Void> deleteDocument(@PathVariable long id, @RequestParam(name = "userToken") @Valid @NotNull String userToken,
+            @RequestParam(name = "tan") @Valid @NotNull String tan) {
+        try {
+            ExternalUser externalUser = authenticationService.getExternalUser(userToken, tan);
+            documentService.deleteDocument(id, new InternalOrExternalUser(externalUser));
+            return ResponseEntity.ok().build();
+        } catch (ExternalUserInvalidTanException | ExternalUserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (NoPermissionException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (DocumentNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 }

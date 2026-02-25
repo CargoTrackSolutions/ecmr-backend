@@ -60,14 +60,28 @@ public class ExternalUserService {
         ExternalUserEntity externalUser = this.externalUserRepository.findExtenalUserByUserTokenAndEcmrId(userToken, ecmrId)
                 .orElseThrow(() -> new ExternalUserNotFoundException(userToken));
 
+        this.checkTan(externalUser, tan, userToken);
+
+        return externalUserPersistenceMapper.toDomain(externalUser);
+    }
+
+    public ExternalUser findExternalUser(String userToken, String tan)
+            throws ExternalUserNotFoundException, ExternalUserInvalidTanException {
+        ExternalUserEntity externalUser = this.externalUserRepository.findByUserTokenAndIsActiveTrue(userToken)
+                .orElseThrow(() -> new ExternalUserNotFoundException(userToken));
+
+        this.checkTan(externalUser, tan, userToken);
+
+        return externalUserPersistenceMapper.toDomain(externalUser);
+    }
+
+    private void checkTan(ExternalUserEntity externalUser, String tan, String userToken) throws ExternalUserInvalidTanException {
         if (!Objects.equals(externalUser.getTan(), tan)) {
             externalUser.setInvalidLoginCount(externalUser.getInvalidLoginCount() + 1);
             externalUser.setActive(externalUser.isActive() && externalUser.getInvalidLoginCount() < MAXIMUM_INVALID_TAN_COUNT);
             externalUserRepository.save(externalUser);
             throw new ExternalUserInvalidTanException(userToken);
         }
-
-        return externalUserPersistenceMapper.toDomain(externalUser);
     }
 
     public List<ExternalUser> findExternalUsers(UUID ecmrId) {
