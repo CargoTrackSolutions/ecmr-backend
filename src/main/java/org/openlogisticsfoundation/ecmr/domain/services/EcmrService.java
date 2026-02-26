@@ -95,7 +95,7 @@ public class EcmrService {
                 null :
                 filterRequestCommand.getTransportType().equals(EcmrTransportType.International);
 
-        final Page<EcmrIdProjection> ecmrPage = ecmrRepository.findAllByTypeAndAssignedGroupIds(ecmrType, usersGroupIds,
+        final Page<EcmrIdProjection> ecmrPage = ecmrRepository.findAllByTypeAndAssignedGroupIds(ecmrType, usersGroupIds, filterRequestCommand.getEcmrId(),
                 filterRequestCommand.getReferenceId(), filterRequestCommand.getFrom(), filterRequestCommand.getTo(),
                 isInternational, filterRequestCommand.getStatus(), filterRequestCommand.getLicensePlate(),
                 filterRequestCommand.getCarrierName(), filterRequestCommand.getCarrierPostCode(), filterRequestCommand.getConsigneePostCode(),

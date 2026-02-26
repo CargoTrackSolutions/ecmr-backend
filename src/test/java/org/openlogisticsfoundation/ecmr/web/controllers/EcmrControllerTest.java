@@ -168,6 +168,7 @@ public class EcmrControllerTest {
     public void testGetMyEcmrs_Success() throws Exception {
         // Arrange
         FilterRequestModel filterRequestModel = new FilterRequestModel(
+                "ecmrId",
                 "referenceId",
                 "from",
                 "to",

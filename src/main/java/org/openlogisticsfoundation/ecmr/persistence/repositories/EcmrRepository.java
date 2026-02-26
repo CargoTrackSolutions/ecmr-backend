@@ -16,8 +16,8 @@ import java.util.UUID;
 
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrType;
-import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
+import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -42,11 +42,12 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
 
     @Query("""
             SELECT new org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection(e.id),
-                e.referenceIdentificationNumber, e.senderInformation.companyName,e.consigneeInformation.companyName,
+                e.ecmrId, e.referenceIdentificationNumber, e.senderInformation.companyName,e.consigneeInformation.companyName,
                 e.ecmrStatus, e.carrierInformation.carrierLicensePlate,e.carrierInformation.companyName, e.carrierInformation.postcode,
                 e.editedBy, e.editedAt, e.createdAt
                 FROM EcmrEntity e
                 WHERE e.type = :type
+                AND (:ecmrId is null OR CAST(e.ecmrId AS string) LIKE CONCAT('%', :ecmrId, '%'))
                 AND (:referenceId is null or e.referenceIdentificationNumber LIKE CONCAT('%', cast(:referenceId as text), '%'))
                 AND (:from is null or e.senderInformation.companyName LIKE  CONCAT('%', cast(:from as text), '%'))
                 AND (:to is null or e.consigneeInformation.companyName LIKE  CONCAT('%', cast(:to as text), '%'))
@@ -61,6 +62,7 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
                 AND EXISTS (SELECT 1 FROM EcmrAssignmentEntity ea WHERE ea.ecmr = e AND ea.group.id in :groupIds)
             """)
     Page<EcmrIdProjection> findAllByTypeAndAssignedGroupIds(@Param("type") EcmrType type, @Param("groupIds") List<Long> groupIds,
+            @Param("ecmrId") String ecmrId,
             @Param("referenceId") String referenceId, @Param("from") String from, @Param("to") String to,
             @Param("isInternational") Boolean isInternational, @Param("ecmrStatus") EcmrStatus ecmrStatus,
             @Param("licensePlate") String licensePlate, @Param("carrierName") String carrierName, @Param("carrierPostCode") String carrierPostCode,
