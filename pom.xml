@@ -232,6 +232,24 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>xmpbox</artifactId>
+            <version>3.0.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>validation-model-jakarta</artifactId>
+            <version>1.28.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>core-jakarta</artifactId>
+            <version>1.28.2</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob</artifactId>
             <version>12.32.0</version>

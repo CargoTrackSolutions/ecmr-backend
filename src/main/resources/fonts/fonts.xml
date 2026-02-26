@@ -1,0 +1,10 @@
+<fontFamilies>
+    <fontFamily name="Inter">
+        <normal>fonts/inter/Inter-Regular.ttf</normal>
+        <bold>fonts/inter/Inter-Bold.ttf</bold>
+        <italic>fonts/inter/Inter-Italic.ttf</italic>
+        <boldItalic>fonts/inter/Inter-BoldItalic.ttf</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <isPdfEmbedded>true</isPdfEmbedded>
+    </fontFamily>
+</fontFamilies>
