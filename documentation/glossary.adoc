@@ -1,31 +1,80 @@
 [[section-glossary]]
-== Glossary for the eCMR
+== Glossary
 
-Contents
-
-We define the project-specific terms for the eCMR, and additionally refer to the global Glossary of the Silicon Economy.
+This chapter provides project-specific terms for the eCMR.
 
 The project uses the eCMR terminology as described in the UN/CEFACT standard.
-Therefore, the defined words in this standard are listed here:
 
 Source: UN/CEFACT, document "Business Requirements Specification eCMR", Chapter 6.2 "Definitions Business Terms" (https://unece.org/trade/uncefact/mainstandards[Link])
 
+[cols="1,3", options="header"]
 |===
-| Transport Service Contract                               | Definition
+| Term | Definition
 
-| Transport Services Buyer (Sender/Consignor or Consignee) | The buyer of transport services.
-| Transport Services Provider (Carrier)                    | The provider of transport services.
-| Sender/Consignor                                         | The party consigning goods as stipulated in a contract of carriage by road (eCMR) and referred as Sender in the CMR Convention
-| Consignee                                                | The party receiving a consignment of goods as stipulated in a contract of carriage by road (eCMR).
-| Carrier / subsequent carrier                             | The party which provides transport services as stipulated in a contract of carriage by road (eCMR).
-| Dispatch place                                           | The party where goods are collected or taken over by the carrier. Operational term is ‘Pick-up Place’ or ‘Ship-from’.
-| Delivery Party                                           | The party to which goods should be delivered by the carrier. Operational term is ‘Place of Positioning’ or ‘Ship to’.
-| Contract of carriage by road (eCMR)                     | Means a contract in which a transport company, against the payment of freight, undertakes to carry goods from one place to another. In the CMR Convention, a contract of carriage is confirmed by the making out of a consignment note.
-| Consignment                                              | A consignment is a separately identifiable collection of Consignment Items (available to be) transported from one Consignor to one Consignee as specified in one single transport contract (eCMR).
-| Consignment Item                                         | A separately identifiable quantity of products grouped together by Customs tariff code or packaging for transport purposes. A Consignment Item is the lowest level of information within a Consignment. In the case of cross-border consignments each Consignment Item must have only one associated Customs tariff code in order to satisfy Customs requirements
-| TDED | Trade Data Elements Directory
-The United Nations Trade Data Element Directory (UNTDED, ISO 7372) is developed and published by UN/CEFACT. The directory consists of a four-digit number to identify each data element, a data element name, and a description that provides a definition of the data element. It provides an internationally accepted standard repository for the semantic of trade data elements used in international trade.
+| Audit Trail
+| A verifiable record of all modifications and exchanges of an eCMR. In the eCMR system, the audit trail is derived from the eSeal chain.
 
-UNTDED2005 ISO 7372 (https://unece.org/DAM/trade/untdid/UNTDED2005.pdf[link])
+| Canonical Transferable Unit
+| The official representation of the eCMR that is transmitted between partners. In this system, the eSeal serves as the canonical transferable unit instead of the raw eCMR.
 
+| Carrier / Subsequent Carrier
+| The party providing transport services as stipulated in a contract of carriage by road (eCMR).
+
+| Consignment
+| A separately identifiable collection of Consignment Items to be transported from one consignor to one consignee under a single transport contract (eCMR).
+
+| Consignment Item
+| A separately identifiable quantity of products grouped by customs tariff code or packaging for transport. Each Consignment Item must have only one associated customs tariff code in cross-border shipments to satisfy customs requirements. It represents the lowest level of information within a consignment.
+
+| Contract of Carriage by Road (eCMR)
+| A contract in which a transport company, against payment of freight, undertakes to carry goods from one place to another. In the CMR Convention, a contract of carriage is confirmed by the issuance of a consignment note.
+
+| Delivery Party
+| The party to which goods should be delivered by the carrier. Operational terms: "Place of Positioning" or "Ship-to".
+
+| Dispatch Place
+| The location where goods are collected or taken over by the carrier. Operational terms: "Pick-up Place" or "Ship-from".
+
+| Digital Signature
+| A cryptographic signature applied to an eCMR or eSeal to ensure integrity, authenticity, and legal recognition under the EU eIDAS Regulation.
+
+| eCMR
+| Electronic consignment note used to digitally record a contract of carriage by road, replacing the traditional paper CMR.
+
+| eSeal (Electronic Seal)
+| A cryptographic mechanism used to sign eCMRs digitally. An eSeal ensures authenticity, integrity, and non-repudiation of a document and serves as the canonical transferable unit between partners.
+
+| eSeal Chain
+| A linked sequence of eSeals, where each new eSeal references its predecessor. This chain enables reconstruction of the full history of an eCMR and ensures a complete audit trail of all changes.
+
+| eSeal Header
+| Metadata accompanying an eSeal, including the public key of the issuer and other relevant verification information.
+
+| Interoperability
+| The ability of independent eCMR instances to exchange and verify eSeals, ensuring legally compliant and trusted communication across organizational boundaries.
+
+| Public Key Verification
+| The process of validating the public key used in an eSeal. The checksum of the public key is published via a DNS record of the providing eCMR instance to enable secure verification.
+
+| Sender / Consignor
+| The party consigning goods under a contract of carriage by road (eCMR), referred to as "Sender" in the CMR Convention.
+
+| Consignee
+| The party receiving a consignment of goods as stipulated in a contract of carriage by road (eCMR).
+
+| Transport Service Contract
+| A contract between a transport services buyer and provider specifying the transport of goods.
+
+| Transport Services Buyer (Sender/Consignor or Consignee)
+| The party purchasing transport services.
+
+| Transport Services Provider (Carrier)
+| The party providing transport services.
+
+| TDED / Trade Data Elements Directory
+| The United Nations Trade Data Elements Directory (UNTDED, ISO 7372) provides a standardized repository for the semantics of trade data elements used in international trade. Each data element has a four-digit identifier, a name, and a descriptive definition. https://unece.org/DAM/trade/untdid/UNTDED2005.pdf
+
+| Trust Service Provider (TSP)
+| A service provider authorized to issue digital certificates or provide verification services that support legally recognized digital signatures and eSeals in compliance with eIDAS.
 |===
+

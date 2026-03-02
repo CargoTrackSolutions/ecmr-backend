@@ -28,7 +28,7 @@ whose goal is to define and implement digital document standards (like eCMR, del
 
 ## Features
 
-- [RESTful API](openapi.yaml) for creating, updating, and retrieving eCMRs
+- [RESTful API](openapi.yml) for creating, updating, and retrieving eCMRs
 - eSEAL (see for [eSEAL Repository](https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal) more details) for signing eCMRs and verifying of signed eCMRs
 - Role-based access and data model based on the official eCMR specification
 - Integration hooks for ERP, TMS, and other relevant systems
@@ -39,8 +39,8 @@ whose goal is to define and implement digital document standards (like eCMR, del
     ├── ecmr-backend/ # Java source code
     ├── documentation/ # eCMR project documentation
     ├── README.md # Project description
-    ├── openapi.yaml # API description
-    ├── API_CHANGELOG.md * Changelog of the openapi.yaml file
+    ├── openapi.yml # API description
+    ├── API_CHANGELOG.md * Changelog of the openapi.yml file
     ├── LICENSE # Licensing information
     ├── docker-compose.yml # Docker compose setup for development purpose
     └── CONTRIBUTING.md # Contribution guidelines
