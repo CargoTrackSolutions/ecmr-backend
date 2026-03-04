@@ -27,4 +27,5 @@ public class FilterRequestModel {
     private String carrierPostCode;
     private String consigneePostCode;
     private String lastEditor;
+    private Long groupId;
 }

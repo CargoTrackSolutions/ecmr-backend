@@ -190,6 +190,15 @@ public class GroupService {
         return group.stream().flatMap(this::flatMapGroupTree).distinct().toList();
     }
 
+    public List<Group> flatMapGroupTreesFromId(List<Group> groups, Long groupId) {
+        return groups.stream()
+                .flatMap(this::flatMapGroupTree)
+                .filter(group -> group.getId().equals(groupId))
+                .findFirst()
+                .map(group -> flatMapGroupTree(group).distinct().toList())
+                .orElse(List.of());
+    }
+
     List<GroupEntity> getGroupEntities(List<Long> groupIds) {
         return groupRepository.findAllById(groupIds);
     }

@@ -91,6 +91,10 @@ public class EcmrService {
         List<Group> usersGroups = groupService.getGroupsForUser(authenticatedUser);
         List<Long> usersGroupIds = groupService.flatMapGroupTrees(usersGroups).stream().map(Group::getId).toList();
 
+        if(filterRequestCommand.getGroupId() != null) {
+            usersGroupIds = groupService.flatMapGroupTreesFromId(usersGroups, filterRequestCommand.getGroupId()).stream().map(Group::getId).toList();
+        }
+
         Boolean isInternational = filterRequestCommand.getTransportType() == null ?
                 null :
                 filterRequestCommand.getTransportType().equals(EcmrTransportType.International);
