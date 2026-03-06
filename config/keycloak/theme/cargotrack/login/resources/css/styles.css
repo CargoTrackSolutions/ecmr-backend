@@ -72,8 +72,9 @@ body.login-pf {
     display: none !important;
 }
 
-/* Inputs */
-.form-control {
+/* Inputs - including PatternFly 4 classes */
+.form-control,
+.pf-c-form-control {
     border: 1px solid #ddd !important;
     border-radius: 4px !important;
     box-shadow: none !important;
@@ -83,21 +84,25 @@ body.login-pf {
     height: auto !important;
 }
 
-.form-control:focus {
+.form-control:focus,
+.pf-c-form-control:focus {
     border-color: #3f51b5 !important;
     background-color: #fff !important;
 }
 
 /* Label */
-.control-label {
-    color: #666;
-    font-weight: 500;
-    font-size: 13px;
-    margin-bottom: 5px;
+.control-label,
+.pf-c-form__label-text {
+    color: #666 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    margin-bottom: 5px !important;
+    display: inline-block !important;
 }
 
 /* Buttons */
-.btn-primary {
+.btn-primary,
+.pf-c-button.pf-m-primary {
     background-color: #3f51b5 !important;
     border-color: #3f51b5 !important;
     color: white !important;
@@ -108,10 +113,20 @@ body.login-pf {
     font-size: 14px !important;
     width: 100% !important;
     margin-top: 10px !important;
+    display: block !important;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.pf-c-button.pf-m-primary:hover {
     background-color: #303f9f !important;
+}
+
+/* Password Toggle Button */
+.pf-c-input-group .pf-c-button {
+    background-color: #f7f7f7 !important;
+    border: 1px solid #ddd !important;
+    border-left: none !important;
+    color: #666 !important;
 }
 
 /* Links */
