@@ -24,6 +24,7 @@ public enum SortingField {
     consigneePostCode("consigneeInformation.postcode"),
     lastEditor("editedBy"),
     lastEditDate("editedAt"),
-    creationDate("createdAt");
+    creationDate("createdAt"),
+    ecmrId("ecmrId");
     private final String entryFieldName;
 }
