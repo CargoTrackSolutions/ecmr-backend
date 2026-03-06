@@ -348,19 +348,41 @@ public class EcmrShareService {
         if (ecmrEntity.getEcmrStatus() != EcmrStatus.DELIVERED) return;
         if (receiverEmails.isEmpty()) return;
 
-        String subject = String.format("Completed eCMR for Shipment [%s]",
+        String subject = String.format("eCMR completat pentru transportul [%1$s] / Completed eCMR for Shipment [%1$s] / Abgeschlossener eCMR für Sendung [%1$s]",
             ecmrEntity.getReferenceIdentificationNumber()
         );
 
         String text = String.format("""
+            Stimate Doamnă / Stimate Domn,
+
+            Vă rugăm să găsiți atașată scrisoarea de trăsură electronică (eCMR) completată pentru transportul [%1$s].
+            Primiți acest document în format PDF pe e-mail deoarece ați fost implicat în proces în calitate de invitat.
+            Puteți păstra eCMR-ul în dosarele dumneavoastră dacă este necesar.
+            Acesta este un e-mail automat, vă rugăm să nu răspundeți!
+
+            Cu stimă
+            
+            ---
+
             Dear Sir or Madam,
 
-            Please find attached the completed eCMR for the shipment [%s].
+            Please find attached the completed eCMR for the shipment [%1$s].
             You are receiving this document as a PDF by email because you were involved in the process as a guest.
             You can keep the eCMR in your records if needed.
             This is an automated e-mail, please do not respond!
 
             Best regards
+            
+            ---
+
+            Sehr geehrte Damen und Herren,
+
+            im Anhang finden Sie den abgeschlossenen eCMR für die Sendung [%1$s].
+            Sie erhalten dieses Dokument als PDF per E-Mail, da Sie als Gast in den Prozess involviert waren.
+            Sie können den eCMR bei Bedarf für Ihre Unterlagen aufbewahren.
+            Dies ist eine automatisierte E-Mail, bitte antworten Sie nicht!
+
+            Mit freundlichen Grüßen
             """, ecmrEntity.getReferenceIdentificationNumber());
 
         PdfFile pdfFile = ecmrPdfService.createJasperReportForEcmr(ecmrEntity.getEcmrId(), internalOrExternalUser, true, true);
