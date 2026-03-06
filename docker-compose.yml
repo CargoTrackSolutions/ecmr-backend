@@ -39,6 +39,7 @@ services:
     image: keycloak/keycloak
     volumes:
       - ./config/keycloak/:/opt/keycloak/data/import/
+      - ./config/keycloak/theme/cargotrack:/opt/keycloak/themes/cargotrack
     command: start-dev --import-realm
     env_file:
       - config/keycloak/keycloak-params.env
