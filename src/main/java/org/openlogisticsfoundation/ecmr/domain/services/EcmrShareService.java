@@ -302,15 +302,15 @@ public class EcmrShareService {
 
         String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", originUrl, ecmrId, shareToken, roleToShare.name());
         String mailText = """
-                Sehr geehrte Damen und Herren,
-                im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:
+                Stimate Doamnă / Stimate Domn,
+                Ca parte a transportului nostru curent, vă punem la dispoziție scrisoarea de trăsură electronică (eCMR). Puteți vizualiza, edita și semna digital documentul folosind următorul link:
 
                 {{url}}
 
-                Wenn bei Ihnen eine eigene Instanz des eCMR Systems besteht, können Sie den eCMR auch in Ihre Instanz importieren. Melden Sie sich dazu bei Ihrer Instanz an und fügen die obige URL in den Import Dialog ein.
+                Dacă aveți propria instanță a sistemului eCMR, puteți de asemenea să importați eCMR-ul în instanța dumneavoastră. Pentru a face recest lucru, conectați-vă la instanța dumneavoastră și inserați URL-ul de mai sus în dialogul de import.
 
-                Bitte beachten Sie, dass der Link aus Sicherheitsgründen nur für einen begrenzten Zeitraum gültig ist. Sollten Sie Rückfragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.
-                Vielen Dank für die Zusammenarbeit.
+                Vă rugăm să rețineți că link-ul este valabil doar pentru o perioadă limitată de timp din motive de securitate. Dacă aveți întrebări sau aveți nevoie de asistență, nu ezitați să ne contactați.
+                Vă mulțumim pentru colaborare.
 
                 ---
 
@@ -323,6 +323,18 @@ public class EcmrShareService {
 
                 Please note that the link is only valid for a limited time for security reasons. If you have any questions or need assistance, feel free to contact us.
                 Thank you for your cooperation.
+
+                ---
+
+                Sehr geehrte Damen und Herren,
+                im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:
+
+                {{url}}
+
+                Wenn bei Ihnen eine eigene Instanz des eCMR Systems besteht, können Sie den eCMR auch in Ihre Instanz importieren. Melden Sie sich dazu bei Ihrer Instanz an und fügen die obige URL in den Import Dialog ein.
+
+                Bitte beachten Sie, dass der Link aus Sicherheitsgründen nur für einen begrenzten Zeitraum gültig ist. Sollten Sie Rückfragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.
+                Vielen Dank für die Zusammenarbeit.
                 """;
         mailService.sendMail(receiverEmail, "Import eCMR", mailText.replace("{{url}}", shareUrl));
         return new EcmrShareResponse(ShareEcmrResult.SharedExternal, null, null);
