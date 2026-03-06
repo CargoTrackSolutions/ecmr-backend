@@ -29,9 +29,11 @@ services:
 
   # Postgres-Database
   postgres:
-    image: postgres
+    image: postgres:16
     env_file:
       - config/postgres-params.env
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
 
   keycloak:
     image: keycloak/keycloak
@@ -42,7 +44,19 @@ services:
       - config/keycloak/keycloak-params.env
     network_mode: "service:localhost"
     healthcheck:
-      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3;cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1" ]
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r
+
+            Host: localhost:9000\r
+
+            Connection: close\r
+
+            \r
+
+            ' >&3;cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1"
+        ]
       interval: 20s
       timeout: 5s
       retries: 3
