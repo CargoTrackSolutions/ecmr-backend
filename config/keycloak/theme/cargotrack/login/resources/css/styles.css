@@ -1,11 +1,11 @@
 /* CargoTrack Keycloak Login Theme */
 
-body {
-    background-image: url('https://on-ts1.cargotrack.ro/assets/project/cargotrack/images/signin/1-spring-3.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+body.login-pf {
+    background-image: url('https://on-ts1.cargotrack.ro/assets/project/cargotrack/images/signin/1-spring-3.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
     height: 100vh;
     font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
     margin: 0;
@@ -17,8 +17,8 @@ body {
     /* Hide default keycloak header */
 }
 
-.login-pf body {
-    background-color: transparent;
+body.login-pf {
+    background-color: transparent !important;
 }
 
 /* Card container */
