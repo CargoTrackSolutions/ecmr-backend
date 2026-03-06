@@ -31,22 +31,31 @@ body,
     display: none !important;
 }
 
-/* Main Card container - PatternFly v3 use .card-pf */
-.card-pf,
-#kc-content {
+/* Main Card container - ONLY style the outer one */
+.card-pf {
     background-color: rgba(255, 255, 255, 0.98) !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5) !important;
     padding: 40px !important;
     max-width: 450px !important;
     margin: 10vh auto !important;
-    /* Center the card vertically */
     border-top: 5px solid #ff7b00 !important;
 }
 
-/* CargoTrack Logo */
-.card-pf::before,
-#kc-content::before {
+/* Ensure inner content containers are transparent to avoid nesting boxes */
+#kc-content,
+#kc-content-wrapper,
+#kc-form,
+#kc-form-wrapper {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* CargoTrack Logo - only on the card */
+.card-pf::before {
     content: '';
     display: block;
     background-image: url('../img/logo.png');
@@ -58,21 +67,22 @@ body,
     margin: 0 auto 20px auto;
 }
 
+/* Hide logo and title from other containers to avoid duplication */
+#kc-content::before,
+.login-pf-header,
+#kc-header,
+.login-pf-page-header {
+    display: none !important;
+}
+
 #kc-page-title {
     font-weight: bold !important;
     color: #3f51b5 !important;
     text-align: center !important;
-    font-size: 18px !important;
+    font-size: 16px !important;
     margin-bottom: 20px !important;
     text-transform: uppercase !important;
     display: block !important;
-}
-
-/* Hide duplicate header if it exists */
-.login-pf-header {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
 }
 
 /* Inputs - including PatternFly 4 classes */
