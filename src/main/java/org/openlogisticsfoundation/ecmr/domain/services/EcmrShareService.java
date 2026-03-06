@@ -71,6 +71,9 @@ public class EcmrShareService {
     @Value("${app.origin.url}")
     private String originUrl;
 
+    @Value("${app.frontend.url:http://localhost:4200}")
+    private String frontendUrl;
+
     public EcmrShareResponse shareEcmrWithGroup(InternalOrExternalUser internalOrExternalUser, @Valid @NotNull UUID ecmrId,
             @Valid @NotNull Long groupId, @Valid @NotNull EcmrRole role)
             throws EcmrNotFoundException, GroupNotFoundException, NoPermissionException, ValidationException {
@@ -300,7 +303,7 @@ public class EcmrShareService {
         }
         String shareToken = this.getShareToken(roleToShare, ecmr);
 
-        String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", originUrl, ecmrId, shareToken, roleToShare.name());
+        String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", frontendUrl, ecmrId, shareToken, roleToShare.name());
         String mailText = """
                 Stimate Doamnă / Stimate Domn,
                 Ca parte a transportului nostru curent, vă punem la dispoziție scrisoarea de trăsură electronică (eCMR). Puteți vizualiza, edita și semna digital documentul folosind următorul link:

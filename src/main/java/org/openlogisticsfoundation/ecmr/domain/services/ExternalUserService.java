@@ -55,6 +55,9 @@ public class ExternalUserService {
     @Value("${app.origin.url}")
     private String originUrl;
 
+    @Value("${app.frontend.url:http://localhost:4200}")
+    private String frontendUrl;
+
     public ExternalUser findExternalUser(UUID ecmrId, String userToken, String tan)
             throws ExternalUserNotFoundException, ExternalUserInvalidTanException {
         ExternalUserEntity externalUser = this.externalUserRepository.findExtenalUserByUserTokenAndEcmrId(userToken, ecmrId)
@@ -148,7 +151,7 @@ public class ExternalUserService {
 
         ecmrAssignmentService.createAndSaveAssigment(ecmrEntity, ecmrRole, externalUserEntity);
 
-        String ecmrLink = this.originUrl + "/ecmr-tan/{ecmrId}/{user-token}/{tan}"
+        String ecmrLink = this.frontendUrl + "/ecmr-tan/{ecmrId}/{user-token}/{tan}"
                 .replace("{ecmrId}", command.getEcmrId().toString())
                 .replace("{user-token}", userToken)
                 .replace("{tan}", tan);
