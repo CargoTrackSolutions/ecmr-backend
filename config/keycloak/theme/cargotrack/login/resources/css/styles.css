@@ -1,7 +1,7 @@
 /* CargoTrack Keycloak Login Theme */
 
 body.login-pf {
-    background-image: url('https://on-ts1.cargotrack.ro/assets/project/cargotrack/images/signin/1-spring-3.jpg') !important;
+    background-image: url('../img/background.jpg') !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
@@ -37,7 +37,7 @@ body.login-pf {
 #kc-content::before {
     content: '';
     display: block;
-    background-image: url('https://on-ts1.cargotrack.ro/assets/project/cargotrack/images/logo.png');
+    background-image: url('../img/logo.png');
     background-position: center;
     background-size: contain;
     background-repeat: no-repeat;
