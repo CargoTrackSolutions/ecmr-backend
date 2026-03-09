@@ -146,8 +146,7 @@ public class ExternalUserService {
         }
 
         String userToken = RandomStringUtils.secure().nextAlphanumeric(4);
-        // TODO: DO NOT DEPLOY TO PRODUCTION! REMOVE HARDCODED TAN WHEN SMS PROVIDER IS ACTIVE
-        String tan = "123456";
+        String tan = RandomStringUtils.secure().nextNumeric(6);
         final ExternalUserEntity externalUserEntity = this.createAndSaveExternalUser(command, userToken, tan);
 
         ecmrAssignmentService.createAndSaveAssigment(ecmrEntity, ecmrRole, externalUserEntity);
