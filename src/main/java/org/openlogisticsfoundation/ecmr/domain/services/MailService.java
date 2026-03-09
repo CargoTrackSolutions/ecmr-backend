@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @Service
 public class MailService {
@@ -42,7 +43,8 @@ public class MailService {
         mailSender.send(message);
     }
 
-    public void sendMailWithPdfAttachment(String to, String subject, String text, @NonNull PdfFile pdfFile) throws MessagingException, MailException {
+    public void sendMailWithPdfAttachment(String to, String subject, String text, @NonNull PdfFile pdfFile) throws MessagingException,
+            MailException, IOException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
         mimeMessageHelper.setTo(to);

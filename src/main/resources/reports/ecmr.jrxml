@@ -11,24 +11,25 @@
 	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
-	<style name="Table_TH" mode="Opaque" backcolor="rgba(255, 255, 255, 0.0)">
+	<style name="Table_TH" mode="Transparent">
 		<box>
 			<topPen lineWidth="0.5" lineColor="#000000"/>
 			<bottomPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
-	<style name="Table_CH" mode="Opaque" backcolor="rgba(255, 255, 255, 0.0)">
+	<style name="Table_CH" mode="Transparent">
 		<box>
 			<topPen lineWidth="0.5" lineColor="#000000"/>
 			<bottomPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
-	<style name="Table_TD" mode="Opaque" backcolor="rgba(255, 255, 255, 0.0)">
+	<style name="Table_TD" mode="Transparent">
 		<box>
 			<topPen lineWidth="0.5" lineColor="#000000"/>
 			<bottomPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
+	<style name="Default" isDefault="true" fontName="Inter" fontSize="10"/>
 	<subDataset name="ItemDataSource" uuid="ea5f1c49-1075-4b6b-8854-dc1e997509a1">
 		<field name="logisticsShippingMarksMarking" class="java.lang.String"/>
 		<field name="logisticsShippingMarksCustomBarcode" class="java.lang.String"/>
@@ -1311,7 +1312,9 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement verticalAlignment="Middle"/>
+					<textElement verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
 					<text><![CDATA[Carriage Charges]]></text>
 				</staticText>
 				<staticText>
@@ -1326,7 +1329,9 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement verticalAlignment="Middle"/>
+					<textElement verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
 					<text><![CDATA[Supplementary Charges]]></text>
 				</staticText>
 				<staticText>
@@ -1341,7 +1346,9 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement verticalAlignment="Middle"/>
+					<textElement verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
 					<text><![CDATA[Custom Duties]]></text>
 				</staticText>
 				<staticText>
@@ -1356,7 +1363,9 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement verticalAlignment="Middle"/>
+					<textElement verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
 					<text><![CDATA[Other Charges]]></text>
 				</staticText>
 				<staticText>
@@ -1373,6 +1382,7 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
+					<textElement verticalAlignment="Middle"/>
 					<text><![CDATA[Amount]]></text>
 				</staticText>
 				<staticText>
@@ -1389,6 +1399,7 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
+					<textElement verticalAlignment="Middle"/>
 					<text><![CDATA[Currency]]></text>
 				</staticText>
 				<staticText>
@@ -1405,6 +1416,7 @@
 						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					</box>
+					<textElement verticalAlignment="Middle"/>
 					<text><![CDATA[Payer]]></text>
 				</staticText>
 				<textField isBlankWhenNull="true">
@@ -1708,7 +1720,7 @@
 						<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement textAlignment="Center"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
 					<text><![CDATA[In]]></text>
 				</staticText>
 				<staticText>
@@ -1725,7 +1737,7 @@
 						<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement textAlignment="Center"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
 					<text><![CDATA[On]]></text>
 				</staticText>
 				<textField isBlankWhenNull="true">
@@ -1877,7 +1889,7 @@
 						<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement textAlignment="Center"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
 					<text><![CDATA[In]]></text>
 				</staticText>
 				<staticText>
@@ -1894,7 +1906,7 @@
 						<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 						<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
 					</box>
-					<textElement textAlignment="Center"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
 					<text><![CDATA[On]]></text>
 				</staticText>
 				<textField isBlankWhenNull="true">

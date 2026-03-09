@@ -7,8 +7,8 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.models;
 
+import java.io.IOException;
 import java.io.OutputStream;
-import java.util.function.Consumer;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,10 +16,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class PdfFile {
-    private String filename;
-    private final Consumer<OutputStream> writer;
+    private final String filename;
+    private final byte[] content;
 
-    public void writeTo(OutputStream out) {
-        writer.accept(out);
+    public void writeTo(OutputStream out) throws IOException {
+        out.write(content);
     }
 }

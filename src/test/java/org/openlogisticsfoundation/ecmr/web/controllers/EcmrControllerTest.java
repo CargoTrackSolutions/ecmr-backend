@@ -23,12 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -168,6 +164,7 @@ public class EcmrControllerTest {
     public void testGetMyEcmrs_Success() throws Exception {
         // Arrange
         FilterRequestModel filterRequestModel = new FilterRequestModel(
+                "ecmrId",
                 "referenceId",
                 "from",
                 "to",
@@ -177,7 +174,8 @@ public class EcmrControllerTest {
                 "carrierName",
                 "carrierPostCode",
                 "consigneePostCode",
-                "lastEditor"
+                "lastEditor",
+                0L
         );
         EcmrPageModel pageModel = new EcmrPageModel(0, 1, List.of());
 
@@ -359,15 +357,7 @@ public class EcmrControllerTest {
         String filename = "test.pdf";
         byte[] data = new byte[] { 1, 2, 3, 4, 5 };
 
-        Consumer<OutputStream> writer = out -> {
-            try {
-                out.write(data);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-
-        PdfFile pdfFile = new PdfFile(filename, writer);
+        PdfFile pdfFile = new PdfFile(filename, data);
 
         when(authenticationService.getAuthenticatedUser(true)).thenReturn(authenticatedUser);
         when(ecmrPdfService.createJasperReportForEcmr(eq(ecmrId), any(InternalOrExternalUser.class), eq(true), eq(false))).thenReturn(pdfFile);

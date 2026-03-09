@@ -16,6 +16,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class FilterRequestModel {
+    private String ecmrId;
     private String referenceId;
     private String from;
     private String to;
@@ -26,4 +27,5 @@ public class FilterRequestModel {
     private String carrierPostCode;
     private String consigneePostCode;
     private String lastEditor;
+    private Long groupId;
 }

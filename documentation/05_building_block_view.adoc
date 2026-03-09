@@ -1,28 +1,39 @@
 [[section-building-block-view]]
-== Building Block View
+== Building Block View / eCMR Architecture
 
-=== eCMR Architecture and Components
+This chapter describes the static decomposition of the eCMR system into its architectural building blocks and shows how the system is structured on different levels of abstraction.
+
+The objective of this chapter is to provide transparency regarding the logical structure of the system, clarify
+responsibilities of individual components, and document their relationships and dependencies.
+
+The eCMR architecture is designed to ensure:
+
+- Clear separation of concerns
+- Legal compliance, particularly with the EU eIDAS Regulation
+- Secure and trustworthy electronic document handling
+- Interoperability between independent eCMR implementations
+- Extensibility for future regulatory and functional requirements
+
+The next overview image shows the major components and which internal system (left side)
+are connected to the eCMR service. The ecmr-backend is handling all the connections
+and providing an external api for share eCMR with other eCMR instances or
+systems that use the eCMR api and data model.
 
 .eCMR Component Overview
 image::images/ecmr_highlevel_architecture.svg["eCMR Component Overview"]
 
-This image shows the major components and which internal system (left side)
-are connected to the ecmr. The ecmr backend is handling all the connections
-and providing an external api for share ecmr with other ecmr instances or
-systems that use the ecmr api and data model.
-
-==== User Management (OAuth)
-The current ecmr version is tested with keycloak as user
+=== User Management (OAuth)
+The current eCMR version is tested with keycloak as user
 management, but any other user management can be used as long OAuth is provided.
 
-==== Database Management Systems (SQL)
-The current ecmr version is tested with postgres and Microsoft SQL Server.
+=== Database Management Systems (SQL)
+The current eCMR version is tested with postgres and Microsoft SQL Server.
 Other SQL-based DBMS can be connected. However, it must be ensured that their SQL dialect or native SQL implementation does not deviate from the standard.
 
-==== Core Frameworks
-* The *eCMR Backend* is based on Java SpringBoot
-* The *eCMR Frontend* is based on Angular
+=== Core Frameworks
+* The *eCMR-Backend* is based on Java SpringBoot
+* The *eCMR-Frontend* is based on Angular
 * All components are designed and implemented for use in *application
 containers* Docker-compatible environments can also be used for execution.
 The setup is tested on Podman and OKD Kubernetes (also uses Podman).
-Execution without the use of application containers is still possible, but requires special softness when setting the port and environment variables.
+Execution without the use of application containers is still possible, but requires special care when setting the port and environment variables.

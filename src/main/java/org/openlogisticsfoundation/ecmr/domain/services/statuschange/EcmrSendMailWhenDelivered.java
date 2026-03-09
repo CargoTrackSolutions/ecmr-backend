@@ -13,6 +13,7 @@ import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfaValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
 import org.openlogisticsfoundation.ecmr.domain.models.ExternalUser;
 import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
@@ -72,7 +73,7 @@ public class EcmrSendMailWhenDelivered implements EcmrStatusChanged {
 
         try {
             this.ecmrShareService.sendPdfToExternalUsersPerEmail(ecmrEntity, user, emails);
-        } catch (PdfCreationException e) {
+        } catch (PdfCreationException | PdfaValidationException e) {
             log.error("Error while creating Pdf: {}", e.getMessage());
             log.debug(e);
         } catch (EcmrNotFoundException e) {

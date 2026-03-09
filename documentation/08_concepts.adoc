@@ -2,14 +2,22 @@
 
 == Concepts
 
-This section describes core concepts of the ecmr service.
+This section describes core concepts of the eCMR service.
 
 === Domain Model
 
 See https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-model[eCMR data model] for
 more information about the eCMR domain model
 
-=== eCMR sharing process and eSeal implications
+=== eCMR Exchange via eSeals: Ensuring Secure and Auditable Document Sharing
+
+In the eCMR service, the exchange of electronic consignment notes between partners is designed around electronic seals
+(eSeals) rather than raw eCMR datasets. This approach simplifies communication, enforces legal
+compliance under the EU eIDAS Regulation, and guarantees a tamper-proof audit trail.
+
+By sharing only eSeals, each participant can validate the integrity and authenticity of the eCMR without exposing the underlying document contents. The chain of eSeals enables reconstruction of the full eCMR history, ensuring that every modification is traceable. Public keys required for eSeal verification are securely distributed via eSeal headers and validated using checksums published in DNS records of the providing eCMR instance.
+
+The following sections describe the core concept of eSeal-based sharing and the resulting auditability and trust guarantees that this approach provides.
 
 ==== Core Concept
 
@@ -22,6 +30,7 @@ more information about the eCMR domain model
 
 This creates a chain of eSeals, ensuring a full audit trail of all eCMR changes.
 
+[#eseal]
 ==== eSeal concept
 
 The eSeal (header + payload) is generated with the sealer's private key.

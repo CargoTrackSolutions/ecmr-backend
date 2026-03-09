@@ -25,6 +25,7 @@ import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserInvalidTan
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ExternalUserNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfaValidationException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.RateLimitException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
 import org.openlogisticsfoundation.ecmr.domain.models.Document;
@@ -452,7 +453,7 @@ public class AnonymousController {
             return createPdfResponse(ecmrReport);
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
-        } catch (PdfCreationException e) {
+        } catch (PdfCreationException | PdfaValidationException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -490,7 +491,7 @@ public class AnonymousController {
             return createPdfResponse(ecmrReport);
         } catch (NoPermissionException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
-        } catch (PdfCreationException e) {
+        } catch (PdfCreationException | PdfaValidationException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (EcmrNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());

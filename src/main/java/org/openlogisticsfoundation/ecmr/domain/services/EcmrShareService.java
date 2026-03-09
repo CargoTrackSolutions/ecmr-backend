@@ -8,28 +8,33 @@
 
 package org.openlogisticsfoundation.ecmr.domain.services;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openlogisticsfoundation.ecmr.api.model.EcmrStatus;
 import org.openlogisticsfoundation.ecmr.api.model.TransportRole;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.EcmrNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.GroupNotFoundException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.NoPermissionException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfCreationException;
+import org.openlogisticsfoundation.ecmr.domain.exceptions.PdfaValidationException;
 import org.openlogisticsfoundation.ecmr.domain.exceptions.ValidationException;
-
-import java.util.*;
-
-import jakarta.mail.MessagingException;
-import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
-import org.openlogisticsfoundation.ecmr.domain.exceptions.*;
 import org.openlogisticsfoundation.ecmr.domain.mappers.EcmrAssignmentMapper;
 import org.openlogisticsfoundation.ecmr.domain.mappers.GroupPersistenceMapper;
-import org.openlogisticsfoundation.ecmr.domain.models.*;
+import org.openlogisticsfoundation.ecmr.domain.models.ActionType;
+import org.openlogisticsfoundation.ecmr.domain.models.ApprovedUrl;
+import org.openlogisticsfoundation.ecmr.domain.models.EcmrAssignment;
+import org.openlogisticsfoundation.ecmr.domain.models.EcmrRole;
+import org.openlogisticsfoundation.ecmr.domain.models.EcmrShareResponse;
+import org.openlogisticsfoundation.ecmr.domain.models.Group;
+import org.openlogisticsfoundation.ecmr.domain.models.InternalOrExternalUser;
+import org.openlogisticsfoundation.ecmr.domain.models.PdfFile;
+import org.openlogisticsfoundation.ecmr.domain.models.ShareEcmrResult;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrAssignmentEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.EcmrEntity;
 import org.openlogisticsfoundation.ecmr.persistence.entities.GroupEntity;
@@ -43,9 +48,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor
@@ -346,7 +353,7 @@ public class EcmrShareService {
     public void sendPdfToExternalUsersPerEmail(EcmrEntity ecmrEntity,
                                                InternalOrExternalUser internalOrExternalUser,
                                                List<String> receiverEmails)
-        throws PdfCreationException, EcmrNotFoundException, NoPermissionException {
+        throws PdfCreationException, EcmrNotFoundException, NoPermissionException, PdfaValidationException {
 
         if (ecmrEntity.getEcmrStatus() != EcmrStatus.DELIVERED) return;
         if (receiverEmails.isEmpty()) return;
@@ -394,7 +401,7 @@ public class EcmrShareService {
             if (StringUtils.isBlank(email)) continue;
             try {
                 mailService.sendMailWithPdfAttachment(email, subject, text, pdfFile);
-            } catch (MessagingException | MailException e) {
+            } catch (MessagingException | MailException | IOException e) {
                 log.error("Could not send mail to <{}>: {}", email, e.getMessage());
                 log.debug(e);
             }

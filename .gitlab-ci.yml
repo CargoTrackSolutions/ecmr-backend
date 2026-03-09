@@ -123,6 +123,18 @@ code_quality:
     CODECLIMATE_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     DOCKER_HOST: "tcp://docker:2375"
   rules:
+  artifacts:
+    expire_in: 1 week
+
+# Override Dependency Scanning job to remove artefacts after one week.
+gemnasium-dependency_scanning:
+  artifacts:
+    expire_in: 1 week
+
+#O verride SAST job to remove artefacts after one week.
+spotbugs-sast:
+  artifacts:
+    expire_in: 1 week
 
 third-party-license-check:
   stage: test

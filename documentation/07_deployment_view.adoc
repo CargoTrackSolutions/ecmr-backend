@@ -68,15 +68,16 @@ From a repository perspective, this integration typically involves:
 * Integrating an existing OAuth2 identity provider for user and role management
 * Integrating existing IT systems (e.g. TMS) with the eCMR backend via its APIs
 
-===== This option offers
+*This option offers*
 
-This option provides a complete, production-ready eCMR setup with flexibility in deployment, branding, and system integration.
+This option provides a complete, production-ready eCMR setup with flexibility in deployment, branding, and system
+ integration.
 
-===== Setting up the eCMR Service
+==== Setting up the eCMR Service
 
 This guide provides a clear, step-by-step approach for setting up the eCMR backend and frontend.
 
-====== 1. Define the Target Setup
+===== Define the Target Setup
 
 Before installing the service, clarify how it will be used:
 
@@ -87,7 +88,7 @@ Before installing the service, clarify how it will be used:
 
 Defining the target setup ensures the installation is aligned with your IT architecture.
 
-====== 2. Prepare the Prerequisites
+===== Prepare the Prerequisites
 
 To run the eCMR service, the following components are required:
 
@@ -99,7 +100,7 @@ To run the eCMR service, the following components are required:
 
 Docker ensures consistent deployment, simplifies dependencies, and allows easy scaling.
 
-====== 3. Download the eCMR Components
+===== Download the eCMR Components
 
 Clone (or Download) the OLF eCMR repositories::
 
@@ -113,14 +114,14 @@ The frontend can either be::
 * Adapted to your company’s style guide, or
 * Replaced entirely by a custom frontend as long as it communicates with the backend API.
 
-====== 4. Set up the Database
+===== Set up the Database
 
 . Create a dedicated database and user for the backend.
 . Configure the backend with connection parameters (JDBC URL, username, password). See <<backend-configuration>> for
 detailed configuration.
 . Verify connectivity and permissions between the backend and the database.
 
-====== 5. Configure Authentication and Authorization
+===== Configure Authentication and Authorization
 
 * Set up an OAuth2 provider like keycloak. You can use an existing one as well.
 * Register the backend service as a client. if required by your identify provider.
@@ -129,14 +130,14 @@ detailed configuration.
 detailed configuration.
 * Verify access by calling a protected API endpoint using a valid token.
 
-====== 6. Configure eSEAL and Digital Signatures
+===== Configure eSEAL and Digital Signatures
 
-* Configure a key pair, keystores, and signature settings. See <<eseal-configuraton>> for detailed configuration.
+* Configure a key pair, keystores, and signature settings. See <<eseal-configuration>> for detailed configuration.
 * Verify that the backend can generate and validate eSEALs.
 * Ensure signature metadata is correctly stored with each eCMR document.
 * Hint: If no external eSEAL solution exists, the provided eSEAL component can be used directly.
 
-====== 7. Configure the Frontend
+===== Configure the Frontend
 The eCMR frontend provides the user interface for interacting with eCMRs. It is designed to run as a Docker container alongside the backend.
 
 * The frontend can be used as-is, providing a complete interface for drivers, dispatchers, or operators.
@@ -148,7 +149,7 @@ The eCMR frontend provides the user interface for interacting with eCMRs. It is 
 
 Both the backend and frontend run in Docker containers, making deployment, scaling, and updates consistent and straightforward.
 
-====== 8. Build and Deploy the Service
+===== Build and Deploy the Service
 
 . Build the backend and frontend components using the provided tooling.
 . Deploy the backend and frontend to your environment.
@@ -158,7 +159,7 @@ Both the backend and frontend run in Docker containers, making deployment, scali
 ** Frontend and backend
 ** Any integrated IT systems (e.g., TMS)
 
-====== 9. Verify APIs and Frontend Functionality
+===== Verify APIs and Frontend Functionality
 
 * Use the OpenAPI definition to explore and test the backend endpoints.
 * Test creating, updating, and retrieving eCMR documents.
@@ -169,7 +170,7 @@ Both the backend and frontend run in Docker containers, making deployment, scali
 Note: These steps are guidance and best-practice recommendations. The exact verification process may vary depending on your specific IT landscape, deployment environment, and internal IT compliance requirements.
 ****
 
-====== 10. Integrate with Existing IT Systems
+===== Integrate with Existing IT Systems
 
 * Configure TMS, ERP, or other systems to consume backend APIs.
 * Implement API calls for creating eCMRs, updating transport events, retrieving document states, and triggering signatures.
@@ -185,7 +186,7 @@ image::images/ecmr_api_implementation.svg["eCMR API implementation"]
 As a second option, organizations can implement the eCMR API directly in their existing IT systems (e.g. TMS or
 another eCMR-enabled service).
 
-The eCMR API is defined in the provided https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/0a1cbe99836af26ce754fdb273f45cc90f193246/openapi.yaml[openapi.yml] file and enables:
+The eCMR API is defined in the provided https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/0a1cbe99836af26ce754fdb273f45cc90f193246/openapi.yml[openapi.yml] file and enables:
 
 - Creation and management of eCMR documents
 - Exchange of eCMRs between involved parties
@@ -198,7 +199,7 @@ be used.
 
 ==== Prerequisites for Quick Onboarding
 ====
-* Access to the https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/0a1cbe99836af26ce754fdb273f45cc90f193246/openapi.yaml[openapi.yml]  file defining the eCMR API
+* Access to the https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/0a1cbe99836af26ce754fdb273f45cc90f193246/openapi.yml[openapi.yml] file defining the eCMR API
 * Existing IT system(s) where the API will be implemented (e.g., TMS)
 * An eSeal implementation *or* access to the OLF https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal/-/tree/f9c311bc928619073d2f7f3baff60840aeb50a48/[eSeal component]
 ====

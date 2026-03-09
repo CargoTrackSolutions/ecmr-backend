@@ -1,7 +1,7 @@
 [[section-introduction]]
 == Introduction
 
-This sections describes the background and origin of the eCMR
+This section describes the background and origin of the eCMR.
 
 === Project description
 
@@ -13,7 +13,7 @@ These organizations represent a wide range of European countries and contribute 
 
 *Why was it built?*
 This project was initiated to address the ongoing challenges of paper-based transport documentation and fragmented digital solutions.
-The goal was to create a shared, open and interoperable approach without forcing organizations into proprietary systems or vendor lock ins.
+The goal was to create a shared, open, and interoperable approach without forcing organizations into proprietary systems or vendor lock-ins.
 
 *For whom is it intended?*
 The eCMR is designed for all key stakeholders involved in road freight transport, including:
@@ -27,7 +27,7 @@ The eCMR is designed for all key stakeholders involved in road freight transport
 
 A consignment note, or CMR, is a shipping document that accompanies freight transport nationally and internationally.
 In both areas, the document contains similar contents and fulfills functions such as information carrier or evidential functions.
-Today, CMRs are usually filled out manually and analogically on paper, which creates a large effort when trying to handle all documents included in one shipment.
+Today, CMRs are usually filled out manually and analog on paper, which creates a large effort when trying to handle all documents included in one shipment.
 In practice, there is also not a consistent layout of the CMR, neither in national nor in international transportation.
 Furthermore, the CMR is often not the only document carried along with a shipment — usually further supporting documents such as documents relating to dangerous goods or samples are included.
 The necessity of organizing and archiving this multitude of documents leads to higher efforts when trying to retrieve documents or in administrative management.
@@ -44,9 +44,14 @@ The administration expense is thereby reduced by between 4 € and 13 €, which
 Furthermore, the improvement in efficiency and sustainability resulting from the digitalization of cargo transportation and logistics services leads to time saved in information transfer and reduced use in resources since paper is no longer necessary.
 Another goal of the eCMR is to eliminate unauthorized third-party access.
 Thus, an access security system (authentication service) with specifically defined access rights for authorized parties is implemented.
-The risk of media breaks, transmission errors and misinformation is also reduced because subsequent editing of the eCMR is possible, while previously saved information remains uncompromisable.
+The risk of media breaks, transmission errors, and misinformation is also reduced because subsequent editing of the eCMR is possible, while previously saved information remains uncompromisable.
 Additional features such as digital stamping are available.
 All processes along the route of transportation are saved in the processing protocol along with the data set.
+
+=== Electronic Seals as digital signatures
+
+This project uses electronic seals (eSeals) to create digital signatures in compliance with the EU eIDAS Regulation
+(Regulation (EU) No 910/2014). Further information about this concept is available here: <<eseal>>.
 
 === Requirements Overview
 
@@ -66,12 +71,13 @@ The following advantages arise compared to the paper-based variant:
 .. For cross-border transports both countries have to be CMR member states and approve the eCMR protocol in order to make eCMR usage possible.
 .. According to the current status 34 CMR members approved to the Additional Protocol on eCMR (as of 04/2024, https://treaties.un.org/pages/ViewDetails.aspx?src=TREATY&mtdsg_no=XI-B-11-b&chapter=11&clang=_en[Source])
 
-.. In Germany the German Federal Council ratified the eCMR protocol on 17.09.2021 (https://www.bmvi.de/SharedDocs/DE/Pressemitteilungen/2021/113-scheuer-e-frachtbrief.html[Source]).
-It is expected that the official approval of the German Bundestag will follow soon, which makes the official use of eCMRs possible.
+.. In Germany the German Bundestag has ratified on 27.09.2021 the Additional Protocol to the Convention on the
+Contract for the International Carriage of Goods by Road (CMR) concerning the electronic consignment note
+(http://www.bgbl.de/xaver/bgbl/start.xav?startbk=Bundesanzeiger_BGBl&jumpTo=bgbl221s1035.pdf[source]).
 
 === Quality Goals
 
-The following table describes the top six quality goals of eCMR classified by https://en.wikipedia.org/wiki/ISO/IEC_9126[ISO/IEC 9126-1] characteristics.
+The following table describes the top six quality goals of eCMR classified by ISO/IEC 9126-1 characteristics.
 The order of goals gives a rough idea of their importance.
 
 .Quality Goals

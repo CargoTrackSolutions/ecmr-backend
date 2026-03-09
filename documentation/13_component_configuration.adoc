@@ -3,27 +3,19 @@
 [#eCMR-component-configuration]
 == eCMR component configuration
 
-There is a guide to show how to set up, start and configure the ecmr service and its components.
+There is a guide to show how to set up, start and configure the eCMR service and its components.
 
 You will find all important environment variables in this chapter.
 
 The eCMR components are developed and maintained in the Open Logistics Foundation's GitLab repository. The source code and documentation can be accessed at:
 GitLab https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr[Repository]
 
-=== Give Feedback & Get Involved
-
-Your feedback helps improve the eCMR service and its interoperability in real-world logistics environments. Share
-your ideas, report issues, or suggest improvements directly via ecmr-feedback@lists.openlogisticsfoundation.org
-or https://git.openlogisticsfoundation.org/groups/wg-electronictransportdocuments/ecmr/-/boards/132[GitLab Issue Board]
-
-Whether it’s a question, integration experience, or a merge request — contributions from the community are welcome and encouraged.
-
 ===  General information
 
 This tutorial provides step-by-step instructions on how to set up, start, and use the eCMR backend, frontend, and eSEAL system. It includes information on architecture, API definition, and required dependencies.
 
 * ecmr data model description https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-model/-/tree/main/documentation?ref_type=heads[Link]
-* API description https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/fd4f0f6e22b895f4c676b28e25b1b19f5571c05c/openapi.yaml[Link]
+* API description https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend/-/blob/fd4f0f6e22b895f4c676b28e25b1b19f5571c05c/openapi.yml[Link]
 
 === Running the docker-compose setup
 
@@ -95,7 +87,7 @@ To use keycloak for user management, the following property must be set:
 spring.security.oauth2.resourceserver.jwt.issuer-uri: url to the realm
 ----
 Users are identified through their email address.
-To create a user, you have to add the user in your keycloak realm and in the link:../src/main/resources/db/init-data.xml[liquibase script] using the _same_ email address.
+To create a user, you have to add the user in your keycloak realm and in the link:../src/main/resources/db/changelog/02-init-data.xml[liquibase script] using the _same_ email address.
 
 ==== eMail Settings
 ----
@@ -105,9 +97,8 @@ spring.mail.auth=false
 mail.from=SENDER_EMAIL_ADDRESS
 ----
 
-Please Note, Host and Post must be given. Auth depends on your Mail_Host. If
-Auth is required please add true here and give additionally these two
-parameter depending on your mail host configuration:
+Please note: host and port must be set. Auth depends on your mail host. If
+auth is required, set it to true and provide these two parameters depending on your mail host configuration:
 
 ----
 spring.mail.username=
@@ -138,7 +129,7 @@ Start the container using the following command:
 docker run -p 8080:8080 [optional: --env-file .env] ecmr-backend
 ----
 
-[#eseal-configuraton]
+[#eseal-configuration]
 === Setup eSEAL
 
 The eSeal dependencies for both the verifier and the signer are included through maven in this project.
@@ -160,7 +151,7 @@ The following config values control the keystore and the selection of the signin
 | `ecmr.seal.sign.key-password`        | dependent |         | The password for using the keystore entry. In case of a PKCS11 module, this is the PIN of the smartcard.                                                                              |
 | `ecmr.seal.sign.key-slot-id`         | no        | `0`     | The slot ID of the PKCS11 module. Set to `-1` if this value should not be used.                                                                                                       |
 | `ecmr.seal.sign.key-slot-list-index` | no        | `-1`    | The slot list index of a specific smart-card reader of the PKCS11 module. `-1` disables the parameter.                                                                                |
-| `ecmr.seal.sign.extra-pkcs11-config` | no        |         | Additional config values which should be attached to the configuration of the link:https://docs.oracle.com/en/java/javase/21/security/pkcs11-reference-guide1.html[SunPKCS11 Provider]|
+| `ecmr.seal.sign.extra-pkcs11-config` | no        |         | Additional config values which should be attached to the configuration of the link:https://docs.oracle.com/en/java/javase/21/security/pkcs11-reference-guide.html[SunPKCS11 Provider]|
 |=========================================
 
 Algorithms
@@ -207,6 +198,517 @@ Verification
 | `ecmr.seal.verify.etsi-report`     | yes      | `true`                                     | Whether to set ETSI report in validation response.                                                                                                                                                                                                     |
 | `ecmr.seal.verify.diagnostic-data` | yes      | `false`                                    | Whether to set diagnostic data in validation response.                                                                                                                                                                                                 |
 |=========================================
+=== Storage Configuration
+
+The eCMR backend supports different storage providers for document management. By default, the filesystem provider is used to store uploaded documents locally.
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `ecmr.storage.provider` | yes | `filesystem` | Storage backend provider. Currently supports `filesystem` for local storage.
+| `ecmr.storage.filesystem.directory` | yes (filesystem) | `./` | Directory path where documents are stored on the filesystem.
+|========
+
+==== Filesystem Storage Configuration
+
+When using the filesystem storage provider, ensure the following:
+
+* The directory path must be accessible and writable by the application process.
+* The directory should exist or be creatable by the application startup.
+* Use absolute paths in production environments for consistency.
+
+[source, properties]
+----
+# Development setup
+ecmr.storage.provider=filesystem
+ecmr.storage.filesystem.directory=./documents
+
+# Production setup
+ecmr.storage.provider=filesystem
+ecmr.storage.filesystem.directory=/var/lib/ecmr/documents
+----
+
+==== Directory Permissions
+
+Ensure proper permissions on the storage directory:
+
+[source, bash]
+----
+# Create storage directory
+mkdir -p /var/lib/ecmr/documents
+
+# Set appropriate permissions (replace 'ecmr' with actual application user)
+chown ecmr:ecmr /var/lib/ecmr/documents
+chmod 750 /var/lib/ecmr/documents
+----
+
+[WARNING]
+====
+In production environments:
+* Use dedicated storage location outside of application directories
+* Implement regular backups of stored documents
+* Monitor available disk space to prevent storage exhaustion
+* Consider implementing cleanup policies for old documents
+====
+
+=== Scheduled Jobs Configuration
+
+The eCMR backend includes optional scheduled jobs for importing documents, archiving, deletion, and forward synchronization. These jobs are configured using cron expressions.
+
+[NOTE]
+====
+Scheduled jobs are OPTIONAL and NOT ESSENTIAL for using the eCMR service. The service functions completely without these jobs enabled. Jobs are primarily useful for automated maintenance and federation synchronization in production environments.
+====
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `ecmr.cron.import` | no | `0 */5 * * * *` | Cron expression for document import job frequency. Default runs every 5 minutes.
+| `ecmr.cron.archive` | no | `0 0 2 * * ?` | Cron expression for archive job frequency. Default runs daily at 2:00 AM.
+| `ecmr.cron.delete` | no | `0 0 1 * * *` | Cron expression for document deletion job frequency. Default runs daily at 1:00 AM.
+| `ecmr.cron.forward-sync` | no | `0 */1 * * * *` | Cron expression for forward synchronization in federation. Default runs every minute.
+| `ecmr.delete.older-than-days` | no | `3650` | Age threshold in days for automatic document deletion. Default is 10 years (3650 days).
+|========
+
+==== Cron Expression Format
+
+Cron expressions use the standard Unix cron format with six fields (some implementations use 7):
+
+[source]
+----
+┌───────────── Second (0-59)
+│ ┌───────────── Minute (0-59)
+│ │ ┌───────────── Hour (0-23)
+│ │ │ ┌───────────── Day of Month (1-31)
+│ │ │ │ ┌───────────── Month (1-12 or JAN-DEC)
+│ │ │ │ │ ┌───────────── Day of Week (0-6 or SUN-SAT, 0=Sunday)
+│ │ │ │ │ │
+│ │ │ │ │ │
+* * * * * *
+----
+
+Common cron expressions:
+
+* `0 */5 * * * *` - Every 5 minutes
+* `0 0 * * * *` - Every hour
+* `0 0 2 * * *` - Daily at 2:00 AM
+* `0 0 0 1 * *` - First day of every month at midnight
+* `0 0 2 ? * MON` - Every Monday at 2:00 AM
+* `0 */30 * * * *` - Every 30 minutes
+
+==== Configuration Examples
+
+[source, properties]
+----
+# High-frequency import for real-time document processing
+ecmr.cron.import=0 */1 * * * *
+ecmr.cron.archive=0 0 1 * * ?
+ecmr.cron.delete=0 0 3 * * *
+ecmr.cron.forward-sync=0 */5 * * * *
+
+# Production setup - monthly sync
+ecmr.cron.import=0 0 2 1 * *
+ecmr.cron.archive=0 0 1 1 * *
+ecmr.cron.delete=0 0 0 1 * *
+ecmr.cron.forward-sync=0 0 3 1 * *
+ecmr.delete.older-than-days=730
+
+# Minimal processing - daily jobs
+ecmr.cron.import=0 0 1 * * *
+ecmr.cron.archive=0 0 2 * * *
+ecmr.cron.delete=0 0 3 * * *
+ecmr.cron.forward-sync=0 0 4 * * *
+----
+
+==== Environment Variable Configuration
+
+Configure jobs through environment variables:
+
+[source, bash]
+----
+export ECMR_CRON_IMPORT="0 */5 * * * *"
+export ECMR_CRON_ARCHIVE="0 0 2 * * ?"
+export ECMR_CRON_DELETE="0 0 1 * * *"
+export ECMR_CRON_FORWARD_SYNC="0 */1 * * * *"
+export ECMR_DELETE_OLDER_THAN_DAYS="3650"
+----
+
+Or in docker-compose or Kubernetes deployments:
+
+[source, yaml]
+----
+environment:
+  - ECMR_CRON_IMPORT=0 */5 * * * *
+  - ECMR_CRON_ARCHIVE=0 0 2 * * ?
+  - ECMR_CRON_DELETE=0 0 1 * * *
+  - ECMR_CRON_FORWARD_SYNC=0 */1 * * * *
+  - ECMR_DELETE_OLDER_THAN_DAYS=3650
+----
+
+[WARNING]
+====
+Job Frequency Considerations:
+* Do not configure overlapping job schedules to avoid conflicts
+* Monitor system resources during job execution
+* Test job configurations in staging environment before production
+* Keep archive and delete jobs separate to ensure data integrity
+====
+
+=== File Upload Configuration
+
+The file upload limits control the maximum size of documents that can be uploaded to the eCMR backend. These settings apply to all multipart file uploads including eCMR documents and attachments.
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `spring.servlet.multipart.max-file-size` | no | `1000MB` | Maximum file size for a single upload.
+| `spring.servlet.multipart.max-request-size` | no | `1000MB` | Maximum size for the entire multipart request.
+|========
+
+==== Configuration Examples
+
+[source, properties]
+----
+# Development environment - generous limits
+spring.servlet.multipart.max-file-size=2000MB
+spring.servlet.multipart.max-request-size=2000MB
+
+# Production environment - conservative limits
+spring.servlet.multipart.max-file-size=500MB
+spring.servlet.multipart.max-request-size=500MB
+
+# Mobile-friendly environment - smaller limits
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=100MB
+----
+
+==== Environment Variable Configuration
+
+[source, bash]
+----
+export SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=500MB
+export SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=500MB
+----
+
+==== Production Recommendations
+
+[NOTE]
+====
+* Set file size limits based on your network bandwidth and server resources
+* Consider CDN or object storage for large-scale deployments
+* Monitor upload failures related to size restrictions
+* Implement client-side validation to prevent unnecessary uploads
+* Set `max-request-size` higher than `max-file-size` to accommodate multipart boundaries and form fields
+====
+
+=== API Documentation & Swagger Configuration
+
+The eCMR backend includes OpenAPI documentation and Swagger UI for API exploration and testing. Configuration options control the API documentation generation and Swagger interface.
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `springdoc.packages-to-scan` | no | `org.openlogisticsfoundation.ecmr` | Base package paths to scan for API documentation annotations.
+| `springdoc.api-docs.enabled` | no | `true` | Enable/disable OpenAPI documentation generation.
+| `springdoc.api-docs.groups.enabled` | no | `false` | Enable/disable API grouping in documentation.
+| `springdoc.swagger-ui.enabled` | no | `true` | Enable/disable Swagger UI interface.
+| `springdoc.swagger-ui.path` | no | `/swagger-ui` | URL path for accessing Swagger UI.
+| `springdoc.swagger-ui.persistAuthorization` | no | `true` | Persist authorization tokens in browser storage.
+| `springdoc.swagger-ui.tagsSorter` | no | `alpha` | Sort API tags alphabetically.
+| `springdoc.swagger-ui.supportedSubmitMethods` | no | All methods | HTTP methods supported in Swagger UI (try-it-out feature).
+| `springdoc.swagger-ui.oauth.clientId` | no | | OAuth 2.0 client ID for authorization in Swagger UI.
+| `springdoc.swagger-ui.oauth.use-pkce-with-authorization-code-grant` | no | `true` | Use PKCE for OAuth 2.0 authorization code grant flow.
+|========
+
+==== Management Endpoints Configuration
+
+The management endpoints provide operational metrics and health information:
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `management.endpoints.web.exposure.include` | no | | Comma-separated list of endpoints to expose. Common values: `prometheus,health,metric`.
+|========
+
+==== Configuration Examples
+
+[source, properties]
+----
+# Basic Swagger setup
+springdoc.swagger-ui.path=/swagger-ui
+springdoc.swagger-ui.persistAuthorization=true
+springdoc.api-docs.enabled=true
+
+# Production setup with OAuth 2.0
+springdoc.swagger-ui.path=/api/swagger-ui
+springdoc.swagger-ui.oauth.clientId=my-oauth-client
+springdoc.swagger-ui.oauth.use-pkce-with-authorization-code-grant=true
+springdoc.swagger-ui.persistAuthorization=true
+
+# Minimal setup - disable Swagger UI in production
+springdoc.swagger-ui.enabled=false
+springdoc.api-docs.enabled=false
+----
+
+==== API Access Points
+
+The following endpoints are available once the backend is running:
+
+* **Swagger UI**: `http://localhost:8080/api/swagger-ui` (configurable via `springdoc.swagger-ui.path`)
+* **OpenAPI JSON**: `http://localhost:8080/api/v3/api-docs`
+* **Health Check**: `http://localhost:8080/api/actuator/health`
+* **Prometheus Metrics**: `http://localhost:8080/api/actuator/prometheus` (if enabled in management endpoints)
+
+==== OAuth 2.0 Configuration for Swagger UI
+
+To enable OAuth 2.0 authentication in Swagger UI:
+
+[source, properties]
+----
+springdoc.swagger-ui.oauth.clientId=ecmr-swagger-client
+springdoc.swagger-ui.oauth.use-pkce-with-authorization-code-grant=true
+springdoc.swagger-ui.oauth.scopes=openid,profile,email
+
+# If using Keycloak
+springdoc.swagger-ui.oauth.authorizationUrl=https://keycloak.example.com/auth/realms/ecmr/protocol/openid-connect/auth
+springdoc.swagger-ui.oauth.tokenUrl=https://keycloak.example.com/auth/realms/ecmr/protocol/openid-connect/token
+----
+
+[NOTE]
+====
+When exposing Swagger UI in production:
+
+* Restrict access using reverse proxy authentication
+* Consider disabling Swagger UI entirely in production for security
+* Use OAuth 2.0 for API documentation access
+* Regularly update OpenAPI documentation
+====
+
+=== eURLList & Cross-Instance Federation
+
+The eCMR supports federation across multiple independent instances through the OLF registry. The eURLList configuration enables instance discovery and distributed key management for cross-instance document verification.
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `olf.websuffix.url` | no | | URL to the OLF eURLList JSON registry for instance discovery and key management in federation scenarios.
+|========
+
+==== Purpose and Function
+
+The eURLList serves as a distributed registry that:
+
+* Enables discovery of other eCMR instances in the federation
+* Provides public keys for verifying documents from other instances
+* Supports cross-instance document validation and verification
+* Allows instances to learn about each other dynamically
+
+==== JSON Format Example
+
+The eURLList JSON file contains a list of registered instances:
+
+[source, json]
+----
+{
+  "instances": [
+    {
+      "name": "instance-1",
+      "url": "https://ecmr1.example.com",
+      "publicKeyUrl": "https://ecmr1.example.com/api/public-key",
+      "truststore": "https://git.example.com/ecmr1-truststore.jks"
+    },
+    {
+      "name": "instance-2",
+      "url": "https://ecmr2.example.com",
+      "publicKeyUrl": "https://ecmr2.example.com/api/public-key",
+      "truststore": "https://git.example.com/ecmr2-truststore.jks"
+    }
+  ]
+}
+----
+
+==== Configuration Examples
+
+[source, properties]
+----
+# Development setup - optional federation
+olf.websuffix.url=https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal-public-keystore/-/raw/main/ecmrurllist.json
+
+# Production setup - custom registry
+olf.websuffix.url=https://registry.mycompany.com/ecmr-instances.json
+
+# Standalone setup - federation disabled (no URL set)
+# olf.websuffix.url=
+----
+
+==== Setting up a Custom Registry
+
+To create your own eURLList registry:
+
+1. Create a JSON file following the format above
+2. Host it on a publicly accessible URL (GitHub, GitLab, or your own server)
+3. Include all eCMR instances that should participate in federation
+4. For each instance, provide the name, URL, and path to the truststore
+5. Update the `olf.websuffix.url` property to point to your registry
+
+[source, bash]
+----
+# Example: Host on GitLab
+git clone https://git.example.com/ecmr-registry.git
+cd ecmr-registry
+
+# Create ecmrurllist.json with your instances
+cat > ecmrurllist.json << 'EOL'
+{
+  "instances": [
+    {
+      "name": "main-office",
+      "url": "https://ecmr.mycompany.com",
+      "publicKeyUrl": "https://ecmr.mycompany.com/api/public-key",
+      "truststore": "https://git.example.com/ecmr-registry/-/raw/main/main-office-truststore.jks"
+    }
+  ]
+}
+EOL
+
+# Commit and push to GitLab
+git add ecmrurllist.json
+git commit -m "Add eCMR instance to registry"
+git push
+----
+
+==== Environment Variable Configuration
+
+[source, bash]
+----
+export OLF_WEBSUFFIX_URL=https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal-public-keystore/-/raw/main/ecmrurllist.json
+----
+
+[WARNING]
+====
+Production Considerations:
+
+* Ensure the registry URL is always accessible and highly available
+* Keep the eURLList updated when adding or removing instances
+* Regularly verify that all listed instance URLs are accessible
+* Implement access controls on the registry to prevent unauthorized modifications
+* Use HTTPS for all registry URLs to ensure security
+* Consider caching the registry locally to reduce network dependency
+====
+
+[NOTE]
+====
+For more information about the OLF registry and federation architecture, visit:
+https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal-public-keystore
+====
+
+=== Database Migration & Liquibase Configuration
+
+The eCMR backend uses Liquibase for automated database schema management and migrations. Liquibase tracks schema changes, manages versions, and ensures consistent database state across deployments.
+
+[options="header"]
+|========
+| Name | Required | Default | Description
+| `spring.liquibase.change-log` | no | `classpath:db/db.changelog-main.xml` | Path to the main Liquibase changelog file containing database migration definitions.
+| `spring.liquibase.contexts` | no | `default` | Comma-separated list of Liquibase contexts to execute. Allows conditional migrations based on deployment environment.
+|========
+
+==== Liquibase Contexts
+
+Different contexts allow running environment-specific migrations:
+
+[options="header"]
+|========
+| Context | Purpose | Description
+| `default` | Always executed | Core migrations required for all environments
+| `development` | Development only | Development-specific schema changes, test data
+| `production` | Production only | Production-specific optimizations, security configurations
+| `test` | Testing only | Test database setup and fixtures
+|========
+
+==== How Database Migrations Work
+
+1. On startup, Liquibase reads the changelog file specified by `spring.liquibase.change-log`
+2. Liquibase checks the `databasechangelog` table to see which changes have been applied
+3. New changes matching the configured contexts are executed
+4. Each change is recorded in `databasechangelog` with checksum and timestamp
+5. Subsequent startups skip already-applied changes
+
+==== Configuration Examples
+
+[source, properties]
+----
+# Development setup - all contexts
+spring.liquibase.change-log=classpath:db/db.changelog-main.xml
+spring.liquibase.contexts=default,development
+
+# Production setup - only essential migrations
+spring.liquibase.change-log=classpath:db/db.changelog-main.xml
+spring.liquibase.contexts=default,production
+
+# Multiple changelog files for large schemas
+spring.liquibase.change-log=classpath:db/db.changelog-master.xml
+----
+
+==== Example Changelog File
+
+[source, xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="001-create-users-table" author="ecmr">
+        <createTable tableName="users">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-add-user-roles" author="ecmr" contexts="development">
+        <insert tableName="users">
+            <column name="email" value="admin@example.com"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
+----
+
+==== Environment Variable Configuration
+
+[source, bash]
+----
+export SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/db.changelog-main.xml
+export SPRING_LIQUIBASE_CONTEXTS=default,production
+----
+
+[WARNING]
+====
+Database Migration Best Practices:
+* NEVER manually modify the changelog XML files
+* NEVER delete or modify rows in the `databasechangelog` table
+* ALWAYS test migrations in a staging environment before production
+* Backup your database before running migrations
+* Use rollback changesets for migration reversions when needed
+* Plan migrations during maintenance windows
+* Monitor migration execution time and database locks
+====
+
+[NOTE]
+====
+Always apply migrations to a test database first to verify:
+* Schema changes are correct
+* Data transformations work as expected
+* No data loss occurs
+* Rollback procedures function properly
+====
 
 
 === Create and store keystores
@@ -229,3 +731,406 @@ Store your public key (in the truststore) in a location accessible (e.g. a gitla
 1. Create a repository for the truststore. Make sure the repository is publicly available.
 2. Add your truststore with the key to the gitlab repository.
 3. Use the link to the truststore in your project (e.g. https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/eseal-public-keystore/-/raw/main/fraunhofer-test-truststore.jks)
+
+=== Phone Message Provider Configuration
+
+The eCMR backend supports configurable phone message providers for sending TANs (Transaction Authentication Numbers) during external user registration. This allows you to integrate various SMS/phone messaging services or implement custom solutions.
+
+==== Overview
+
+The phone message provider system is implemented using the Spring Service pattern with dependency injection. The system includes:
+
+* **PhoneMessageProvider** interface - Defines the contract for message sending
+* **DummyMessageProvider** - Default development implementation that logs messages to console
+* **Custom implementations** - For production services like Twilio, AWS SNS, or other SMS providers
+
+==== Default Configuration
+
+By default, the eCMR backend uses the `DummyMessageProvider` which logs all messages to the application console. This is suitable for development and testing environments.
+
+[source, properties]
+----
+# Default behavior - logs messages to console
+# No additional configuration required
+----
+
+The dummy provider logs messages in the following format:
+
+[source]
+----
+########################################
+MESSAGE TO: '+1234567890', MESSAGE: 'Your tan code is 123456 Please enter your code or click on the following link: https://example.com'
+########################################
+----
+
+==== How Phone Message Provider Works
+
+1. User initiates external registration via `POST /api/anonymous/registration`
+2. A 6-digit TAN (Transaction Authentication Number) is generated
+3. A message containing the TAN is created
+4. The configured `PhoneMessageProvider` sends the message to the user's phone
+5. If sending fails, a `MessageProviderException` is thrown and HTTP 500 is returned
+6. If successful, the user receives the message and can proceed with registration
+
+==== Implementing a Custom Provider
+
+To use a production phone messaging service, create a new Spring service that implements `PhoneMessageProvider`:
+
+===== Example: Twilio Implementation
+
+[source, java]
+----
+package org.openlogisticsfoundation.ecmr.domain.services.tan;
+
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+
+@Service
+@Primary  // This makes it the primary implementation, overriding DummyMessageProvider
+@Slf4j
+public class TwilioMessageProvider implements PhoneMessageProvider {
+
+    @Value("${twilio.account-sid}")
+    private String accountSid;
+
+    @Value("${twilio.auth-token}")
+    private String authToken;
+
+    @Value("${twilio.phone-number}")
+    private String fromPhoneNumber;
+
+    @Override
+    public void sendMessage(String recipientIdentifier, String message) 
+            throws MessageProviderException {
+        try {
+            // Initialize Twilio with credentials
+            Twilio.init(accountSid, authToken);
+            
+            // Send the message
+            Message twilioMessage = Message.creator(
+                    new PhoneNumber(recipientIdentifier),      // To number
+                    new PhoneNumber(fromPhoneNumber),          // From number
+                    message)                                    // Message body
+                .create();
+
+            log.info("Message sent successfully. SID: {}", twilioMessage.getSid());
+        } catch (Exception e) {
+            log.error("Failed to send message via Twilio: {}", e.getMessage(), e);
+            throw new MessageProviderException("Failed to send SMS message", e);
+        }
+    }
+}
+----
+
+===== Required Dependencies
+
+Add the Twilio SDK to your `pom.xml`:
+
+[source, xml]
+----
+<dependency>
+    <groupId>com.twilio.sdk</groupId>
+    <artifactId>twilio</artifactId>
+    <version>9.0.0</version>
+</dependency>
+----
+
+===== Configuration Properties
+
+Add these properties to `application.properties` or set them as environment variables:
+
+[source, properties]
+----
+# Twilio Configuration
+twilio.account-sid=your-account-sid
+twilio.auth-token=your-auth-token
+twilio.phone-number=+1234567890
+----
+
+Or as environment variables:
+
+[source, bash]
+----
+export TWILIO_ACCOUNT_SID=your-account-sid
+export TWILIO_AUTH_TOKEN=your-auth-token
+export TWILIO_PHONE_NUMBER=+1234567890
+----
+
+==== Other Implementation Examples
+
+===== AWS SNS (Simple Notification Service)
+
+[source, java]
+----
+@Service
+@Primary
+@Slf4j
+public class AwsSnsMessageProvider implements PhoneMessageProvider {
+
+    private final SnsClient snsClient;
+
+    public AwsSnsMessageProvider(SnsClient snsClient) {
+        this.snsClient = snsClient;
+    }
+
+    @Override
+    public void sendMessage(String recipientIdentifier, String message) 
+            throws MessageProviderException {
+        try {
+            PublishRequest request = PublishRequest.builder()
+                    .message(message)
+                    .phoneNumber(recipientIdentifier)
+                    .build();
+
+            PublishResponse result = snsClient.publish(request);
+            log.info("Message sent via AWS SNS. Message ID: {}", result.messageId());
+        } catch (Exception e) {
+            log.error("Failed to send message via AWS SNS: {}", e.getMessage(), e);
+            throw new MessageProviderException("Failed to send SMS via AWS SNS", e);
+        }
+    }
+}
+----
+
+===== Custom HTTP-Based Provider
+
+[source, java]
+----
+@Service
+@Primary
+@Slf4j
+public class CustomHttpMessageProvider implements PhoneMessageProvider {
+
+    @Value("${custom.sms.api-endpoint}")
+    private String apiEndpoint;
+
+    @Value("${custom.sms.api-key}")
+    private String apiKey;
+
+    private final RestTemplate restTemplate;
+
+    public CustomHttpMessageProvider(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @Override
+    public void sendMessage(String recipientIdentifier, String message) 
+            throws MessageProviderException {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("to", recipientIdentifier);
+            payload.put("message", message);
+            payload.put("apiKey", apiKey);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    apiEndpoint, 
+                    request, 
+                    String.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new MessageProviderException(
+                    "HTTP error: " + response.getStatusCode()
+                );
+            }
+
+            log.info("Message sent via custom HTTP API");
+        } catch (Exception e) {
+            log.error("Failed to send message via custom HTTP API: {}", e.getMessage(), e);
+            throw new MessageProviderException("Failed to send SMS via custom API", e);
+        }
+    }
+}
+----
+
+==== Security Best Practices
+
+[WARNING]
+====
+When implementing a custom phone message provider:
+
+* **Never hardcode credentials** - Use environment variables or secure configuration management
+* **Store sensitive data securely** - API keys, account SIDs, auth tokens should be protected
+* **Use HTTPS** - Ensure all communication with third-party services is encrypted
+* **Validate phone numbers** - Sanitize and validate recipient phone numbers before sending
+* **Log securely** - Avoid logging sensitive information like API keys or auth tokens
+* **Handle failures gracefully** - Implement proper error handling and retry logic
+* **Rate limiting** - Implement rate limiting to prevent abuse
+* **Audit trails** - Log all message sending attempts for compliance and debugging
+====
+
+==== Configuration Examples
+
+===== Development Environment (Using Dummy Provider)
+
+No additional configuration needed. The `DummyMessageProvider` is used by default and logs messages to console.
+
+[source, bash]
+----
+# No environment variables needed - uses DummyMessageProvider
+docker run -p 8080:8080 ecmr-backend
+----
+
+===== Production Environment (Using Twilio)
+
+[source, bash]
+----
+export TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export TWILIO_AUTH_TOKEN=your-auth-token
+export TWILIO_PHONE_NUMBER=+1234567890
+
+docker run -p 8080:8080 \
+  --env TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID \
+  --env TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN \
+  --env TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER \
+  ecmr-backend
+----
+
+===== Docker Compose Configuration
+
+[source, yaml]
+----
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ecmr
+      SPRING_DATASOURCE_USERNAME: ecmr_user
+      SPRING_DATASOURCE_PASSWORD: your_password
+      
+      # Twilio configuration
+      TWILIO_ACCOUNT_SID: ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      TWILIO_AUTH_TOKEN: your-auth-token
+      TWILIO_PHONE_NUMBER: +1234567890
+      
+      # OAuth/Keycloak configuration
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://keycloak:8080/auth/realms/ecmr
+    depends_on:
+      - db
+      - keycloak
+----
+
+==== Testing Your Implementation
+
+To test your phone message provider implementation:
+
+===== Using curl
+
+[source, bash]
+----
+curl -X POST http://localhost:8080/api/anonymous/registration \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "phone": "+1234567890",
+    "password": "SecurePassword123!"
+  }'
+----
+
+===== Checking Logs
+
+For development (DummyMessageProvider):
+
+[source, bash]
+----
+docker logs ecmr-backend | grep "MESSAGE TO"
+----
+
+For production (Twilio):
+
+[source, bash]
+----
+# Check application logs
+docker logs ecmr-backend | grep "Message sent"
+
+# Check Twilio console for message delivery status
+----
+
+===== Unit Testing
+
+[source, java]
+----
+@ExtendWith(MockitoExtension.class)
+class CustomMessageProviderTest {
+
+    @InjectMocks
+    private TwilioMessageProvider provider;
+
+    @Mock
+    private SomeService mockService;
+
+    @Test
+    void testSendMessageSuccess() throws MessageProviderException {
+        String phoneNumber = "+1234567890";
+        String message = "Your tan code is 123456";
+
+        provider.sendMessage(phoneNumber, message);
+
+        // Verify message was sent
+        // Add your assertions here
+    }
+
+    @Test
+    void testSendMessageFailure() {
+        String phoneNumber = "+1234567890";
+        String message = "Your tan code is 123456";
+
+        assertThrows(MessageProviderException.class, 
+            () -> provider.sendMessage(phoneNumber, message)
+        );
+    }
+}
+----
+
+==== Troubleshooting
+
+===== Messages Not Being Sent
+
+1. **Check Configuration**: Verify that all required configuration properties are set correctly
+2. **Check Logs**: Look for error messages in the application logs
+3. **Verify Credentials**: Ensure API keys and credentials are valid and have sufficient permissions
+4. **Test Connectivity**: Verify that your service can reach the SMS provider's API
+5. **Check Rate Limits**: Some providers have rate limits - ensure you're not exceeding them
+
+===== Wrong Provider Implementation Being Used
+
+Ensure that your custom provider is annotated with `@Primary`:
+
+[source, java]
+----
+@Service
+@Primary  // REQUIRED - without this, DummyMessageProvider will be used
+public class MyCustomProvider implements PhoneMessageProvider {
+    // ...
+}
+----
+
+===== MessageProviderException Being Thrown
+
+This indicates that the message sending failed. Check:
+
+1. Phone number format is correct
+2. Service credentials are valid
+3. Network connectivity to the SMS provider
+4. Account has sufficient balance/quota
+5. Phone number is in a supported region
+
+==== Reference
+
+* **Interface**: `org.openlogisticsfoundation.ecmr.domain.services.tan.PhoneMessageProvider`
+* **Default Implementation**: `org.openlogisticsfoundation.ecmr.domain.services.tan.DummyMessageProvider`
+* **Exception Class**: `org.openlogisticsfoundation.ecmr.domain.services.tan.MessageProviderException`
+* **Usage Location**: `org.openlogisticsfoundation.ecmr.domain.services.ExternalUserService.registerExternalUser()`
+* **REST Endpoint**: `POST /api/anonymous/registration`

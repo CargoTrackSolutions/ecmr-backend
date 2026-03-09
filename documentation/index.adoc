@@ -15,7 +15,7 @@ This documentation describes the implementation of digital convention relative a
 
 === Scope
 
-The ecmr backend is the core component of the ecmr service and is intended to be used for the exchange and processing of eCMRs. An important part of the project is the ecmr service api for the communication with the service as well as for the interaction between several ecmr service instances.
+The ecmr-backend is the core component of the eCMR service and is intended to be used for the exchange and processing of eCMRs. An important part of the project is the eCMR service api for the communication with the service as well as for the interaction between several eCMR service instances.
 
 === Documentation Approach
 
@@ -29,7 +29,15 @@ attaching a User Management System and a database.
 
 You will find a glossary at the very end of the documentation.
 
-https://docs.gitlab.com/ee/user/asciidoc.html[GitLab AsciiDoc] gives an overview of how to use AsciiDoc in a GitLab project.
+https://asciidoctor.org/[Asciidoctor] gives an overview of how to use AsciiDoc.
+
+=== Give Feedback & Get Involved
+
+Your feedback helps improve the eCMR service and its interoperability in real-world logistics environments. Share
+your ideas, report issues, or suggest improvements directly via ecmr-feedback@lists.openlogisticsfoundation.org
+or https://git.openlogisticsfoundation.org/groups/wg-electronictransportdocuments/ecmr/-/boards/132[GitLab Issue Board]
+
+Whether it’s a question, integration experience, or a merge request — contributions from the community are welcome and encouraged.
 
 === Main Authors
 
