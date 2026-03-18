@@ -6,7 +6,7 @@ services:
     env_file:
       - config/frontend-params.env
     ports:
-      - "8082:8080"
+      - "8092:8080"
     depends_on:
       keycloak:
         condition: service_healthy
@@ -69,5 +69,5 @@ services:
     image: alpine:latest
     command: sleep infinity
     ports:
-      - "8080:8080" # Keycloak port
-      - "8081:8081" # Backend port
+      - "8090:8080" # Keycloak port
+      - "8091:8081" # Backend port
