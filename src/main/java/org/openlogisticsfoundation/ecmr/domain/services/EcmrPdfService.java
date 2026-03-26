@@ -342,10 +342,10 @@ public class EcmrPdfService {
 
         //Copy Watermark
         if (isCopy) {
-            InputStream imageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
-            byte[] waterMarkBytes = imageStream.readAllBytes();
-            Renderable renderableWaterMark = SimpleDataRenderer.getInstance(waterMarkBytes);
-            parameters.put("watermark", renderableWaterMark);
+            InputStream copyImageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
+            byte[] copyWaterMarkBytes = copyImageStream.readAllBytes();
+            Renderable copyRenderableWaterMark = SimpleDataRenderer.getInstance(copyWaterMarkBytes);
+            parameters.put("watermark", copyRenderableWaterMark);
         }
 
         return parameters;
