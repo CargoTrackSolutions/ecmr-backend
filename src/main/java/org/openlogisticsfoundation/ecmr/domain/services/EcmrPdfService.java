@@ -7,9 +7,6 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.services;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import javax.imageio.ImageIO;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -196,8 +192,7 @@ public class EcmrPdfService {
         parameters.put("senderStreet", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderStreet());
         parameters.put("senderPostCode", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderPostcode());
         parameters.put("senderCity", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCity());
-        if (ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode() != null)
-            parameters.put("senderCountry", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode().getValue());
+        parameters.put("senderCountry", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode().getValue());
 
         //consignee Data
         if (!ecmrModel.getEcmrConsignment().getMultiConsigneeShipment().getIsMultiConsigneeShipment()) {
@@ -206,8 +201,7 @@ public class EcmrPdfService {
             parameters.put("consigneeStreet", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeStreet());
             parameters.put("consigneePostcode", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneePostcode());
             parameters.put("consigneeCity", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCity());
-            if (ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode() != null)
-                parameters.put("consigneeCountryCode", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode().getValue());
+            parameters.put("consigneeCountryCode", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode().getValue());
         } else {
             parameters.put("multiConsigneeShipmentNotice", getMultiConsigneeShipmentText());
         }
@@ -227,8 +221,7 @@ public class EcmrPdfService {
         parameters.put("carrierPostcode", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierPostcode());
         parameters.put("carrierStreet", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierStreet());
         parameters.put("carrierCity", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCity());
-        if (ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCountryCode() != null)
-            parameters.put("carrierCountry", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCountryCode().getValue());
+        parameters.put("carrierCountry", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCountryCode().getValue());
         parameters.put("carrierLicensePlate", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierLicensePlate());
 
         //successive carrier Data
@@ -239,9 +232,8 @@ public class EcmrPdfService {
         parameters.put("successiveCarrierStreetName", ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierStreet());
         parameters.put("successiveCarrierPostcode", ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierPostcode());
         parameters.put("successiveCarrierCity", ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCity());
-        if (ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCountryCode() != null)
-            parameters.put("successiveCarrierCountryCode",
-                    ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCountryCode().getValue());
+        parameters.put("successiveCarrierCountryCode",
+                ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCountryCode().getValue());
 
         //Carriers reservations
         parameters.put("carrierReservationsObservations",
@@ -343,15 +335,19 @@ public class EcmrPdfService {
         parameters.put("ecmrId", ecmrModel.getEcmrId());
 
         //eCmr Logo
-        InputStream imageStream = resourceLoader.getResource("classpath:/images/cmrLogo.png").getInputStream();
-        Renderable renderableWaterMark = SimpleDataRenderer.getInstance(flattenAlphaChannel(imageStream));
-        parameters.put("ecmrLogo", renderableWaterMark);
+        if (EcmrTransportType.INTERNATIONAL == ecmrTransportType) {
+            InputStream imageStream = resourceLoader.getResource("classpath:/images/cmrLogo.png").getInputStream();
+            byte[] waterMarkBytes = imageStream.readAllBytes();
+            Renderable renderableWaterMark = SimpleDataRenderer.getInstance(waterMarkBytes);
+            parameters.put("ecmrLogo", renderableWaterMark);
+        }
 
         //Copy Watermark
         if (isCopy) {
-            InputStream copyImageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
-            Renderable copyRenderableWaterMark = SimpleDataRenderer.getInstance(flattenAlphaChannel(copyImageStream));
-            parameters.put("watermark", copyRenderableWaterMark);
+            InputStream imageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
+            byte[] waterMarkBytes = imageStream.readAllBytes();
+            Renderable renderableWaterMark = SimpleDataRenderer.getInstance(waterMarkBytes);
+            parameters.put("watermark", renderableWaterMark);
         }
 
         return parameters;
@@ -373,10 +369,6 @@ public class EcmrPdfService {
     }
 
     private EcmrTransportType getEcmrTransportType(EcmrModel ecmrModel) {
-        if (ecmrModel.getEcmrConsignment().getMultiConsigneeShipment().getIsMultiConsigneeShipment()) {
-            return EcmrTransportType.UNKNOWN;
-        }
-
         String senderCountry = ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode().getValue();
         String consigneeCountry = ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode().getValue();
 
@@ -391,19 +383,6 @@ public class EcmrPdfService {
         INTERNATIONAL,
         NATIONAL,
         UNKNOWN
-    }
-
-    private byte[] flattenAlphaChannel(InputStream inputStream) throws IOException {
-        BufferedImage original = ImageIO.read(inputStream);
-        BufferedImage rgb = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = rgb.createGraphics();
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, original.getWidth(), original.getHeight());
-        g.drawImage(original, 0, 0, null);
-        g.dispose();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(rgb, "png", baos);
-        return baos.toByteArray();
     }
 
     private Renderable decodeImage(String base64Image) throws IOException {
