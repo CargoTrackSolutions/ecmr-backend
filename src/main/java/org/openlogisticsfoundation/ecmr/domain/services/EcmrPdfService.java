@@ -196,7 +196,8 @@ public class EcmrPdfService {
         parameters.put("senderStreet", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderStreet());
         parameters.put("senderPostCode", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderPostcode());
         parameters.put("senderCity", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCity());
-        parameters.put("senderCountry", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode().getValue());
+        if (ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode() != null)
+            parameters.put("senderCountry", ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode().getValue());
 
         //consignee Data
         if (!ecmrModel.getEcmrConsignment().getMultiConsigneeShipment().getIsMultiConsigneeShipment()) {
@@ -205,7 +206,8 @@ public class EcmrPdfService {
             parameters.put("consigneeStreet", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeStreet());
             parameters.put("consigneePostcode", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneePostcode());
             parameters.put("consigneeCity", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCity());
-            parameters.put("consigneeCountryCode", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode().getValue());
+            if (ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode() != null)
+                parameters.put("consigneeCountryCode", ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode().getValue());
         } else {
             parameters.put("multiConsigneeShipmentNotice", getMultiConsigneeShipmentText());
         }
@@ -225,7 +227,8 @@ public class EcmrPdfService {
         parameters.put("carrierPostcode", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierPostcode());
         parameters.put("carrierStreet", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierStreet());
         parameters.put("carrierCity", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCity());
-        parameters.put("carrierCountry", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCountryCode().getValue());
+        if (ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCountryCode() != null)
+            parameters.put("carrierCountry", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierCountryCode().getValue());
         parameters.put("carrierLicensePlate", ecmrModel.getEcmrConsignment().getCarrierInformation().getCarrierLicensePlate());
 
         //successive carrier Data
@@ -236,8 +239,9 @@ public class EcmrPdfService {
         parameters.put("successiveCarrierStreetName", ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierStreet());
         parameters.put("successiveCarrierPostcode", ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierPostcode());
         parameters.put("successiveCarrierCity", ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCity());
-        parameters.put("successiveCarrierCountryCode",
-                ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCountryCode().getValue());
+        if (ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCountryCode() != null)
+            parameters.put("successiveCarrierCountryCode",
+                    ecmrModel.getEcmrConsignment().getSuccessiveCarrierInformation().getSuccessiveCarrierCountryCode().getValue());
 
         //Carriers reservations
         parameters.put("carrierReservationsObservations",
