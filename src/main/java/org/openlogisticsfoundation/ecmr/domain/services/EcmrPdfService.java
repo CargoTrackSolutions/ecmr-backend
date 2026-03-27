@@ -344,15 +344,13 @@ public class EcmrPdfService {
 
         //eCmr Logo
         InputStream imageStream = resourceLoader.getResource("classpath:/images/cmrLogo.png").getInputStream();
-        byte[] waterMarkBytes = imageStream.readAllBytes();
-        Renderable renderableWaterMark = SimpleDataRenderer.getInstance(waterMarkBytes);
+        Renderable renderableWaterMark = SimpleDataRenderer.getInstance(flattenAlphaChannel(imageStream));
         parameters.put("ecmrLogo", renderableWaterMark);
 
         //Copy Watermark
         if (isCopy) {
             InputStream copyImageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
-            byte[] copyWaterMarkBytes = copyImageStream.readAllBytes();
-            Renderable copyRenderableWaterMark = SimpleDataRenderer.getInstance(copyWaterMarkBytes);
+            Renderable copyRenderableWaterMark = SimpleDataRenderer.getInstance(flattenAlphaChannel(copyImageStream));
             parameters.put("watermark", copyRenderableWaterMark);
         }
 
@@ -393,6 +391,19 @@ public class EcmrPdfService {
         INTERNATIONAL,
         NATIONAL,
         UNKNOWN
+    }
+
+    private byte[] flattenAlphaChannel(InputStream inputStream) throws IOException {
+        BufferedImage original = ImageIO.read(inputStream);
+        BufferedImage rgb = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = rgb.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, original.getWidth(), original.getHeight());
+        g.drawImage(original, 0, 0, null);
+        g.dispose();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(rgb, "png", baos);
+        return baos.toByteArray();
     }
 
     private Renderable decodeImage(String base64Image) throws IOException {
