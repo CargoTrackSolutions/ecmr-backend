@@ -7,6 +7,9 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.services;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import javax.imageio.ImageIO;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -367,6 +371,10 @@ public class EcmrPdfService {
     }
 
     private EcmrTransportType getEcmrTransportType(EcmrModel ecmrModel) {
+        if (ecmrModel.getEcmrConsignment().getMultiConsigneeShipment().getIsMultiConsigneeShipment()) {
+            return EcmrTransportType.UNKNOWN;
+        }
+
         String senderCountry = ecmrModel.getEcmrConsignment().getSenderInformation().getSenderCountryCode().getValue();
         String consigneeCountry = ecmrModel.getEcmrConsignment().getConsigneeInformation().getConsigneeCountryCode().getValue();
 
