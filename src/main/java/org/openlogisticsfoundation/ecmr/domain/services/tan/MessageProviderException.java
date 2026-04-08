@@ -16,4 +16,8 @@ public class MessageProviderException extends Exception {
     public MessageProviderException(String message) {
         super(message);
     }
+
+    public MessageProviderException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

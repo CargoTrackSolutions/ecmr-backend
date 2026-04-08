@@ -7,6 +7,9 @@
  */
 package org.openlogisticsfoundation.ecmr.domain.services;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import javax.imageio.ImageIO;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -337,17 +341,15 @@ public class EcmrPdfService {
         //eCmr Logo
         if (EcmrTransportType.INTERNATIONAL == ecmrTransportType) {
             InputStream imageStream = resourceLoader.getResource("classpath:/images/cmrLogo.png").getInputStream();
-            byte[] waterMarkBytes = imageStream.readAllBytes();
-            Renderable renderableWaterMark = SimpleDataRenderer.getInstance(waterMarkBytes);
+            Renderable renderableWaterMark = SimpleDataRenderer.getInstance(flattenAlphaChannel(imageStream));
             parameters.put("ecmrLogo", renderableWaterMark);
         }
 
         //Copy Watermark
         if (isCopy) {
-            InputStream imageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
-            byte[] waterMarkBytes = imageStream.readAllBytes();
-            Renderable renderableWaterMark = SimpleDataRenderer.getInstance(waterMarkBytes);
-            parameters.put("watermark", renderableWaterMark);
+            InputStream copyImageStream = resourceLoader.getResource("classpath:/images/Copy-Wasserzeichen-DIN4.png").getInputStream();
+            Renderable copyRenderableWaterMark = SimpleDataRenderer.getInstance(flattenAlphaChannel(copyImageStream));
+            parameters.put("watermark", copyRenderableWaterMark);
         }
 
         return parameters;
@@ -397,6 +399,19 @@ public class EcmrPdfService {
             log.error("Error while decoding image", e);
             throw new IOException(e);
         }
+    }
+
+    private byte[] flattenAlphaChannel(InputStream inputStream) throws IOException {
+        BufferedImage original = ImageIO.read(inputStream);
+        BufferedImage rgb = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = rgb.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, original.getWidth(), original.getHeight());
+        g.drawImage(original, 0, 0, null);
+        g.dispose();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(rgb, "png", baos);
+        return baos.toByteArray();
     }
 
     private String getSealText(SealMetadata sealMetadata) {

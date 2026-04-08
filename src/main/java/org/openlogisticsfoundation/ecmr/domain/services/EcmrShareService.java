@@ -78,6 +78,9 @@ public class EcmrShareService {
     @Value("${app.origin.url}")
     private String originUrl;
 
+    @Value("${app.frontend.url:http://localhost:4200}")
+    private String frontendUrl;
+
     public EcmrShareResponse shareEcmrWithGroup(InternalOrExternalUser internalOrExternalUser, @Valid @NotNull UUID ecmrId,
             @Valid @NotNull Long groupId, @Valid @NotNull EcmrRole role)
             throws EcmrNotFoundException, GroupNotFoundException, NoPermissionException, ValidationException {
@@ -307,17 +310,17 @@ public class EcmrShareService {
         }
         String shareToken = this.getShareToken(roleToShare, ecmr);
 
-        String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", originUrl, ecmrId, shareToken, roleToShare.name());
+        String shareUrl = String.format("%s/external-user-registration/%s?token=%s&role=%s", frontendUrl, ecmrId, shareToken, roleToShare.name());
         String mailText = """
-                Sehr geehrte Damen und Herren,
-                im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:
+                Stimate Doamnă / Stimate Domn,
+                Ca parte a transportului nostru curent, vă punem la dispoziție scrisoarea de trăsură electronică (eCMR). Puteți vizualiza, edita și semna digital documentul folosind următorul link:
 
                 {{url}}
 
-                Wenn bei Ihnen eine eigene Instanz des eCMR Systems besteht, können Sie den eCMR auch in Ihre Instanz importieren. Melden Sie sich dazu bei Ihrer Instanz an und fügen die obige URL in den Import Dialog ein.
+                Dacă aveți propria instanță a sistemului eCMR, puteți de asemenea să importați eCMR-ul în instanța dumneavoastră. Pentru a face recest lucru, conectați-vă la instanța dumneavoastră și inserați URL-ul de mai sus în dialogul de import.
 
-                Bitte beachten Sie, dass der Link aus Sicherheitsgründen nur für einen begrenzten Zeitraum gültig ist. Sollten Sie Rückfragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.
-                Vielen Dank für die Zusammenarbeit.
+                Vă rugăm să rețineți că link-ul este valabil doar pentru o perioadă limitată de timp din motive de securitate. Dacă aveți întrebări sau aveți nevoie de asistență, nu ezitați să ne contactați.
+                Vă mulțumim pentru colaborare.
 
                 ---
 
@@ -330,6 +333,18 @@ public class EcmrShareService {
 
                 Please note that the link is only valid for a limited time for security reasons. If you have any questions or need assistance, feel free to contact us.
                 Thank you for your cooperation.
+
+                ---
+
+                Sehr geehrte Damen und Herren,
+                im Rahmen unseres aktuellen Transports stellen wir Ihnen hiermit den elektronischen Frachtbrief (eCMR) zur Verfügung. Über den folgenden Link können Sie das Dokument einsehen, bearbeiten und bei Bedarf digital signieren:
+
+                {{url}}
+
+                Wenn bei Ihnen eine eigene Instanz des eCMR Systems besteht, können Sie den eCMR auch in Ihre Instanz importieren. Melden Sie sich dazu bei Ihrer Instanz an und fügen die obige URL in den Import Dialog ein.
+
+                Bitte beachten Sie, dass der Link aus Sicherheitsgründen nur für einen begrenzten Zeitraum gültig ist. Sollten Sie Rückfragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.
+                Vielen Dank für die Zusammenarbeit.
                 """;
         mailService.sendMail(receiverEmail, "Import eCMR", mailText.replace("{{url}}", shareUrl));
         return new EcmrShareResponse(ShareEcmrResult.SharedExternal, null, null);
@@ -343,19 +358,41 @@ public class EcmrShareService {
         if (ecmrEntity.getEcmrStatus() != EcmrStatus.DELIVERED) return;
         if (receiverEmails.isEmpty()) return;
 
-        String subject = String.format("Completed eCMR for Shipment [%s]",
+        String subject = String.format("eCMR completat pentru transportul [%1$s] / Completed eCMR for Shipment [%1$s] / Abgeschlossener eCMR für Sendung [%1$s]",
             ecmrEntity.getReferenceIdentificationNumber()
         );
 
         String text = String.format("""
+            Stimate Doamnă / Stimate Domn,
+
+            Vă rugăm să găsiți atașată scrisoarea de trăsură electronică (eCMR) completată pentru transportul [%1$s].
+            Primiți acest document în format PDF pe e-mail deoarece ați fost implicat în proces în calitate de invitat.
+            Puteți păstra eCMR-ul în dosarele dumneavoastră dacă este necesar.
+            Acesta este un e-mail automat, vă rugăm să nu răspundeți!
+
+            Cu stimă
+            
+            ---
+
             Dear Sir or Madam,
 
-            Please find attached the completed eCMR for the shipment [%s].
+            Please find attached the completed eCMR for the shipment [%1$s].
             You are receiving this document as a PDF by email because you were involved in the process as a guest.
             You can keep the eCMR in your records if needed.
             This is an automated e-mail, please do not respond!
 
             Best regards
+            
+            ---
+
+            Sehr geehrte Damen und Herren,
+
+            im Anhang finden Sie den abgeschlossenen eCMR für die Sendung [%1$s].
+            Sie erhalten dieses Dokument als PDF per E-Mail, da Sie als Gast in den Prozess involviert waren.
+            Sie können den eCMR bei Bedarf für Ihre Unterlagen aufbewahren.
+            Dies ist eine automatisierte E-Mail, bitte antworten Sie nicht!
+
+            Mit freundlichen Grüßen
             """, ecmrEntity.getReferenceIdentificationNumber());
 
         PdfFile pdfFile = ecmrPdfService.createJasperReportForEcmr(ecmrEntity.getEcmrId(), internalOrExternalUser, true, true);

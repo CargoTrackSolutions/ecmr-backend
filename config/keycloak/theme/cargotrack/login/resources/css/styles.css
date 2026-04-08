@@ -1,0 +1,175 @@
+/* CargoTrack Keycloak Login Theme */
+
+/* Force background on all possible root containers */
+html,
+body,
+.login-pf,
+.login-pf-page {
+    background-image: url('../img/background.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: #000 !important;
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
+}
+
+/* Make everything between root and card transparent */
+.login-pf-page,
+#kc-container-wrapper,
+#kc-content-wrapper {
+    background: transparent !important;
+}
+
+#kc-header,
+#kc-header-wrapper,
+.login-pf-page-header {
+    display: none !important;
+}
+
+/* Main Card container - ONLY style the outer one */
+.card-pf {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5) !important;
+    padding: 40px !important;
+    max-width: 450px !important;
+    margin: 10vh auto !important;
+    border-top: 5px solid #ff7b00 !important;
+}
+
+/* Ensure inner content containers are transparent to avoid nesting boxes */
+#kc-content,
+#kc-content-wrapper,
+#kc-form,
+#kc-form-wrapper {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* CargoTrack Logo - only on the card */
+.card-pf::before {
+    content: '';
+    display: block;
+    background-image: url('../img/logo.png');
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 250px;
+    height: 60px;
+    margin: 0 auto 20px auto;
+}
+
+/* Hide logo and title from other containers to avoid duplication */
+#kc-content::before,
+.login-pf-header,
+#kc-header,
+.login-pf-page-header {
+    display: none !important;
+}
+
+#kc-page-title {
+    font-weight: bold !important;
+    color: #3f51b5 !important;
+    text-align: center !important;
+    font-size: 16px !important;
+    margin-bottom: 20px !important;
+    text-transform: uppercase !important;
+    display: block !important;
+}
+
+/* Inputs - including PatternFly 4 classes */
+.form-control,
+.pf-c-form-control {
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    background-color: #f7f7f7 !important;
+    padding: 12px !important;
+    color: #333 !important;
+    height: auto !important;
+}
+
+.form-control:focus,
+.pf-c-form-control:focus {
+    border-color: #3f51b5 !important;
+    background-color: #fff !important;
+}
+
+/* Label */
+.control-label,
+.pf-c-form__label,
+.pf-c-form__label-text {
+    color: #666 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    margin-bottom: 5px !important;
+    display: inline-block !important;
+}
+
+/* Buttons */
+.btn-primary,
+.pf-c-button.pf-m-primary {
+    background-color: #3f51b5 !important;
+    border-color: #3f51b5 !important;
+    color: white !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+    display: block !important;
+}
+
+.btn-primary:hover,
+.pf-c-button.pf-m-primary:hover {
+    background-color: #303f9f !important;
+}
+
+/* Password Toggle Button */
+.pf-c-input-group .pf-c-button {
+    background-color: #f7f7f7 !important;
+    border: 1px solid #ddd !important;
+    border-left: none !important;
+    color: #666 !important;
+}
+
+/* Links */
+a {
+    color: #3f51b5 !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    text-decoration: underline !important;
+}
+
+/* Checkbox */
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Adjustments */
+#kc-form,
+#kc-form-login {
+    margin-top: 0 !important;
+}
+
+#kc-info {
+    background: transparent !important;
+    border: none !important;
+}
+
+#kc-info-wrapper {
+    padding: 0 !important;
+    text-align: center !important;
+}

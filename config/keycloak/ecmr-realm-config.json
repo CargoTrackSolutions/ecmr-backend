@@ -17,11 +17,10 @@
       "publicClient": true,
       "directAccessGrantsEnabled": true,
       "redirectUris": [
-        "http://localhost:8082/*"
+        "https://ecmr.cargotrack.ro/*"
       ],
       "webOrigins": [
-        "http://localhost:8081",
-        "http://localhost:8082"
+        "https://ecmr.cargotrack.ro"
       ]
     }
   ],

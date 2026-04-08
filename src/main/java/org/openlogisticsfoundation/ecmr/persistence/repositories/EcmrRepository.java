@@ -41,13 +41,10 @@ public interface EcmrRepository extends JpaRepository<EcmrEntity, Long> {
     List<UUID> findAllEcmrIdsByTypeAndEditedAtBefore(EcmrType type, Instant timestamp);
 
     @Query("""
-            SELECT new org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection(e.id),
-                e.ecmrId, e.referenceIdentificationNumber, e.senderInformation.companyName,e.consigneeInformation.companyName,
-                e.ecmrStatus, e.carrierInformation.carrierLicensePlate,e.carrierInformation.companyName, e.carrierInformation.postcode,
-                e.editedBy, e.editedAt, e.createdAt
+            SELECT new org.openlogisticsfoundation.ecmr.persistence.entities.EcmrIdProjection(e.id)
                 FROM EcmrEntity e
                 WHERE e.type = :type
-                AND (:ecmrId is null OR CAST(e.ecmrId AS string) LIKE CONCAT('%', :ecmrId, '%'))
+                AND (:ecmrId is null OR CAST(e.ecmrId AS string) LIKE CONCAT('%', cast(:ecmrId as text), '%'))
                 AND (:referenceId is null or e.referenceIdentificationNumber LIKE CONCAT('%', cast(:referenceId as text), '%'))
                 AND (:from is null or e.senderInformation.companyName LIKE  CONCAT('%', cast(:from as text), '%'))
                 AND (:to is null or e.consigneeInformation.companyName LIKE  CONCAT('%', cast(:to as text), '%'))
