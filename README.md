@@ -68,6 +68,8 @@ Signs with the upstream test keystore - development only. Real TAN SMS: put the 
 
 ## Run
 
+Production deployment (backend, frontend, Keycloak, eSeal key, DNS, OLF validation): [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 See [`config/backend.env.example`](config/backend.env.example) for the required environment variables.
 Activate the `jobs` profile on exactly one instance. The upstream `docker-compose.yml` is for demos only, not for production.
 
