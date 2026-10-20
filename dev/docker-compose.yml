@@ -43,6 +43,8 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     volumes:
       - ./keycloak:/opt/keycloak/data/import:ro
+      # dev-mode database (H2 under data/): users/passwords changed in the admin console survive "down"
+      - kcdata:/opt/keycloak/data
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep -q '\"UP\"' <&3"]
       interval: 10s
@@ -107,3 +109,4 @@ services:
 volumes:
   pgdata:
   attachments:
+  kcdata:
