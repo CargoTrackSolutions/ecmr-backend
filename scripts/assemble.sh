@@ -29,7 +29,8 @@ export_upstream() {
   rm -rf "$target"
   mkdir -p "$target"
   # autocrlf off: identical LF tree on Windows and CI, so patches apply the same everywhere
-  git -C "$cache" -c core.autocrlf=false archive "$sha" | tar -x -C "$target"
+  # (without core.eol, Windows git writes CRLF for files that upstream's .gitattributes marks as text)
+  git -C "$cache" -c core.autocrlf=false -c core.eol=lf archive "$sha" | tar -x -C "$target"
 }
 
 export_upstream "$UPSTREAM_REPO" "$SHA" ecmr-backend "$OUT"
@@ -41,7 +42,7 @@ for p in "${patches[@]}"; do
   echo ">> Applying patch $(basename "$p")"
   # The ceiling keeps git from treating build/src as a subdirectory of this repository:
   # inside a repo, git apply silently skips every path outside the current directory.
-  (cd "$OUT" && GIT_CEILING_DIRECTORIES="$ROOT" git apply --whitespace=nowarn "$p") || {
+  (cd "$OUT" && GIT_CEILING_DIRECTORIES="$ROOT" git -c core.autocrlf=false -c core.eol=lf apply --whitespace=nowarn "$p") || {
     echo "Patch $(basename "$p") no longer applies to upstream $SHA - rebase it or drop it if merged upstream." >&2
     exit 1
   }
