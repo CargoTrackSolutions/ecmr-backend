@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Upstream 02-init-data.xml seeds ten Admin accounts (Rhenus/IML e-mails). Users are matched by e-mail claim,
+  so these must never be usable on a CargoTrack instance.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="ct-002-deactivate-upstream-seed-users" author="cargotrack">
+        <update tableName="ecmr_user">
+            <column name="deactivated" valueBoolean="true"/>
+            <where>email IN ('artur.blek@rhenus.com', 'niklas.nopper@rhenus.com', 'jonas.kassan@rhenus.com',
+                'benedikt.hilbert@rhenus.com', 'timo.volkenrath@rhenus.com', 'deniz.baskale@rhenus.com',
+                'thomas.dukvin@rhenus.com', 'baris.baskale@rhenus.com', 'jan.eissing@rhenus.com', 'test@iml.de')</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

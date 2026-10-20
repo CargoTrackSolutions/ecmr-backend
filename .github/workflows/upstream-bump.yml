@@ -1,0 +1,91 @@
+name: Upstream bump
+
+# Weekly: if upstream ecmr-backend has moved, open a PR that bumps upstream.lock,
+# with the commit list, API changelog diff and DB/OpenAPI changes for review.
+#
+# PRs opened with the default GITHUB_TOKEN do not trigger other workflows (no Build check on the PR).
+# Add a fine-grained PAT or GitHub App token as secret UPSTREAM_BUMP_TOKEN
+# (contents + pull requests: read/write on this repo) to get CI on bump PRs automatically.
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Upstream commit to bump to (default - latest on upstream main)
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.UPSTREAM_BUMP_TOKEN || github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.UPSTREAM_BUMP_TOKEN || github.token }}
+
+      - name: Check upstream
+        id: check
+        run: |
+          . upstream.lock
+          new="${{ inputs.sha }}"
+          [ -n "$new" ] || new="$(git ls-remote "$UPSTREAM_REPO" "refs/heads/$UPSTREAM_REF" | cut -f1)"
+          branch="upstream-bump/${new:0:8}"
+          echo "old=$UPSTREAM_SHA" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          if [ "$new" = "$UPSTREAM_SHA" ]; then
+            echo "Up to date ($new)"; echo "changed=false" >> "$GITHUB_OUTPUT"
+          elif git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "Bump branch $branch already exists"; echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Assemble against new upstream
+        id: assemble
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          if bash scripts/assemble.sh "${{ steps.check.outputs.new }}" > assemble.log 2>&1; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+          cat assemble.log
+
+      - name: Open PR
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          old="${{ steps.check.outputs.old }}"; new="${{ steps.check.outputs.new }}"; branch="${{ steps.check.outputs.branch }}"
+          up=".upstream/ecmr-backend"
+          {
+            echo "Bumps upstream ecmr-backend \`${old:0:8}\` → \`${new:0:8}\`."
+            echo
+            if [ "${{ steps.assemble.outputs.ok }}" != "true" ]; then
+              echo "> [!WARNING]"
+              echo "> \`scripts/assemble.sh\` failed (patch no longer applies or overlay collision):"
+              echo; echo '```'; tail -n 20 assemble.log; echo '```'
+            fi
+            echo "## Upstream commits"
+            echo '```'; git -C "$up" log --no-merges --format='%h %ad %an: %s' --date=short "$old..$new"; echo '```'
+            echo "## API_CHANGELOG.md"
+            echo '```diff'; git -C "$up" diff "$old" "$new" -- API_CHANGELOG.md; echo '```'
+            echo "## Changed DB migrations / OpenAPI contracts / pom"
+            echo '```'; git -C "$up" diff --stat "$old" "$new" -- src/main/resources/db documentation/openapi pom.xml; echo '```'
+            echo
+            echo "Checklist: review breaking API changes → regenerate the frontend client against this revision → staging deploy."
+          } > pr-body.md
+
+          sed -i "s/^UPSTREAM_SHA=.*/UPSTREAM_SHA=$new/" upstream.lock
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git commit -am "Bump upstream ecmr-backend to ${new:0:8}"
+          git push origin "$branch"
+          gh pr create --title "Bump upstream ecmr-backend to ${new:0:8}" --body-file pr-body.md --base main --head "$branch"

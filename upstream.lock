@@ -1,0 +1,5 @@
+# Pinned upstream ecmr-backend revision. Updated via the "Upstream bump" workflow (PR).
+# ecmr-model and eseal versions follow from the upstream pom.xml at this revision.
+UPSTREAM_REPO=https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend.git
+UPSTREAM_REF=main
+UPSTREAM_SHA=0aab246b8be6d31943ec01fb77d05ca8fe18bf5e

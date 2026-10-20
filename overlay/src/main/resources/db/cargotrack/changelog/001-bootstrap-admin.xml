@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Creates the first CargoTrack administrator (in the upstream root group, id 1).
+  The e-mail must match the email/upn/sub claim issued by the CargoTrack identity provider.
+  Requires spring.liquibase.parameters.bootstrapAdminEmail (env: SPRING_LIQUIBASE_PARAMETERS_BOOTSTRAPADMINEMAIL).
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="ct-001-bootstrap-admin" author="cargotrack">
+        <preConditions onFail="HALT"
+                       onFailMessage="Set spring.liquibase.parameters.bootstrapAdminEmail to create the first CargoTrack admin.">
+            <changeLogPropertyDefined property="bootstrapAdminEmail"/>
+        </preConditions>
+        <insert tableName="ecmr_user">
+            <column name="first_name" value="${bootstrapAdminFirstName}"/>
+            <column name="last_name" value="${bootstrapAdminLastName}"/>
+            <column name="country" value="${bootstrapAdminCountry}"/>
+            <column name="email" value="${bootstrapAdminEmail}"/>
+            <column name="role" value="Admin"/>
+            <column name="default_group_id" valueNumeric="1"/>
+        </insert>
+        <sql>
+            INSERT INTO user_to_group (user_id, group_id)
+            SELECT id, 1 FROM ecmr_user WHERE email = '${bootstrapAdminEmail}'
+        </sql>
+    </changeSet>
+</databaseChangeLog>

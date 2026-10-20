@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CargoTrack Liquibase entry point (spring.liquibase.change-log in application-cargotrack.properties).
+  Runs the complete upstream changelog first, then CargoTrack changesets.
+  Never edit upstream changesets; add new files under db/cargotrack/changelog/ instead.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Defaults; values from spring.liquibase.parameters.* take precedence. -->
+    <property name="bootstrapAdminFirstName" value="CargoTrack"/>
+    <property name="bootstrapAdminLastName" value="Admin"/>
+    <property name="bootstrapAdminCountry" value="HU"/>
+
+    <include file="/db/db.changelog-main.xml"/>
+
+    <include file="/db/cargotrack/changelog/001-bootstrap-admin.xml"/>
+    <include file="/db/cargotrack/changelog/002-deactivate-upstream-seed-users.xml"/>
+</databaseChangeLog>

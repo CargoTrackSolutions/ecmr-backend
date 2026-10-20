@@ -1,0 +1,6 @@
+/build/
+/.upstream/
+*.env
+!config/*.env.example
+.idea/
+.vscode/
