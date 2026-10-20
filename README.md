@@ -7,13 +7,17 @@ The build downloads upstream at a pinned commit and adds CargoTrack's files on t
 Upstream stays the single source of truth, and updating it means changing one line.
 
 ```
-upstream.lock     pinned upstream commit (bumped by PR, see below)
+upstream.lock     pinned upstream commits: ecmr-backend (bumped by PR, see below) and eSeal
 overlay/          new files copied into the upstream tree (must not override upstream files)
 patches/          changes to upstream files - should stay empty, see patches/README.md
 docker/           runtime image
 config/           environment variable reference
-scripts/          assemble.sh - builds the source tree in build/src
+scripts/          assemble.sh - builds the source tree in build/src and the eSeal source in build/eseal
 ```
+
+eSeal signer/verifier are built from source at `ESEAL_SHA` instead of being taken from the OLF Maven registry,
+where released versions have been overwritten (1.2.0, 2026-10-19) and deleted (1.2.1).
+`ESEAL_SHA` must produce the version the backend `pom.xml` expects (`version=` in eSeal's `gradle.properties`).
 
 ## What the overlay adds
 
@@ -24,14 +28,11 @@ scripts/          assemble.sh - builds the source tree in build/src
 | `overlay/.../db/cargotrack/changelog-master.xml` | Runs the full upstream changelog, then CargoTrack changesets |
 | `.../001-bootstrap-admin.xml` | First admin from `SPRING_LIQUIBASE_PARAMETERS_BOOTSTRAPADMINEMAIL` (startup halts if unset on a fresh DB) |
 | `.../002-deactivate-upstream-seed-users.xml` | Deactivates the 10 admin accounts that upstream seeds (users are matched by e-mail claim) |
-| `overlay/cargotrack/olf-artifacts.sha256` + `verify-olf-artifacts.sh` | SHA-256 pins for the OLF-hosted jars (data model, eSeal). The OLF Maven registry allows re-publishing a released version, and eSeal 1.2.0 was overwritten with incompatible content on 2026-10-19. Docker and CI builds fail on any drift |
+| `overlay/cargotrack/olf-artifacts.sha256` + `verify-olf-artifacts.sh` | SHA-256 pins for the jars still taken from the OLF registry (data model). The OLF Maven registry allows re-publishing a released version, and eSeal 1.2.0 was overwritten with incompatible content on 2026-10-19. Docker and CI builds fail on any drift |
 
 ## Current patches
 
-| Patch | Why | Remove when |
-|---|---|---|
-| `0001-eseal-1.2.1.patch` | The re-published eSeal 1.2.0 breaks startup; pins 1.2.1 (same as upstream branch `221-update-dependencies-to-latest-versions`) | upstream `main` uses eSeal ≥ 1.2.1 |
-| `0002-sig-policy-dss-6.5.patch` | eSeal 1.2.1 bundles DSS 6.5.1; `sig-policy.xml` needs the new `<TLVersion><Id>` format | fixed upstream (to be reported / contributed) |
+None.
 
 Custom Spring beans must live under `org.openlogisticsfoundation.ecmr` (upstream component scan), e.g. `org.openlogisticsfoundation.ecmr.cargotrack.*`.
 
@@ -41,10 +42,11 @@ Requires Git Bash and Docker (no local Java/Maven needed):
 
 ```bash
 scripts/assemble.sh
-docker build -f docker/Dockerfile -t ecmr-backend:local build/src
+docker build -f docker/Dockerfile -t ecmr-backend:local build
 ```
 
-With JDK 21 and Maven 3.9 installed, you can also run the upstream test suite: `mvn -f build/src/pom.xml verify` (needs Docker for Testcontainers).
+With JDK 21 and Maven 3.9 installed, you can also run the upstream test suite (needs Docker for Testcontainers):
+first `cd build/eseal && ./gradlew :signer:publishToMavenLocal :verifier:publishToMavenLocal -x test`, then `mvn -f build/src/pom.xml verify`.
 
 ## Run
 
@@ -62,6 +64,7 @@ Activate the `jobs` profile on exactly one instance. The upstream `docker-compos
 ### Upgrade procedure
 
 1. Review the bump PR: breaking API changes, new migrations, data model/eSeal versions in `pom.xml`.
+   If the eSeal version changed, move `ESEAL_SHA` in `upstream.lock` to an eSeal commit with that version.
    If the OLF checksum step fails, verify the new artifacts are intended, then copy the printed "actual" lines into `overlay/cargotrack/olf-artifacts.sha256`.
    Drop patches that upstream now includes.
 2. Regenerate the frontend API client against the new revision (`documentation/openapi/frontend/openapi.yml`) and fix compile errors.

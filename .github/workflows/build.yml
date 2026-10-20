@@ -29,6 +29,13 @@ jobs:
           cache: maven
           cache-dependency-path: build/src/pom.xml
 
+      # eSeal signer/verifier are built from pinned source (upstream.lock), not taken from the OLF registry
+      - name: Build eSeal
+        working-directory: build/eseal
+        run: |
+          rm -rf ~/.m2/repository/org/openlogisticsfoundation/ecmr/signer ~/.m2/repository/org/openlogisticsfoundation/ecmr/verifier
+          sh ./gradlew --no-daemon -q :signer:publishToMavenLocal :verifier:publishToMavenLocal -x test
+
       - name: Verify OLF artifact checksums
         working-directory: build/src
         run: |
@@ -69,7 +76,7 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: build/src
+          context: build
           file: docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |

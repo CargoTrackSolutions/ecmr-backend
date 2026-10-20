@@ -1,13 +1,27 @@
 # syntax=docker/dockerfile:1.7
-# Build context: build/src (produced by scripts/assemble.sh)
-#   docker build -f docker/Dockerfile -t ecmr-backend build/src
+# Build context: build/ (produced by scripts/assemble.sh)
+#   docker build -f docker/Dockerfile -t ecmr-backend build
+
+# eSeal signer/verifier from pinned source (see upstream.lock)
+FROM eclipse-temurin:21-jdk AS eseal
+WORKDIR /eseal
+COPY eseal/ .
+RUN --mount=type=cache,target=/root/.gradle \
+    sh ./gradlew --no-daemon -q :signer:publishToMavenLocal :verifier:publishToMavenLocal -x test
 
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /src
-COPY pom.xml .
-COPY cargotrack/ cargotrack/
-RUN --mount=type=cache,target=/root/.m2 mvn -B -q dependency:go-offline  && sh cargotrack/verify-olf-artifacts.sh
-COPY src/ src/
+COPY --from=eseal /root/.m2/repository/org/openlogisticsfoundation/ecmr/ /eseal-repo/
+COPY src/pom.xml .
+COPY src/cargotrack/ cargotrack/
+# Replace any registry copy of signer/verifier in the cached local repo with the source build
+RUN --mount=type=cache,target=/root/.m2 \
+    rm -rf /root/.m2/repository/org/openlogisticsfoundation/ecmr/signer /root/.m2/repository/org/openlogisticsfoundation/ecmr/verifier \
+ && mkdir -p /root/.m2/repository/org/openlogisticsfoundation/ecmr \
+ && cp -R /eseal-repo/. /root/.m2/repository/org/openlogisticsfoundation/ecmr/ \
+ && mvn -B -q dependency:go-offline \
+ && sh cargotrack/verify-olf-artifacts.sh
+COPY src/src/ src/
 RUN --mount=type=cache,target=/root/.m2 mvn -B -q package -DskipTests -Dmaven.source.skip=true -Dmaven.javadoc.skip=true \
  && cp target/ecmr-backend-*.jar /src/app.jar
 
