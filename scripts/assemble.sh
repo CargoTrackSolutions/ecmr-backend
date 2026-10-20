@@ -39,7 +39,9 @@ shopt -s nullglob
 patches=("$ROOT"/patches/*.patch)
 for p in "${patches[@]}"; do
   echo ">> Applying patch $(basename "$p")"
-  (cd "$OUT" && git apply --whitespace=nowarn "$p") || {
+  # The ceiling keeps git from treating build/src as a subdirectory of this repository:
+  # inside a repo, git apply silently skips every path outside the current directory.
+  (cd "$OUT" && GIT_CEILING_DIRECTORIES="$ROOT" git apply --whitespace=nowarn "$p") || {
     echo "Patch $(basename "$p") no longer applies to upstream $SHA - rebase it or drop it if merged upstream." >&2
     exit 1
   }

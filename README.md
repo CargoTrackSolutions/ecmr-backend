@@ -48,6 +48,24 @@ docker build -f docker/Dockerfile -t ecmr-backend:local build
 With JDK 21 and Maven 3.9 installed, you can also run the upstream test suite (needs Docker for Testcontainers):
 first `cd build/eseal && ./gradlew :signer:publishToMavenLocal :verifier:publishToMavenLocal -x test`, then `mvn -f build/src/pom.xml verify`.
 
+## Local stack (Keycloak, PostgreSQL, Mailpit, frontend)
+
+[`dev/docker-compose.yml`](dev/docker-compose.yml) runs the locally built `ecmr-backend:local` and `ecmr-frontend:local`
+images (see the comment at the top of the file) with a dev Keycloak realm ([`dev/keycloak/cargotrack-realm.json`](dev/keycloak/cargotrack-realm.json)):
+
+```bash
+docker compose -f dev/docker-compose.yml up -d      # down: stop, down -v: also delete the data
+```
+
+| | |
+|---|---|
+| Frontend | http://localhost:8082 - `admin@cargotrack.local` / `admin` (bootstrap admin) |
+| Keycloak | http://localhost:8080 - `admin` / `admin`; realm user `dispecer@cargotrack.local` / `dispecer` needs an eCMR user with that e-mail |
+| Backend | http://localhost:8081/api/swagger-ui |
+| Mailpit | http://localhost:8025 - all mails sent by the backend |
+
+Signs with the upstream test keystore - development only. Real TAN SMS: put the `CARGOTRACK_SMS_*` variables into `dev/.env` (git-ignored).
+
 ## Run
 
 See [`config/backend.env.example`](config/backend.env.example) for the required environment variables.
