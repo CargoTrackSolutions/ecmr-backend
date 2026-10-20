@@ -1,0 +1,49 @@
+{
+  "realm": "cargotrack",
+  "displayName": "CargoTrack (staging)",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "browserSecurityHeaders": {
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self' https://*.cargotrack.ro; object-src 'none';",
+    "xFrameOptions": ""
+  },
+  "clients": [
+    {
+      "clientId": "ecmr-frontend",
+      "name": "eCMR frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "https://ecmr-staging.cargotrack.ro/*"
+      ],
+      "webOrigins": [
+        "https://ecmr-staging.cargotrack.ro"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://ecmr-staging.cargotrack.ro/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@cargotrack.local",
+      "email": "admin@cargotrack.local",
+      "emailVerified": true,
+      "firstName": "CargoTrack",
+      "lastName": "Admin",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "CHANGE_ME",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

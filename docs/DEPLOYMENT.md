@@ -7,6 +7,9 @@ The same setup is what the Open Logistics Foundation validates before CargoTrack
 
 Host names below are suggestions; whatever you choose, use it consistently in all settings.
 
+Staging (`https://ecmr-staging.cargotrack.ro`, server `192.168.140.4:/opt/ecmr`) runs the whole stack behind one
+port with path routing (`/`, `/api`, `/auth`): [`deploy/staging`](../deploy/staging).
+
 | Component | Public URL | Image / source |
 |---|---|---|
 | Frontend | `https://ecmr.cargotrack.ro` | `ghcr.io/cargotracksolutions/ecmr-frontend:main` |
