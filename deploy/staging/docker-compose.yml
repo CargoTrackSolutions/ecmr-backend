@@ -84,11 +84,15 @@ services:
       SPRINGDOC_SWAGGER_UI_OAUTH_CLIENTID: ecmr-frontend
       SWAGGER_AUTH_URL: https://ecmr-staging.cargotrack.ro/auth/realms/cargotrack/protocol/openid-connect/auth
       SWAGGER_TOKEN_URL: https://ecmr-staging.cargotrack.ro/auth/realms/cargotrack/protocol/openid-connect/token
-      SPRING_MAIL_HOST: mailpit
-      SPRING_MAIL_PORT: "1025"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
-      MAIL_FROM: ecmr-staging@cargotrack.ro
+      # SMTP from .env; without SMTP_HOST all mails go to Mailpit (ssh -L 8125:localhost:8125)
+      SPRING_MAIL_HOST: ${SMTP_HOST:-mailpit}
+      SPRING_MAIL_PORT: ${SMTP_PORT:-1025}
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SMTP_AUTH:-false}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SMTP_STARTTLS:-false}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE: ${SMTP_SSL:-false}
+      MAIL_FROM: ${MAIL_FROM:-ecmr-staging@cargotrack.ro}
       ECMR_SEAL_SIGN_KEYSTORETYPE: PKCS12
       ECMR_SEAL_SIGN_KEYSTOREPATH: /secrets/eseal.p12
       ECMR_SEAL_SIGN_KEYSTOREPASSWORD: ${ESEAL_PASSWORD}
