@@ -23,7 +23,7 @@ where released versions have been overwritten (1.2.0, 2026-10-19) and deleted (1
 
 | File | Purpose |
 |---|---|
-| `overlay/.../cargotrack/sms/CargoTrackSmsProvider.java` | Sends guest TANs through the CargoTrack SMS gateway (`cargotrack.sms.enabled=true`); otherwise upstream's logging dummy is used |
+| `overlay/.../cargotrack/sms/SmsoSmsProvider.java` | Sends guest TAN SMS through SMSO (`cargotrack.sms.enabled=true`, API key + sender from env, optional Romanian template); otherwise upstream's logging dummy is used |
 | `overlay/.../application-cargotrack.properties` | `cargotrack` Spring profile: own Liquibase entry point, storage path, SMS settings |
 | `overlay/.../db/cargotrack/changelog-master.xml` | Runs the full upstream changelog, then CargoTrack changesets |
 | `.../001-bootstrap-admin.xml` | First admin from `SPRING_LIQUIBASE_PARAMETERS_BOOTSTRAPADMINEMAIL` (startup halts if unset on a fresh DB) |

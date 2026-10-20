@@ -79,6 +79,11 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
       MAIL_FROM: ecmr-dev@cargotrack.local
+      # Real SMS only when set in dev/.env (git-ignored); otherwise TAN messages appear in the backend log
+      CARGOTRACK_SMS_ENABLED: ${CARGOTRACK_SMS_ENABLED:-false}
+      CARGOTRACK_SMS_TOKEN: ${CARGOTRACK_SMS_TOKEN:-}
+      CARGOTRACK_SMS_SENDER: ${CARGOTRACK_SMS_SENDER:-}
+      CARGOTRACK_SMS_TEMPLATE: ${CARGOTRACK_SMS_TEMPLATE:-}
       # Upstream test keystore - never in production (see config/backend.env.example)
       ECMR_SEAL_SIGN_KEYSTORETYPE: jks
       ECMR_SEAL_SIGN_KEYSTOREPATH: /secrets/test-keystore.jks
