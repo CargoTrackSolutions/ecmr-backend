@@ -44,7 +44,9 @@ jobs:
 
       # Upstream test suite (incl. Keycloak Testcontainer - Docker is available on ubuntu-latest).
       - name: Test
-        run: mvn -B -f build/src/pom.xml verify
+        # license.skip: upstream's license-maven-plugin requires the OLF header on every source file;
+        # CargoTrack overlay files are proprietary and must not carry it (upstream files are checked upstream).
+        run: mvn -B -f build/src/pom.xml verify -Dlicense.skip=true
 
   image:
     needs: test
