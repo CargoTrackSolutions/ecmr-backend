@@ -2,7 +2,7 @@
 # ecmr-backend is bumped via the "Upstream bump" workflow (PR).
 UPSTREAM_REPO=https://git.openlogisticsfoundation.org/wg-electronictransportdocuments/ecmr/ecmr-backend.git
 UPSTREAM_REF=main
-UPSTREAM_SHA=0aab246b8be6d31943ec01fb77d05ca8fe18bf5e
+UPSTREAM_SHA=3416c988778abc405ca07f88e3d8716b89878b91
 
 # eSeal signer/verifier are built from source instead of taken from the OLF Maven registry,
 # where released versions have been overwritten and deleted (1.2.0 / 1.2.1, Oct 2026).
